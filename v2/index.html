@@ -1,0 +1,921 @@
+<title>짠이의 가계부</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --p:#FF8C42;--pl:#FFF0E6;--g:#2ECC71;--gl:#E8F8F0;--r:#E74C3C;--rl:#FDECEA;
+  --y:#F1C40F;--bl:#3498DB;--pu:#9B59B6;
+  --bg:#FFFAF3;--card:#fff;--td:#1A1A2E;--tm:#555;--tl:#999;--bd:#F2EDE4;
+  --ss:0 2px 8px rgba(0,0,0,.06);--sm:0 4px 20px rgba(0,0,0,.10);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#EDE8E0;min-height:100vh;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;min-height:100vh;background:var(--bg);position:relative;padding-bottom:84px;overflow:hidden}
+.screen{display:none;min-height:calc(100vh - 84px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.screen.active{display:block}
+
+/* NAV */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:84px;background:#fff;border-top:1.5px solid var(--bd);display:flex;padding:0 4px 16px;box-shadow:0 -4px 20px rgba(0,0,0,.08);z-index:100}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border-radius:12px;transition:all .2s;padding:8px 2px}
+.ni .ic{font-size:22px}.ni .lb{font-size:11px;font-weight:700;color:var(--tl)}
+.ni.active .lb{color:var(--p)}.ni.active .ic{transform:scale(1.12)}
+.nadd{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer}
+.nadd .ac{width:54px;height:54px;background:var(--p);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;box-shadow:0 4px 16px rgba(255,140,66,.4);transform:translateY(-14px);transition:all .2s;font-weight:300}
+.nadd:active .ac{transform:translateY(-14px) scale(.94)}
+.nadd .lb{font-size:11px;font-weight:700;color:var(--tl);margin-top:-10px}
+
+/* COMMON */
+.card{background:var(--card);border-radius:20px;padding:20px;margin:0 16px 12px;box-shadow:var(--ss)}
+.stitle{font-size:13px;font-weight:700;color:var(--tl);text-transform:uppercase;letter-spacing:.5px;padding:6px 20px 6px}
+.pbar-bg{height:11px;background:var(--bd);border-radius:6px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:6px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* HOME */
+.hdr{padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:20px;font-weight:800;color:var(--p);display:flex;align-items:center;gap:6px}
+.streak{background:#FFF3E0;border:2px solid var(--p);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:700;color:var(--p);display:flex;align-items:center;gap:4px}
+
+.mascot-row{padding:10px 16px;display:flex;align-items:flex-end;gap:10px}
+.mc{font-size:42px;flex-shrink:0;animation:bob 2.2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.bubble{background:#fff;border-radius:16px 16px 16px 4px;padding:11px 15px;box-shadow:var(--ss);border:1.5px solid var(--bd);font-size:13px;font-weight:600;color:var(--td);line-height:1.55;position:relative}
+.bubble::before{content:'';position:absolute;left:-10px;bottom:12px;width:0;height:0;border:6px solid transparent;border-right-color:var(--bd)}
+.bubble::after{content:'';position:absolute;left:-8px;bottom:13px;width:0;height:0;border:5px solid transparent;border-right-color:#fff}
+
+.hero{background:linear-gradient(135deg,#FF8C42 0%,#FF5F00 100%);border-radius:20px;padding:22px;margin:0 16px 12px;color:#fff;box-shadow:0 8px 24px rgba(255,140,66,.35)}
+.hero-lbl{font-size:12px;font-weight:600;opacity:.85;margin-bottom:4px}
+.hero-amt{font-size:44px;font-weight:800;letter-spacing:-2px;margin-bottom:3px}
+.hero-sub{font-size:12px;opacity:.7}
+.hero-row{display:flex;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.25)}
+.hero-stat{flex:1;text-align:center}
+.hero-stat-v{font-size:17px;font-weight:800}
+.hero-stat-l{font-size:10px;opacity:.75;margin-top:2px}
+
+.wcard{background:var(--card);border-radius:20px;padding:16px 20px;margin:0 16px 12px;box-shadow:var(--ss)}
+.pr{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.pr-l{font-size:14px;font-weight:700;color:var(--td)}
+.pr-a{font-size:12px;font-weight:600;color:var(--tm)}
+
+.fqcard{background:var(--card);border-radius:20px;padding:14px 18px;margin:0 16px 12px;box-shadow:var(--ss);display:flex;align-items:center;cursor:pointer;transition:all .2s}
+.fqcard:active{transform:scale(.98)}
+.fqicon{width:42px;height:42px;background:#EEF2FF;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-right:12px;flex-shrink:0}
+.fqinfo{flex:1}
+.fqtitle{font-size:14px;font-weight:700;color:var(--td)}
+.fqsub{font-size:11px;color:var(--tl);margin-top:2px}
+.fqbadge{background:#FFE4D0;color:var(--p);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700}
+
+.txitem{display:flex;align-items:center;padding:11px 20px;gap:11px;border-bottom:1px solid var(--bd)}
+.txitem:last-child{border-bottom:none}
+.txicon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.txinfo{flex:1}
+.txname{font-size:14px;font-weight:600;color:var(--td)}
+.txtime{font-size:11px;color:var(--tl);margin-top:1px}
+.txamt{font-size:14px;font-weight:700}
+.txamt.ex{color:var(--r)}.txamt.inc{color:var(--g)}
+
+/* ADD */
+.ahdr{padding:18px 20px 0;display:flex;align-items:center;gap:12px}
+.back{width:40px;height:40px;border-radius:12px;background:var(--card);border:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--ss)}
+.ttog{display:flex;background:var(--bd);border-radius:12px;padding:4px;flex:1}
+.tbtn{flex:1;padding:8px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;background:transparent;color:var(--tl);font-family:inherit}
+.tbtn.active.ex{background:var(--r);color:#fff}
+.tbtn.active.inc{background:var(--g);color:#fff}
+
+.catscroll{display:flex;gap:8px;padding:10px 16px;overflow-x:auto;scrollbar-width:none}
+.catscroll::-webkit-scrollbar{display:none}
+.cchip{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;transition:all .2s}
+.ccicon{width:52px;height:52px;border-radius:16px;background:var(--bd);display:flex;align-items:center;justify-content:center;font-size:24px;transition:all .2s;border:2px solid transparent}
+.cchip.sel .ccicon{background:var(--pl);border-color:var(--p)}
+.cclbl{font-size:11px;font-weight:600;color:var(--tm)}
+
+.amtdisp{text-align:center;padding:14px 20px 6px}
+.amtnum{font-size:50px;font-weight:800;letter-spacing:-2px;color:var(--td);transition:color .2s}
+.amtnum.over{color:var(--r)}
+.amthint{font-size:12px;color:var(--tl);margin-top:3px}
+
+.minput{width:100%;background:var(--card);border:1.5px solid var(--bd);border-radius:12px;padding:12px 16px;font-size:14px;font-family:inherit;color:var(--td);outline:none;transition:border-color .2s;margin:0 16px;width:calc(100% - 32px)}
+.minput:focus{border-color:var(--p)}
+
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 16px}
+.nk{background:var(--card);border:none;border-radius:14px;padding:18px;font-size:22px;font-weight:700;color:var(--td);cursor:pointer;transition:all .15s;box-shadow:var(--ss);font-family:inherit}
+.nk:active{transform:scale(.93);background:var(--bd)}
+.nk.del{color:var(--tm);font-size:20px}
+
+.subbtn{margin:8px 16px 16px;width:calc(100% - 32px);padding:18px;background:var(--p);color:#fff;border:none;border-radius:20px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(255,140,66,.35);transition:all .2s}
+.subbtn:active{transform:scale(.97)}
+
+/* FIXED */
+.calcont{margin:0 16px 12px;background:var(--card);border-radius:20px;padding:16px;box-shadow:var(--ss)}
+.calhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.caltitle{font-size:16px;font-weight:800;color:var(--td)}
+.calnav{font-size:20px;color:var(--tl);cursor:pointer;padding:4px 8px}
+.calwd{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px}
+.calwdi{text-align:center;font-size:11px;font-weight:700;color:var(--tl);padding:4px 0}
+.calwdi:first-child{color:#E74C3C}.calwdi:last-child{color:#3498DB}
+.caldaysgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cd{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:12px;font-weight:600;color:var(--td);position:relative;cursor:pointer}
+.cd.today{background:var(--p);color:#fff;font-weight:800;z-index:2}
+.cd.sun:not(.today){color:#E74C3C}.cd.sat:not(.today){color:#3498DB}
+.cd .rbg{position:absolute;inset:1px;border-radius:6px;z-index:0}
+.cd .dnum{position:relative;z-index:1}
+.cd .dots{position:absolute;bottom:2px;display:flex;gap:1.5px;z-index:1}
+.dot{width:4px;height:4px;border-radius:50%}
+.leg{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)}
+.legi{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--tm)}
+.legdot{width:10px;height:10px;border-radius:3px}
+
+.fxsum{background:var(--card);border-radius:20px;padding:16px;margin:0 16px 12px;box-shadow:var(--ss);display:flex}
+.fxsi{flex:1;text-align:center}
+.fxsi+.fxsi{border-left:1px solid var(--bd)}
+.fxsv{font-size:19px;font-weight:800;color:var(--td)}
+.fxsl{font-size:11px;color:var(--tl);margin-top:4px;font-weight:600}
+
+.fxsect{font-size:15px;font-weight:800;color:var(--td);padding:10px 20px 6px;display:flex;align-items:center;gap:8px}
+.fxwrap{margin:0 16px 12px;border-radius:14px;overflow:hidden;box-shadow:var(--ss)}
+.fxi{display:flex;align-items:center;padding:13px 18px;gap:11px;border-bottom:1px solid var(--bd);background:var(--card);cursor:pointer;transition:background .15s}
+.fxi:last-child{border-bottom:none}
+.fxi:active{background:var(--bg)}
+.fxcb{width:26px;height:26px;border-radius:8px;border:2.5px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:all .2s}
+.fxcb.ck{background:var(--g);border-color:var(--g);color:#fff}
+.fxidot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.fxiinfo{flex:1}
+.fxiname{font-size:14px;font-weight:700;color:var(--td)}
+.fxiname.done{text-decoration:line-through;color:var(--tl)}
+.fxidate{font-size:11px;color:var(--tl);margin-top:2px}
+.fxiamt{font-size:14px;font-weight:700;color:var(--td)}
+.fxiamt.done{color:var(--tl)}
+
+/* BUDGET */
+.bmcard{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:20px;padding:22px;margin:0 16px 12px;color:#fff;box-shadow:0 8px 24px rgba(102,126,234,.35)}
+.bml{font-size:12px;opacity:.85;margin-bottom:4px}
+.bms{font-size:38px;font-weight:800;letter-spacing:-1px}
+.bmt{font-size:14px;opacity:.7;margin-bottom:14px}
+.bmbbar{height:10px;background:rgba(255,255,255,.25);border-radius:5px;overflow:hidden;margin-bottom:5px}
+.bmbbf{height:100%;background:#fff;border-radius:5px}
+.bmpct{font-size:12px;opacity:.8}
+
+.catbk{margin:0 16px 12px;background:var(--card);border-radius:20px;padding:18px 20px;box-shadow:var(--ss)}
+.catbkt{font-size:15px;font-weight:800;color:var(--td);margin-bottom:14px}
+.cbi{margin-bottom:13px}
+.cbi:last-child{margin-bottom:0}
+.cbr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.cbn{font-size:13px;font-weight:600;color:var(--td);display:flex;align-items:center;gap:5px}
+.cba{font-size:12px;font-weight:600;color:var(--tm)}
+.cba.over{color:var(--r)}
+
+.svcard{background:var(--card);border-radius:20px;padding:18px 20px;margin:0 16px 12px;box-shadow:var(--ss)}
+.svt{font-size:15px;font-weight:800;color:var(--td);margin-bottom:3px}
+.svsub{font-size:12px;color:var(--tl);margin-bottom:14px}
+.svbig{font-size:32px;font-weight:800;color:var(--g);letter-spacing:-1px;margin-bottom:3px}
+.svgoal{font-size:12px;color:var(--tl);margin-bottom:10px}
+.svpct{font-size:12px;font-weight:700;color:var(--g);margin-top:6px}
+
+.cmpcard{background:var(--gl);border-radius:20px;padding:14px 18px;margin:0 16px 20px;display:flex;align-items:center;gap:12px;box-shadow:var(--ss)}
+.cmpico{font-size:30px}.cmptxt{font-size:13px;font-weight:600;color:#1E7A4F;line-height:1.55}
+.cmptxt strong{font-size:16px;font-weight:800;color:var(--g)}
+
+/* CALENDAR V2 */
+.calweeks{display:flex;flex-direction:column;gap:0}
+.calwk{margin-bottom:3px}
+.caldrow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cd{display:flex;flex-direction:column;align-items:center;padding:5px 2px 4px;border-radius:8px;min-height:46px;position:relative}
+.cd.today{background:var(--p);color:#fff}
+.cd.sun:not(.today){color:#E74C3C}.cd.sat:not(.today){color:#3498DB}
+.dnum{font-size:13px;font-weight:700;line-height:1}
+.damt{font-size:10px;font-weight:700;color:var(--r);margin-top:3px;line-height:1}
+.cd.today .damt{color:rgba(255,255,255,.85)}
+.calevrow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-top:2px;margin-bottom:1px;min-height:18px}
+.calev{border-radius:4px;font-size:10px;font-weight:700;padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:center;line-height:1.4}
+
+/* BOTTOM SHEET */
+.bsheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:150;opacity:0;pointer-events:none;transition:opacity .3s}
+.bsheet-bg.show{opacity:1;pointer-events:all}
+.bsheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:430px;background:#fff;border-radius:24px 24px 0 0;z-index:151;transition:transform .35s cubic-bezier(.32,1.08,.51,1);padding:0 0 32px;max-height:92vh;overflow-y:auto}
+.bsheet.show{transform:translateX(-50%) translateY(0)}
+.bsheet-handle{width:40px;height:4px;background:var(--bd);border-radius:2px;margin:12px auto 0}
+.bsheet-title{font-size:18px;font-weight:800;color:var(--td);padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between}
+.bsheet-close{font-size:22px;color:var(--tl);cursor:pointer;line-height:1;padding:4px}
+
+.flabel{font-size:12px;font-weight:700;color:var(--tl);padding:0 20px;margin-bottom:6px;display:block}
+.finput{width:calc(100% - 32px);margin:0 16px;padding:13px 16px;background:var(--bg);border:1.5px solid var(--bd);border-radius:12px;font-size:15px;font-family:inherit;color:var(--td);outline:none;transition:border-color .2s;display:block}
+.finput:focus{border-color:var(--p)}
+.fgap{height:14px}
+
+/* Date type selector */
+.dtype-row{display:flex;gap:8px;padding:0 16px;overflow-x:auto;scrollbar-width:none}
+.dtype-row::-webkit-scrollbar{display:none}
+.dtype-chip{flex-shrink:0;padding:8px 14px;border-radius:20px;border:2px solid var(--bd);font-size:13px;font-weight:700;color:var(--tm);cursor:pointer;white-space:nowrap;transition:all .2s;background:#fff}
+.dtype-chip.sel{border-color:var(--p);background:var(--pl);color:var(--p)}
+
+/* Date sub-inputs */
+.dsub{padding:0 16px;display:none}
+.dsub.show{display:block}
+.dsub-row{display:flex;gap:8px;align-items:center}
+.dsub select,.dsub input[type=number]{flex:1;padding:11px 12px;background:var(--bg);border:1.5px solid var(--bd);border-radius:12px;font-size:14px;font-family:inherit;color:var(--td);outline:none;transition:border-color .2s;-webkit-appearance:none}
+.dsub select:focus,.dsub input[type=number]:focus{border-color:var(--p)}
+.dsub-sep{font-size:14px;font-weight:700;color:var(--tl);flex-shrink:0}
+.dsub-note{font-size:11px;color:var(--tl);margin-top:6px;font-weight:600}
+
+/* Color picker */
+.cpick{display:flex;gap:10px;padding:0 16px;flex-wrap:wrap}
+.cpick-item{width:32px;height:32px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .2s;position:relative}
+.cpick-item.sel{border-color:var(--td);transform:scale(1.1)}
+.cpick-item.sel::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800}
+
+.fsave{margin:16px 16px 0;width:calc(100% - 32px);padding:16px;background:var(--p);color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(255,140,66,.3);transition:all .2s}
+.fsave:active{transform:scale(.97)}
+
+/* TOAST */
+.toast{position:fixed;top:-70px;left:50%;transform:translateX(-50%);background:var(--td);color:#fff;padding:12px 22px;border-radius:40px;font-size:13px;font-weight:600;white-space:nowrap;z-index:300;transition:top .3s cubic-bezier(.175,.885,.32,1.275);max-width:calc(100% - 32px);text-align:center}
+.toast.show{top:16px}
+
+/* REACTION */
+.rxn{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .3s;padding:20px}
+.rxn.show{opacity:1;pointer-events:all}
+.rxncard{background:#fff;border-radius:28px;padding:32px;text-align:center;max-width:300px;width:100%;transform:scale(.8);transition:transform .3s cubic-bezier(.175,.885,.32,1.275)}
+.rxn.show .rxncard{transform:scale(1)}
+.rxne{font-size:72px;display:block;margin-bottom:10px}
+.rxntitle{font-size:21px;font-weight:800;color:var(--td);margin-bottom:8px}
+.rxnsub{font-size:13px;color:var(--tm);line-height:1.6;white-space:pre-line}
+.rxnclose{margin-top:20px;padding:14px 32px;background:var(--p);color:#fff;border:none;border-radius:40px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;width:100%}
+</style>
+
+<div class="app">
+
+<!-- ===== HOME ===== -->
+<div class="screen active" id="s-home">
+  <div class="hdr">
+    <div class="logo">🐷 짠이의 가계부</div>
+  </div>
+
+  <div class="mascot-row" style="padding-bottom:0">
+    <div class="mc">🐷</div>
+    <div class="bubble">
+      오늘까지 꽤 잘 하고 있어! 💪<br>
+      하루 <strong>₩23,400</strong> 남았으니까<br>
+      저녁은 집밥으로 도전해봐! 🏠
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;padding:10px 16px 0">
+    <!-- Streak card -->
+    <div style="flex:1;background:#fff;border-radius:18px;padding:14px 16px;box-shadow:var(--ss)">
+      <div style="font-size:11px;font-weight:700;color:var(--tl);margin-bottom:6px">연속 작성일</div>
+      <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:10px">
+        <span style="font-size:30px;font-weight:800;color:var(--td);letter-spacing:-1px">12</span>
+        <span style="font-size:13px;font-weight:700;color:var(--tm)">일째 🔥</span>
+      </div>
+      <div style="display:flex;gap:4px">
+        <div style="width:20px;height:20px;border-radius:6px;background:#FFE4D0;display:flex;align-items:center;justify-content:center;font-size:11px">✓</div>
+        <div style="width:20px;height:20px;border-radius:6px;background:#FFE4D0;display:flex;align-items:center;justify-content:center;font-size:11px">✓</div>
+        <div style="width:20px;height:20px;border-radius:6px;background:#FFE4D0;display:flex;align-items:center;justify-content:center;font-size:11px">✓</div>
+        <div style="width:20px;height:20px;border-radius:6px;background:#FF8C42;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">✓</div>
+        <div style="width:20px;height:20px;border-radius:6px;background:#FF8C42;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">✓</div>
+        <div style="width:20px;height:20px;border-radius:6px;background:#FF8C42;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">✓</div>
+        <div style="width:20px;height:20px;border-radius:6px;background:#FF8C42;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">✓</div>
+      </div>
+      <div style="font-size:10px;color:var(--tl);margin-top:5px;font-weight:600">최고 기록 21일</div>
+    </div>
+    <!-- Savings card -->
+    <div style="flex:1;background:#fff;border-radius:18px;padding:14px 16px;box-shadow:var(--ss)">
+      <div style="font-size:11px;font-weight:700;color:var(--tl);margin-bottom:6px">지금까지 모은 돈</div>
+      <div style="display:flex;align-items:baseline;gap:2px;margin-bottom:8px">
+        <span style="font-size:11px;font-weight:700;color:var(--g)">₩</span>
+        <span style="font-size:26px;font-weight:800;color:var(--g);letter-spacing:-1px">1,200,000</span>
+      </div>
+      <div style="height:7px;background:var(--bd);border-radius:4px;overflow:hidden;margin-bottom:5px">
+        <div style="width:24%;height:100%;background:linear-gradient(90deg,#2ECC71,#27AE60);border-radius:4px"></div>
+      </div>
+      <div style="font-size:10px;color:var(--tl);font-weight:600">목표 ₩5,000,000 · 24%</div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-lbl">오늘 쓸 수 있는 돈</div>
+    <div class="hero-amt">₩23,400</div>
+    <div class="hero-sub">일 예산 ₩50,000 중 ₩26,600 사용</div>
+    <div class="hero-row">
+      <div class="hero-stat">
+        <div class="hero-stat-v">₩167,000</div>
+        <div class="hero-stat-l">이번 주 지출</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-v">₩83,000</div>
+        <div class="hero-stat-l">주간 잔여</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-v">54%</div>
+        <div class="hero-stat-l">이번 달 사용</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wcard">
+    <div class="pr">
+      <span class="pr-l">이번 주 예산</span>
+      <span class="pr-a">₩167,000 / ₩250,000</span>
+    </div>
+    <div class="pbar-bg">
+      <div class="pbar-fill" style="width:67%;background:linear-gradient(90deg,#F1C40F,#E67E22)"></div>
+    </div>
+  </div>
+
+  <div class="fqcard" onclick="goTo('fixed')">
+    <div class="fqicon">📌</div>
+    <div class="fqinfo">
+      <div class="fqtitle">고정지출 현황</div>
+      <div class="fqsub">넷플릭스 · 핸드폰 · 교통 미결제</div>
+    </div>
+    <div class="fqbadge">3개 남음 →</div>
+  </div>
+
+  <div class="stitle">오늘 지출</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="txitem"><div class="txicon" style="background:#FFF3E0">☕</div><div class="txinfo"><div class="txname">스타벅스 아메리카노</div><div class="txtime">카페 · 13:24</div></div><div class="txamt ex">-₩4,500</div></div>
+    <div class="txitem"><div class="txicon" style="background:#F3E5F5">🛒</div><div class="txinfo"><div class="txname">이마트 장보기</div><div class="txtime">마트 · 11:05</div></div><div class="txamt ex">-₩23,400</div></div>
+    <div class="txitem"><div class="txicon" style="background:#E3F2FD">🚇</div><div class="txinfo"><div class="txname">교통비</div><div class="txtime">교통 · 08:20</div></div><div class="txamt ex">-₩1,400</div></div>
+  </div>
+  <div style="height:8px"></div>
+</div>
+
+<!-- ===== ADD ===== -->
+<div class="screen" id="s-add">
+  <div class="ahdr">
+    <button class="back" onclick="goTo('home')">←</button>
+    <div class="ttog">
+      <button class="tbtn active ex" id="btex" onclick="setType('ex')">지출</button>
+      <button class="tbtn inc" id="btinc" onclick="setType('inc')">수입</button>
+    </div>
+  </div>
+
+  <div style="padding:10px 20px 0 20px;font-size:12px;font-weight:700;color:var(--tl);margin-top:6px">카테고리</div>
+  <div class="catscroll">
+    <div class="cchip sel" onclick="selCat(this)"><div class="ccicon">🍱</div><div class="cclbl">식비</div></div>
+    <div class="cchip" onclick="selCat(this)"><div class="ccicon">☕</div><div class="cclbl">카페</div></div>
+    <div class="cchip" onclick="selCat(this)"><div class="ccicon">🛒</div><div class="cclbl">마트</div></div>
+    <div class="cchip" onclick="selCat(this)"><div class="ccicon">🚇</div><div class="cclbl">교통</div></div>
+    <div class="cchip" onclick="selCat(this)"><div class="ccicon">🎮</div><div class="cclbl">여가</div></div>
+    <div class="cchip" onclick="selCat(this)"><div class="ccicon">👗</div><div class="cclbl">쇼핑</div></div>
+    <div class="cchip" onclick="selCat(this)"><div class="ccicon">💊</div><div class="cclbl">건강</div></div>
+    <div class="cchip" onclick="selCat(this)"><div class="ccicon">📦</div><div class="cclbl">기타</div></div>
+  </div>
+
+  <div style="padding:0 16px 8px">
+    <input type="text" class="minput" placeholder="메모 (선택사항)" id="memo" style="margin:0;width:100%">
+  </div>
+
+  <div class="amtdisp">
+    <div class="amtnum" id="amtd">₩0</div>
+    <div class="amthint" id="amth">일 예산 ₩23,400 남았어요</div>
+  </div>
+
+  <div class="numpad">
+    <button class="nk" onclick="ni('1')">1</button>
+    <button class="nk" onclick="ni('2')">2</button>
+    <button class="nk" onclick="ni('3')">3</button>
+    <button class="nk" onclick="ni('4')">4</button>
+    <button class="nk" onclick="ni('5')">5</button>
+    <button class="nk" onclick="ni('6')">6</button>
+    <button class="nk" onclick="ni('7')">7</button>
+    <button class="nk" onclick="ni('8')">8</button>
+    <button class="nk" onclick="ni('9')">9</button>
+    <button class="nk" onclick="ni('00')">00</button>
+    <button class="nk" onclick="ni('0')">0</button>
+    <button class="nk del" onclick="nd()">⌫</button>
+  </div>
+  <button class="subbtn" onclick="submitTx()">기록하기</button>
+</div>
+
+<!-- ===== HISTORY ===== -->
+<div class="screen" id="s-history">
+  <div style="padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between">
+    <div style="font-size:20px;font-weight:800;color:var(--td)">📋 거래 내역</div>
+    <div style="font-size:12px;color:var(--tl);font-weight:600">2026년 7월</div>
+  </div>
+  <div style="height:10px"></div>
+  <div style="padding:0 16px 10px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none">
+    <div style="flex-shrink:0;padding:7px 14px;border-radius:20px;background:var(--p);color:#fff;font-size:13px;font-weight:700">전체</div>
+    <div style="flex-shrink:0;padding:7px 14px;border-radius:20px;background:#fff;border:1.5px solid var(--bd);color:var(--tm);font-size:13px;font-weight:700">식비</div>
+    <div style="flex-shrink:0;padding:7px 14px;border-radius:20px;background:#fff;border:1.5px solid var(--bd);color:var(--tm);font-size:13px;font-weight:700">카페</div>
+    <div style="flex-shrink:0;padding:7px 14px;border-radius:20px;background:#fff;border:1.5px solid var(--bd);color:var(--tm);font-size:13px;font-weight:700">교통</div>
+    <div style="flex-shrink:0;padding:7px 14px;border-radius:20px;background:#fff;border:1.5px solid var(--bd);color:var(--tm);font-size:13px;font-weight:700">여가</div>
+  </div>
+  <div style="padding:0 20px 6px;font-size:12px;font-weight:700;color:var(--tl)">오늘 · 7월 14일</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="txitem"><div class="txicon" style="background:#FFF3E0">☕</div><div class="txinfo"><div class="txname">스타벅스 아메리카노</div><div class="txtime">카페 · 13:24</div></div><div class="txamt ex">-₩4,500</div></div>
+    <div class="txitem"><div class="txicon" style="background:#F3E5F5">🛒</div><div class="txinfo"><div class="txname">이마트 장보기</div><div class="txtime">마트 · 11:05</div></div><div class="txamt ex">-₩23,400</div></div>
+  </div>
+  <div style="padding:6px 20px 6px;font-size:12px;font-weight:700;color:var(--tl)">어제 · 7월 13일</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="txitem"><div class="txicon" style="background:#E8F5E9">🍱</div><div class="txinfo"><div class="txname">순대국밥</div><div class="txtime">식비 · 12:30</div></div><div class="txamt ex">-₩9,000</div></div>
+    <div class="txitem"><div class="txicon" style="background:#E3F2FD">🚇</div><div class="txinfo"><div class="txname">교통비</div><div class="txtime">교통 · 08:15</div></div><div class="txamt ex">-₩1,400</div></div>
+    <div class="txitem"><div class="txicon" style="background:#FFF9C4">🎮</div><div class="txinfo"><div class="txname">스팀 게임</div><div class="txtime">여가 · 22:10</div></div><div class="txamt ex">-₩15,000</div></div>
+  </div>
+  <div style="padding:6px 20px 6px;font-size:12px;font-weight:700;color:var(--tl)">7월 12일 토요일</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="txitem"><div class="txicon" style="background:#FCE4EC">🍕</div><div class="txinfo"><div class="txname">피자 배달</div><div class="txtime">식비 · 19:40</div></div><div class="txamt ex">-₩28,000</div></div>
+    <div class="txitem"><div class="txicon" style="background:#E8F5E9">💰</div><div class="txinfo"><div class="txname">용돈 (부모님)</div><div class="txtime">수입 · 14:00</div></div><div class="txamt inc">+₩100,000</div></div>
+  </div>
+  <div style="padding:6px 20px 6px;font-size:12px;font-weight:700;color:var(--tl)">7월 10일 목요일</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="txitem"><div class="txicon" style="background:#E8F5E9">💰</div><div class="txinfo"><div class="txname">7월 급여</div><div class="txtime">수입 · 09:00</div></div><div class="txamt inc">+₩2,800,000</div></div>
+    <div class="txitem"><div class="txicon" style="background:#F3E5F5">👗</div><div class="txinfo"><div class="txname">무신사 반팔</div><div class="txtime">쇼핑 · 14:22</div></div><div class="txamt ex">-₩38,000</div></div>
+    <div class="txitem"><div class="txicon" style="background:#FFF3E0">☕</div><div class="txinfo"><div class="txname">할리스 카페</div><div class="txtime">카페 · 10:15</div></div><div class="txamt ex">-₩5,500</div></div>
+  </div>
+  <div style="height:8px"></div>
+</div>
+
+<!-- ===== FIXED ===== -->
+<div class="screen" id="s-fixed">
+  <div style="padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between">
+    <div style="font-size:20px;font-weight:800;color:var(--td)">📌 고정지출</div>
+    <button onclick="openSheet()" style="background:var(--p);color:#fff;border:none;border-radius:12px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;box-shadow:0 3px 10px rgba(255,140,66,.35)">＋ 추가</button>
+  </div>
+
+  <div style="height:10px"></div>
+
+  <div class="calcont">
+    <div class="calhdr">
+      <span class="caltitle">2026년 7월</span>
+      <div style="display:flex;gap:4px"><span class="calnav">‹</span><span class="calnav">›</span></div>
+    </div>
+    <div class="calwd">
+      <div class="calwdi">일</div><div class="calwdi">월</div><div class="calwdi">화</div><div class="calwdi">수</div>
+      <div class="calwdi">목</div><div class="calwdi">금</div><div class="calwdi">토</div>
+    </div>
+    <div class="calweeks" id="caldays"></div>
+    <div class="leg">
+      <div class="legi"><div class="legdot" style="background:#E74C3C"></div>월세</div>
+      <div class="legi"><div class="legdot" style="background:#3498DB"></div>수도세</div>
+      <div class="legi"><div class="legdot" style="background:#9B59B6"></div>넷플릭스</div>
+      <div class="legi"><div class="legdot" style="background:#27AE60"></div>핸드폰</div>
+      <div class="legi"><div class="legdot" style="background:#F39C12"></div>교통대금</div>
+    </div>
+  </div>
+
+  <div class="fxsum">
+    <div class="fxsi"><div class="fxsv">₩580,000</div><div class="fxsl">결제 완료</div></div>
+    <div class="fxsi"><div class="fxsv" style="color:var(--p)">₩122,000</div><div class="fxsl">결제 예정</div></div>
+    <div class="fxsi"><div class="fxsv">₩702,000</div><div class="fxsl">총 고정지출</div></div>
+  </div>
+
+  <div class="fxsect"><span style="color:var(--g)">✓</span> 결제 완료</div>
+  <div class="fxwrap">
+    <div class="fxi" onclick="togFx(this)">
+      <div class="fxcb ck">✓</div>
+      <div class="fxidot" style="background:#E74C3C"></div>
+      <div class="fxiinfo"><div class="fxiname done">월세</div><div class="fxidate">7월 1일 결제 완료</div></div>
+      <div class="fxiamt done">₩550,000</div>
+    </div>
+    <div class="fxi" onclick="togFx(this)">
+      <div class="fxcb ck">✓</div>
+      <div class="fxidot" style="background:#3498DB"></div>
+      <div class="fxiinfo"><div class="fxiname done">수도세 (격달)</div><div class="fxidate">7월 5~10일 중 결제 완료</div></div>
+      <div class="fxiamt done">₩30,000</div>
+    </div>
+  </div>
+
+  <div class="fxsect"><span style="color:var(--p)">⏳</span> 결제 예정</div>
+  <div class="fxwrap" id="unpaid-wrap">
+    <div class="fxi" onclick="togFx(this)">
+      <div class="fxcb"></div>
+      <div class="fxidot" style="background:#9B59B6"></div>
+      <div class="fxiinfo"><div class="fxiname">넷플릭스</div><div class="fxidate">7월 14~16일 중 예정</div></div>
+      <div class="fxiamt">₩17,000</div>
+    </div>
+    <div class="fxi" onclick="togFx(this)">
+      <div class="fxcb"></div>
+      <div class="fxidot" style="background:#27AE60"></div>
+      <div class="fxiinfo"><div class="fxiname">핸드폰 요금</div><div class="fxidate">7월 20~22일 중 예정</div></div>
+      <div class="fxiamt">₩55,000</div>
+    </div>
+    <div class="fxi" onclick="togFx(this)">
+      <div class="fxcb"></div>
+      <div class="fxidot" style="background:#F39C12"></div>
+      <div class="fxiinfo"><div class="fxiname">교통대금</div><div class="fxidate">7월 25~31일 중 예정 (출금일 불명확)</div></div>
+      <div class="fxiamt">₩50,000</div>
+    </div>
+  </div>
+  <div style="height:8px"></div>
+</div>
+
+<!-- ===== BUDGET ===== -->
+<div class="screen" id="s-budget">
+  <div style="padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between">
+    <div style="font-size:20px;font-weight:800;color:var(--td)">📊 예산 현황</div>
+    <div style="font-size:12px;color:var(--tl);font-weight:600">2026년 7월</div>
+  </div>
+  <div style="height:10px"></div>
+
+  <div class="bmcard">
+    <div class="bml">이번 달 지출</div>
+    <div class="bms">₩820,000</div>
+    <div class="bmt">총 예산 ₩1,500,000</div>
+    <div class="bmbbar"><div class="bmbbf" style="width:54%"></div></div>
+    <div class="bmpct">54% 사용 · ₩680,000 남음</div>
+  </div>
+
+  <div class="catbk">
+    <div class="catbkt">카테고리별 지출</div>
+    <div class="cbi">
+      <div class="cbr"><span class="cbn">🍱 식비</span><span class="cba">₩280,000 / ₩350,000</span></div>
+      <div class="pbar-bg"><div class="pbar-fill" style="width:80%;background:linear-gradient(90deg,#FF8C42,#FFB347)"></div></div>
+    </div>
+    <div class="cbi">
+      <div class="cbr"><span class="cbn">🚇 교통</span><span class="cba">₩45,000 / ₩100,000</span></div>
+      <div class="pbar-bg"><div class="pbar-fill" style="width:45%;background:linear-gradient(90deg,#3498DB,#2980B9)"></div></div>
+    </div>
+    <div class="cbi">
+      <div class="cbr"><span class="cbn">🎮 여가</span><span class="cba over">₩120,000 / ₩100,000 ⚠️</span></div>
+      <div class="pbar-bg"><div class="pbar-fill" style="width:100%;background:linear-gradient(90deg,#E74C3C,#C0392B)"></div></div>
+    </div>
+    <div class="cbi">
+      <div class="cbr"><span class="cbn">☕ 카페</span><span class="cba">₩67,000 / ₩80,000</span></div>
+      <div class="pbar-bg"><div class="pbar-fill" style="width:84%;background:linear-gradient(90deg,#8D6E63,#6D4C41)"></div></div>
+    </div>
+    <div class="cbi">
+      <div class="cbr"><span class="cbn">👗 쇼핑</span><span class="cba">₩58,000 / ₩150,000</span></div>
+      <div class="pbar-bg"><div class="pbar-fill" style="width:39%;background:linear-gradient(90deg,#9B59B6,#8E44AD)"></div></div>
+    </div>
+  </div>
+
+  <div class="svcard">
+    <div class="svt">🏦 저축 목표</div>
+    <div class="svsub">목표: 월 ₩300,000 저축 → 내 집 마련 자금</div>
+    <div class="svbig">₩1,200,000</div>
+    <div class="svgoal">누적 저축 / 목표 ₩5,000,000</div>
+    <div class="pbar-bg"><div class="pbar-fill" style="width:24%;background:linear-gradient(90deg,#2ECC71,#27AE60)"></div></div>
+    <div class="svpct">24% 달성 · 이번 달 예상 저축 ₩228,000</div>
+  </div>
+
+  <div class="cmpcard">
+    <div class="cmpico">🎉</div>
+    <div class="cmptxt">지난달보다 <strong>₩45,000</strong> 덜 썼어요!<br>이 페이스면 목표까지 <strong>16개월</strong></div>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bnav">
+  <div class="ni active" id="n-home" onclick="goTo('home')"><span class="ic">🏠</span><span class="lb">홈</span></div>
+  <div class="ni" id="n-history" onclick="goTo('history')"><span class="ic">📋</span><span class="lb">내역</span></div>
+  <div class="nadd" onclick="goTo('add')"><div class="ac">＋</div><span class="lb">기록</span></div>
+  <div class="ni" id="n-fixed" onclick="goTo('fixed')"><span class="ic">📌</span><span class="lb">고정</span></div>
+  <div class="ni" id="n-budget" onclick="goTo('budget')"><span class="ic">📊</span><span class="lb">예산</span></div>
+</nav>
+</div>
+
+<!-- Add Fixed Expense Bottom Sheet -->
+<div class="bsheet-bg" id="bsbg" onclick="closeSheet()"></div>
+<div class="bsheet" id="bsheet">
+  <div class="bsheet-handle"></div>
+  <div class="bsheet-title">
+    고정지출 추가
+    <span class="bsheet-close" onclick="closeSheet()">×</span>
+  </div>
+
+  <span class="flabel">항목명</span>
+  <input class="finput" id="fx-name" type="text" placeholder="예: 넷플릭스, 월세, 보험료">
+  <div class="fgap"></div>
+
+  <span class="flabel">금액</span>
+  <input class="finput" id="fx-amt" type="number" placeholder="0" inputmode="numeric">
+  <div class="fgap"></div>
+
+  <span class="flabel">달력 색상</span>
+  <div class="cpick" id="cpick">
+    <div class="cpick-item sel" data-color="#E74C3C" style="background:#E74C3C" onclick="selColor(this)"></div>
+    <div class="cpick-item" data-color="#3498DB" style="background:#3498DB" onclick="selColor(this)"></div>
+    <div class="cpick-item" data-color="#9B59B6" style="background:#9B59B6" onclick="selColor(this)"></div>
+    <div class="cpick-item" data-color="#27AE60" style="background:#27AE60" onclick="selColor(this)"></div>
+    <div class="cpick-item" data-color="#F39C12" style="background:#F39C12" onclick="selColor(this)"></div>
+    <div class="cpick-item" data-color="#1ABC9C" style="background:#1ABC9C" onclick="selColor(this)"></div>
+    <div class="cpick-item" data-color="#E91E63" style="background:#E91E63" onclick="selColor(this)"></div>
+  </div>
+  <div class="fgap"></div>
+
+  <span class="flabel">결제일 유형</span>
+  <div class="dtype-row">
+    <div class="dtype-chip sel" data-type="fixed" onclick="selDtype(this)">📅 고정일</div>
+    <div class="dtype-chip" data-type="nweek" onclick="selDtype(this)">📆 N주차 요일</div>
+    <div class="dtype-chip" data-type="range" onclick="selDtype(this)">📋 기간</div>
+    <div class="dtype-chip" data-type="bimonth" onclick="selDtype(this)">🔄 격달</div>
+  </div>
+  <div class="fgap" style="height:10px"></div>
+
+  <!-- 고정일 -->
+  <div class="dsub show" id="dsub-fixed">
+    <div class="dsub-row">
+      <span class="dsub-sep">매월</span>
+      <input type="number" id="fx-fixday" placeholder="15" min="1" max="31">
+      <span class="dsub-sep">일</span>
+    </div>
+    <div class="dsub-note">주말이면 가장 가까운 평일로 자동 표시돼요</div>
+  </div>
+
+  <!-- N주차 요일 -->
+  <div class="dsub" id="dsub-nweek">
+    <div class="dsub-row">
+      <span class="dsub-sep">매월</span>
+      <select id="fx-week">
+        <option value="1">1주차</option>
+        <option value="2">2주차</option>
+        <option value="3">3주차</option>
+        <option value="4">4주차</option>
+        <option value="5">5주차</option>
+      </select>
+      <select id="fx-dow">
+        <option value="0">일요일</option>
+        <option value="1">월요일</option>
+        <option value="2">화요일</option>
+        <option value="3">수요일</option>
+        <option value="4">목요일</option>
+        <option value="5">금요일</option>
+        <option value="6">토요일</option>
+      </select>
+    </div>
+    <div class="dsub-note">예: 매월 3주차 금요일 (구독 서비스에 자주 사용)</div>
+  </div>
+
+  <!-- 기간 -->
+  <div class="dsub" id="dsub-range">
+    <div class="dsub-row">
+      <input type="number" id="fx-rs" placeholder="25" min="1" max="31">
+      <span class="dsub-sep">일 ~</span>
+      <input type="number" id="fx-re" placeholder="31" min="1" max="31">
+      <span class="dsub-sep">일 사이</span>
+    </div>
+    <div class="dsub-note">교통대금처럼 출금일이 불명확한 경우에 사용</div>
+  </div>
+
+  <!-- 격달 -->
+  <div class="dsub" id="dsub-bimonth">
+    <div class="dsub-row">
+      <span class="dsub-sep">매월</span>
+      <input type="number" id="fx-bday" placeholder="5" min="1" max="31">
+      <span class="dsub-sep">일 (격달)</span>
+    </div>
+    <select id="fx-bmonth" style="margin-top:8px;width:100%;padding:11px 12px;background:var(--bg);border:1.5px solid var(--bd);border-radius:12px;font-size:14px;font-family:inherit;color:var(--td);outline:none">
+      <option value="odd">홀수 달 (1, 3, 5, 7, 9, 11월)</option>
+      <option value="even">짝수 달 (2, 4, 6, 8, 10, 12월)</option>
+    </select>
+    <div class="dsub-note">수도세·관리비 등 격달 청구 항목에 사용</div>
+  </div>
+
+  <div class="fgap"></div>
+  <button class="fsave" onclick="saveFx()">저장하기</button>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="rxn" id="rxn" onclick="closeRxn()">
+  <div class="rxncard" onclick="event.stopPropagation()">
+    <span class="rxne" id="rxne"></span>
+    <div class="rxntitle" id="rxnt"></div>
+    <div class="rxnsub" id="rxns"></div>
+    <button class="rxnclose" onclick="closeRxn()">확인</button>
+  </div>
+</div>
+
+<script>
+const DAILY = 23400;
+let cur = '';
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('active');
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  const nav = document.getElementById('n-' + id);
+  if (nav) nav.classList.add('active');
+  document.getElementById('s-' + id).scrollTop = 0;
+}
+
+function ni(v) {
+  if (cur.length >= 8) return;
+  if (!cur && v === '00') return;
+  cur += v;
+  updAmt();
+}
+function nd() { cur = cur.slice(0, -1); updAmt(); }
+
+function updAmt() {
+  const amt = parseInt(cur || '0');
+  const d = document.getElementById('amtd');
+  const h = document.getElementById('amth');
+  d.textContent = '₩' + (amt ? amt.toLocaleString() : '0');
+  if (amt > DAILY) {
+    d.classList.add('over');
+    h.textContent = `⚠️ 일 예산 초과 ${(amt - DAILY).toLocaleString()}원`;
+    h.style.color = 'var(--r)';
+  } else {
+    d.classList.remove('over');
+    h.textContent = amt > 0 ? `결제 후 ₩${(DAILY - amt).toLocaleString()} 남아요` : `일 예산 ₩${DAILY.toLocaleString()} 남았어요`;
+    h.style.color = 'var(--tl)';
+  }
+}
+
+function setType(t) {
+  document.getElementById('btex').className = 'tbtn' + (t==='ex'?' active ex':' ex');
+  document.getElementById('btinc').className = 'tbtn' + (t==='inc'?' active inc':' inc');
+}
+
+function selCat(el) {
+  document.querySelectorAll('.cchip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function submitTx() {
+  const amt = parseInt(cur || '0');
+  if (!amt) { showToast('금액을 입력해주세요 🤔'); return; }
+  if (amt > DAILY) {
+    showRxn('😤', '짠이가 실망했어요...', `일 예산을 ₩${(amt - DAILY).toLocaleString()}이나 초과했어요!\n내일은 더 아껴봐요. 작은 절약이 큰 저축이 돼요! 💪`);
+  } else if (amt > DAILY * 0.7) {
+    showRxn('😅', '꽤 쓰긴 했지만...', `아직 오늘 ₩${(DAILY - amt).toLocaleString()} 남았어요!\n오늘 저녁은 집밥 어때요? 🏠`);
+  } else {
+    showRxn('🎉', '잘했어요!', `₩${amt.toLocaleString()} 기록 완료!\n남은 일 예산: ₩${(DAILY - amt).toLocaleString()}\n이 페이스면 이번 달 저축 목표 달성해요! 🐷`);
+  }
+  cur = '';
+  updAmt();
+  document.getElementById('memo').value = '';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function showRxn(e, t, s) {
+  document.getElementById('rxne').textContent = e;
+  document.getElementById('rxnt').textContent = t;
+  document.getElementById('rxns').textContent = s;
+  document.getElementById('rxn').classList.add('show');
+}
+
+function closeRxn() {
+  document.getElementById('rxn').classList.remove('show');
+  goTo('home');
+}
+
+function togFx(item) {
+  const cb = item.querySelector('.fxcb');
+  const nm = item.querySelector('.fxiname');
+  const am = item.querySelector('.fxiamt');
+  const ck = cb.classList.contains('ck');
+  if (!ck) {
+    cb.classList.add('ck'); cb.textContent = '✓';
+    nm.classList.add('done'); am.classList.add('done');
+    showToast('결제 완료로 표시했어요 ✓');
+  } else {
+    cb.classList.remove('ck'); cb.textContent = '';
+    nm.classList.remove('done'); am.classList.remove('done');
+  }
+}
+
+// ---- Bottom Sheet ----
+function openSheet() {
+  document.getElementById('bsbg').classList.add('show');
+  document.getElementById('bsheet').classList.add('show');
+}
+function closeSheet() {
+  document.getElementById('bsbg').classList.remove('show');
+  document.getElementById('bsheet').classList.remove('show');
+}
+
+function selColor(el) {
+  document.querySelectorAll('.cpick-item').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+let curDtype = 'fixed';
+function selDtype(el) {
+  document.querySelectorAll('.dtype-chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  curDtype = el.dataset.type;
+  document.querySelectorAll('.dsub').forEach(d => d.classList.remove('show'));
+  document.getElementById('dsub-' + curDtype).classList.add('show');
+}
+
+const COLORS = ['#E74C3C','#3498DB','#9B59B6','#27AE60','#F39C12','#1ABC9C','#E91E63'];
+let colorIdx = 0;
+
+function saveFx() {
+  const name = document.getElementById('fx-name').value.trim();
+  const amt = parseInt(document.getElementById('fx-amt').value || '0');
+  if (!name) { showToast('항목명을 입력해주세요 🤔'); return; }
+  if (!amt) { showToast('금액을 입력해주세요 🤔'); return; }
+
+  const color = document.querySelector('.cpick-item.sel')?.dataset.color || '#E74C3C';
+
+  let dateText = '';
+  if (curDtype === 'fixed') {
+    const d = document.getElementById('fx-fixday').value || '?';
+    dateText = `매월 ${d}일 예정`;
+  } else if (curDtype === 'nweek') {
+    const w = document.getElementById('fx-week').options[document.getElementById('fx-week').selectedIndex].text;
+    const dow = document.getElementById('fx-dow').options[document.getElementById('fx-dow').selectedIndex].text;
+    dateText = `매월 ${w} ${dow} 예정`;
+  } else if (curDtype === 'range') {
+    const s = document.getElementById('fx-rs').value || '?';
+    const e = document.getElementById('fx-re').value || '?';
+    dateText = `매월 ${s}~${e}일 중 예정`;
+  } else {
+    const d = document.getElementById('fx-bday').value || '?';
+    const m = document.getElementById('fx-bmonth').value === 'odd' ? '홀수달' : '짝수달';
+    dateText = `격달(${m}) ${d}일 예정`;
+  }
+
+  // Add to unpaid list
+  const wrap = document.getElementById('unpaid-wrap');
+  const item = document.createElement('div');
+  item.className = 'fxi';
+  item.onclick = function(){ togFx(this); };
+  item.innerHTML = `
+    <div class="fxcb"></div>
+    <div class="fxidot" style="background:${color}"></div>
+    <div class="fxiinfo"><div class="fxiname">${name}</div><div class="fxidate">${dateText}</div></div>
+    <div class="fxiamt">₩${amt.toLocaleString()}</div>
+  `;
+  wrap.appendChild(item);
+
+  // Add to legend
+  const leg = document.querySelector('.leg');
+  const li = document.createElement('div');
+  li.className = 'legi';
+  li.innerHTML = `<div class="legdot" style="background:${color}"></div>${name}`;
+  leg.appendChild(li);
+
+  // Reset form
+  document.getElementById('fx-name').value = '';
+  document.getElementById('fx-amt').value = '';
+  document.getElementById('fx-fixday').value = '';
+
+  closeSheet();
+  showToast(`"${name}" 고정지출을 추가했어요 📌`);
+}
+
+// Calendar V2
+(function() {
+  const startCol = 3; // July 1 = Wednesday
+  const daysInMonth = 31;
+  const today = 14;
+
+  const ranges = [
+    {name:'월세',    s:1,  e:1,  c:'#E74C3C'},
+    {name:'수도세',  s:5,  e:10, c:'#3498DB'},
+    {name:'넷플릭스',s:14, e:16, c:'#9B59B6'},
+    {name:'핸드폰',  s:20, e:22, c:'#27AE60'},
+    {name:'교통대금',s:25, e:31, c:'#F39C12'},
+  ];
+
+  const spending = {7:8500,8:38000,9:12000,10:5500,12:28000,13:10400,14:29300};
+
+  function fmt(n) {
+    if (n >= 10000) {
+      const v = n/10000;
+      return (Number.isInteger(v) ? v : v.toFixed(1)) + '만';
+    }
+    return Math.round(n/1000) + '천';
+  }
+
+  // Build weeks
+  const weeks = [];
+  let week = Array(startCol).fill(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    week.push(d);
+    if (week.length === 7) { weeks.push(week); week = []; }
+  }
+  if (week.length) { while (week.length < 7) week.push(null); weeks.push(week); }
+
+  let html = '';
+  weeks.forEach(w => {
+    const valid = w.filter(Boolean);
+    const wStart = valid[0], wEnd = valid[valid.length - 1];
+
+    // Day cells
+    html += '<div class="calwk"><div class="caldrow">';
+    w.forEach((d, col) => {
+      if (!d) { html += '<div class="cd"></div>'; return; }
+      const isToday = d === today;
+      let cls = 'cd';
+      if (isToday) cls += ' today';
+      else if (col === 0) cls += ' sun';
+      else if (col === 6) cls += ' sat';
+      const amt = spending[d];
+      html += `<div class="${cls}"><span class="dnum">${d}</span>${amt?`<span class="damt">-${fmt(amt)}</span>`:''}</div>`;
+    });
+    html += '</div>';
+
+    // Event bars
+    const wRanges = ranges.filter(r => r.e >= wStart && r.s <= wEnd);
+    html += '<div class="calevrow">';
+    wRanges.forEach(r => {
+      const barS = Math.max(r.s, wStart);
+      const barE = Math.min(r.e, wEnd);
+      const colS = w.indexOf(barS) + 1;
+      const span = barE - barS + 1;
+      html += `<div class="calev" style="grid-column:${colS}/span ${span};background:${r.c}18;border-left:3px solid ${r.c};color:${r.c}">${r.name}</div>`;
+    });
+    html += '</div></div>';
+  });
+
+  document.getElementById('caldays').innerHTML = html;
+})();
+</script>
