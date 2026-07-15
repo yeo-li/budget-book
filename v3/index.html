@@ -702,12 +702,21 @@ function updateHero() {
   const remaining = DAILY - spent;
   const remEl = document.getElementById('hero-remaining');
   const subEl = document.getElementById('hero-sub');
+  const heroEl = document.querySelector('.hero');
   if (!remEl) return;
-  remEl.textContent = '₩' + Math.abs(remaining).toLocaleString();
-  remEl.style.opacity = remaining < 0 ? '.7' : '1';
-  subEl.textContent = remaining >= 0
-    ? `일 예산 ₩${DAILY.toLocaleString()} 중 ₩${spent.toLocaleString()} 사용`
-    : `일 예산 ₩${DAILY.toLocaleString()} 초과 ₩${Math.abs(remaining).toLocaleString()}`;
+  if (remaining < 0) {
+    remEl.textContent = '-₩' + Math.abs(remaining).toLocaleString();
+    remEl.style.color = '#FFD0C0';
+    heroEl.style.background = 'linear-gradient(135deg,#E74C3C 0%,#C0392B 100%)';
+    heroEl.style.boxShadow = '0 8px 24px rgba(231,76,60,.4)';
+    subEl.textContent = `일 예산 ₩${DAILY.toLocaleString()} 초과 · ₩${Math.abs(remaining).toLocaleString()} 더 씀`;
+  } else {
+    remEl.textContent = '₩' + remaining.toLocaleString();
+    remEl.style.color = '';
+    heroEl.style.background = '';
+    heroEl.style.boxShadow = '';
+    subEl.textContent = `일 예산 ₩${DAILY.toLocaleString()} 중 ₩${spent.toLocaleString()} 사용`;
+  }
 }
 
 function renderTodayList() {
