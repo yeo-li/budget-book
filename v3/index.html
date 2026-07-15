@@ -279,12 +279,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="hero">
     <div class="hero-lbl">오늘 쓸 수 있는 돈</div>
     <div class="hero-amt" id="hero-remaining">₩20,700</div>
-    <div class="hero-sub" id="hero-sub">일 예산 ₩50,000 중 ₩29,300 사용</div>
-    <div style="margin-top:12px;background:rgba(255,255,255,.18);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:12px;opacity:.9">오늘 지출</span>
-      <span style="font-size:18px;font-weight:800" id="hero-spent">₩29,300</span>
-    </div>
+    <div class="hero-sub" id="hero-sub">일 예산 ₩50,000</div>
     <div class="hero-row">
+      <div class="hero-stat">
+        <div class="hero-stat-v" id="hero-spent">₩29,300</div>
+        <div class="hero-stat-l">오늘 지출</div>
+      </div>
       <div class="hero-stat">
         <div class="hero-stat-v">₩167,000</div>
         <div class="hero-stat-l">이번 주 지출</div>
@@ -795,13 +795,13 @@ function updateHero() {
     remEl.style.color = '#FFD0C0';
     heroEl.style.background = 'linear-gradient(135deg,#E74C3C 0%,#C0392B 100%)';
     heroEl.style.boxShadow = '0 8px 24px rgba(231,76,60,.4)';
-    subEl.textContent = `일 예산 ₩${DAILY.toLocaleString()} 초과 · ₩${Math.abs(remaining).toLocaleString()} 더 씀`;
+    subEl.textContent = `일 예산 ₩${DAILY.toLocaleString()} 초과`;
   } else {
     remEl.textContent = '₩' + remaining.toLocaleString();
     remEl.style.color = '';
     heroEl.style.background = '';
     heroEl.style.boxShadow = '';
-    subEl.textContent = `일 예산 ₩${DAILY.toLocaleString()} 중 ₩${spent.toLocaleString()} 사용`;
+    subEl.textContent = `일 예산 ₩${DAILY.toLocaleString()}`;
   }
 }
 
