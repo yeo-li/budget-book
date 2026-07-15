@@ -480,25 +480,67 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
   <div class="catbk">
     <div class="catbkt">카테고리별 지출</div>
-    <div class="cbi">
-      <div class="cbr"><span class="cbn">🍱 식비</span><span class="cba">₩280,000 / ₩350,000</span></div>
-      <div class="pbar-bg"><div class="pbar-fill" style="width:80%;background:linear-gradient(90deg,#FF8C42,#FFB347)"></div></div>
-    </div>
-    <div class="cbi">
-      <div class="cbr"><span class="cbn">🚇 교통</span><span class="cba">₩45,000 / ₩100,000</span></div>
-      <div class="pbar-bg"><div class="pbar-fill" style="width:45%;background:linear-gradient(90deg,#3498DB,#2980B9)"></div></div>
-    </div>
-    <div class="cbi">
-      <div class="cbr"><span class="cbn">🎮 여가</span><span class="cba over">₩120,000 / ₩100,000 ⚠️</span></div>
-      <div class="pbar-bg"><div class="pbar-fill" style="width:100%;background:linear-gradient(90deg,#E74C3C,#C0392B)"></div></div>
-    </div>
-    <div class="cbi">
-      <div class="cbr"><span class="cbn">☕ 카페</span><span class="cba">₩67,000 / ₩80,000</span></div>
-      <div class="pbar-bg"><div class="pbar-fill" style="width:84%;background:linear-gradient(90deg,#8D6E63,#6D4C41)"></div></div>
-    </div>
-    <div class="cbi">
-      <div class="cbr"><span class="cbn">👗 쇼핑</span><span class="cba">₩58,000 / ₩150,000</span></div>
-      <div class="pbar-bg"><div class="pbar-fill" style="width:39%;background:linear-gradient(90deg,#9B59B6,#8E44AD)"></div></div>
+    <div style="display:flex;align-items:center;gap:20px">
+      <div style="flex-shrink:0;position:relative;width:130px;height:130px">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <!-- 식비 49.1% -->
+          <circle cx="65" cy="65" r="50" fill="none" stroke="#FF8C42" stroke-width="22"
+            stroke-dasharray="214 440" stroke-dashoffset="110" stroke-linecap="butt"/>
+          <!-- 여가 21.1% -->
+          <circle cx="65" cy="65" r="50" fill="none" stroke="#E74C3C" stroke-width="22"
+            stroke-dasharray="91 440" stroke-dashoffset="-104" stroke-linecap="butt"/>
+          <!-- 카페 11.7% -->
+          <circle cx="65" cy="65" r="50" fill="none" stroke="#8D6E63" stroke-width="22"
+            stroke-dasharray="51 440" stroke-dashoffset="-195" stroke-linecap="butt"/>
+          <!-- 쇼핑 10.2% -->
+          <circle cx="65" cy="65" r="50" fill="none" stroke="#9B59B6" stroke-width="22"
+            stroke-dasharray="44 440" stroke-dashoffset="-246" stroke-linecap="butt"/>
+          <!-- 교통 7.9% -->
+          <circle cx="65" cy="65" r="50" fill="none" stroke="#3498DB" stroke-width="22"
+            stroke-dasharray="34 440" stroke-dashoffset="-290" stroke-linecap="butt"/>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div style="font-size:11px;font-weight:700;color:var(--tl)">총 지출</div>
+          <div style="font-size:15px;font-weight:800;color:var(--td);letter-spacing:-0.5px">57만원</div>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:9px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:7px">
+            <div style="width:10px;height:10px;border-radius:3px;background:#FF8C42;flex-shrink:0"></div>
+            <span style="font-size:13px;font-weight:600;color:var(--td)">🍱 식비</span>
+          </div>
+          <span style="font-size:12px;font-weight:700;color:var(--tm)">49%</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:7px">
+            <div style="width:10px;height:10px;border-radius:3px;background:#E74C3C;flex-shrink:0"></div>
+            <span style="font-size:13px;font-weight:600;color:var(--td)">🎮 여가 ⚠️</span>
+          </div>
+          <span style="font-size:12px;font-weight:700;color:var(--r)">21%</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:7px">
+            <div style="width:10px;height:10px;border-radius:3px;background:#8D6E63;flex-shrink:0"></div>
+            <span style="font-size:13px;font-weight:600;color:var(--td)">☕ 카페</span>
+          </div>
+          <span style="font-size:12px;font-weight:700;color:var(--tm)">12%</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:7px">
+            <div style="width:10px;height:10px;border-radius:3px;background:#9B59B6;flex-shrink:0"></div>
+            <span style="font-size:13px;font-weight:600;color:var(--td)">👗 쇼핑</span>
+          </div>
+          <span style="font-size:12px;font-weight:700;color:var(--tm)">10%</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:7px">
+            <div style="width:10px;height:10px;border-radius:3px;background:#3498DB;flex-shrink:0"></div>
+            <span style="font-size:13px;font-weight:600;color:var(--td)">🚇 교통</span>
+          </div>
+          <span style="font-size:12px;font-weight:700;color:var(--tm)">8%</span>
+        </div>
+      </div>
     </div>
   </div>
 
