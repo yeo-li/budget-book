@@ -7,9 +7,9 @@
   --bg:#FFFAF3;--card:#fff;--td:#1A1A2E;--tm:#555;--tl:#999;--bd:#F2EDE4;
   --ss:0 2px 8px rgba(0,0,0,.06);--sm:0 4px 20px rgba(0,0,0,.10);
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#EDE8E0;min-height:100vh;display:flex;justify-content:center}
-.app{width:100%;max-width:430px;min-height:100vh;background:var(--bg);position:relative;padding-bottom:84px;overflow:hidden}
-.screen{display:none;min-height:calc(100vh - 84px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#EDE8E0;height:100vh;overflow:hidden;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;height:100vh;background:var(--bg);position:relative;overflow:hidden;display:flex;flex-direction:column}
+.screen{display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:84px}
 .screen.active{display:block}
 
 /* NAV */
@@ -33,12 +33,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .logo{font-size:20px;font-weight:800;color:var(--p);display:flex;align-items:center;gap:6px}
 .streak{background:#FFF3E0;border:2px solid var(--p);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:700;color:var(--p);display:flex;align-items:center;gap:4px}
 
-.mascot-row{padding:10px 16px;display:flex;align-items:flex-end;gap:10px}
-.mc{font-size:42px;flex-shrink:0;animation:bob 2.2s ease-in-out infinite}
-@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-.bubble{background:#fff;border-radius:16px 16px 16px 4px;padding:11px 15px;box-shadow:var(--ss);border:1.5px solid var(--bd);font-size:13px;font-weight:600;color:var(--td);line-height:1.55;position:relative}
-.bubble::before{content:'';position:absolute;left:-10px;bottom:12px;width:0;height:0;border:6px solid transparent;border-right-color:var(--bd)}
-.bubble::after{content:'';position:absolute;left:-8px;bottom:13px;width:0;height:0;border:5px solid transparent;border-right-color:#fff}
 
 .hero{background:linear-gradient(135deg,#FF8C42 0%,#FF5F00 100%);border-radius:20px;padding:22px;margin:0 16px 12px;color:#fff;box-shadow:0 8px 24px rgba(255,140,66,.35)}
 .hero-lbl{font-size:12px;font-weight:600;opacity:.85;margin-bottom:4px}
@@ -243,16 +237,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <!-- ===== HOME ===== -->
 <div class="screen active" id="s-home">
   <div class="hdr">
-    <div class="logo">🐷 짠이의 가계부</div>
-  </div>
-
-  <div class="mascot-row" style="padding-bottom:0">
-    <div class="mc">🐷</div>
-    <div class="bubble">
-      오늘까지 꽤 잘 하고 있어! 💪<br>
-      하루 <strong>₩23,400</strong> 남았으니까<br>
-      저녁은 집밥으로 도전해봐! 🏠
-    </div>
+    <div class="logo">짠이의 가계부</div>
   </div>
 
   <div style="display:flex;gap:10px;padding:10px 16px 0">
