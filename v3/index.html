@@ -96,6 +96,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .subbtn{margin:8px 16px 16px;width:calc(100% - 32px);padding:18px;background:var(--p);color:#fff;border:none;border-radius:20px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(255,140,66,.35);transition:all .2s}
 .subbtn:active{transform:scale(.97)}
 
+/* GROUP */
+.grpcard{background:var(--card);border-radius:20px;padding:18px;margin:0 16px 12px;box-shadow:var(--ss);cursor:pointer;transition:all .2s}
+.grpcard:active{transform:scale(.98)}
+.grpcard-top{display:flex;align-items:flex-start;justify-content:space-between}
+.grpcard-name{font-size:16px;font-weight:800;color:var(--td)}
+.grpcard-meta{font-size:12px;color:var(--tl);margin-top:3px;font-weight:600}
+.grpcard-dday{background:#FFF0E6;color:var(--p);border-radius:10px;padding:5px 10px;font-size:12px;font-weight:800}
+.grpavatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;border:2px solid #fff;margin-left:-6px;flex-shrink:0}
+.grpavatar:first-child{margin-left:0}
+.grprank{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--bd)}
+.grprank:last-child{border-bottom:none}
+.grprank-1{background:#FFFBF0}
+.grprank-pos{width:24px;text-align:center;font-size:18px;font-weight:800;color:var(--tl);flex-shrink:0}
+.grpfeed{background:var(--card);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:var(--ss)}
+.grpreact{background:var(--bd);border:none;border-radius:20px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;color:var(--td)}
+.grpreact.on{background:var(--pl);color:var(--p)}
+.grpperiod{flex:1;text-align:center;padding:10px;border:1.5px solid var(--bd);border-radius:12px;font-size:14px;font-weight:700;color:var(--tl);cursor:pointer;transition:all .2s}
+.grpperiod.sel{border-color:var(--p);color:var(--p);background:var(--pl)}
+
 /* FIXED */
 .calcont{margin:0 16px 12px;background:var(--card);border-radius:20px;padding:16px;box-shadow:var(--ss)}
 .calhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -598,12 +617,211 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <!-- Bottom Nav -->
+<!-- ===== GROUP ===== -->
+<div class="screen" id="s-group">
+  <div style="padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between">
+    <div style="font-size:20px;font-weight:800;color:var(--td)">👥 절약 모임</div>
+    <button onclick="showGroupCreate()" style="background:var(--p);color:#fff;border:none;border-radius:12px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 만들기</button>
+  </div>
+  <div style="height:12px"></div>
+
+  <!-- 모임 카드 1 -->
+  <div class="grpcard" onclick="showGroupDetail('7월 짠내 챌린지')">
+    <div class="grpcard-top">
+      <div>
+        <div class="grpcard-name">7월 짠내 챌린지 🔥</div>
+        <div class="grpcard-meta">4명 참여 · D-17</div>
+      </div>
+      <div class="grpcard-dday">D-17</div>
+    </div>
+    <div style="margin:12px 0 6px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:12px;font-weight:600;color:var(--tl)">목표 예산 ₩500,000</span>
+      <span style="font-size:12px;font-weight:700;color:var(--p)">내 달성률 72%</span>
+    </div>
+    <div class="pbar-bg"><div class="pbar-fill" style="width:72%;background:var(--p)"></div></div>
+    <div style="margin-top:12px;display:flex;gap:-6px">
+      <div class="grpavatar" style="background:#FFB74D">짠</div>
+      <div class="grpavatar" style="background:#64B5F6">민</div>
+      <div class="grpavatar" style="background:#81C784">수</div>
+      <div class="grpavatar" style="background:#F06292">지</div>
+    </div>
+  </div>
+
+  <!-- 모임 카드 2 -->
+  <div class="grpcard" onclick="showGroupDetail('신혼부부 생활비 관리')">
+    <div class="grpcard-top">
+      <div>
+        <div class="grpcard-name">신혼부부 생활비 관리 💑</div>
+        <div class="grpcard-meta">2명 참여 · D-17</div>
+      </div>
+      <div class="grpcard-dday" style="background:#E8F4FD;color:#3498DB">D-17</div>
+    </div>
+    <div style="margin:12px 0 6px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:12px;font-weight:600;color:var(--tl)">목표 예산 ₩1,200,000</span>
+      <span style="font-size:12px;font-weight:700;color:var(--g)">내 달성률 45%</span>
+    </div>
+    <div class="pbar-bg"><div class="pbar-fill" style="width:45%;background:var(--g)"></div></div>
+    <div style="margin-top:12px;display:flex;gap:-6px">
+      <div class="grpavatar" style="background:#FFB74D">짠</div>
+      <div class="grpavatar" style="background:#F06292">현</div>
+    </div>
+  </div>
+
+  <div style="padding:0 20px;font-size:13px;color:var(--tl);text-align:center;line-height:1.6">
+    친구를 초대해서 함께 절약해보세요 🌱<br>
+    <span style="color:var(--p);font-weight:700;cursor:pointer" onclick="showGroupCreate()">+ 새 모임 만들기</span>
+  </div>
+</div>
+
+<!-- 모임 상세 (오버레이) -->
+<div id="grp-detail" style="display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:100vh;background:var(--bg);z-index:200;overflow-y:auto;padding-bottom:40px">
+  <div style="padding:16px 20px;display:flex;align-items:center;gap:12px;background:var(--bg);position:sticky;top:0;z-index:10;border-bottom:1px solid var(--bd)">
+    <button onclick="closeGroupDetail()" style="width:36px;height:36px;border-radius:10px;background:var(--card);border:none;font-size:18px;cursor:pointer">←</button>
+    <div style="font-size:17px;font-weight:800;color:var(--td)" id="grp-detail-title">7월 짠내 챌린지 🔥</div>
+  </div>
+
+  <!-- 목표 카드 -->
+  <div style="margin:16px 16px 0;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:20px;padding:20px;color:#fff">
+    <div style="font-size:12px;opacity:.8;margin-bottom:4px">이번 달 그룹 목표</div>
+    <div style="font-size:28px;font-weight:800;letter-spacing:-1px">₩500,000</div>
+    <div style="margin-top:12px;background:rgba(255,255,255,.2);border-radius:8px;height:8px;overflow:hidden">
+      <div style="width:68%;height:100%;background:#fff;border-radius:8px"></div>
+    </div>
+    <div style="margin-top:6px;font-size:12px;opacity:.85">그룹 평균 68% 사용 · D-17 남음</div>
+  </div>
+
+  <!-- 랭킹 -->
+  <div style="padding:18px 20px 6px;font-size:14px;font-weight:800;color:var(--td)">🏆 절약 랭킹</div>
+  <div style="margin:0 16px 12px;background:var(--card);border-radius:20px;overflow:hidden;box-shadow:var(--ss)">
+    <div class="grprank grprank-1">
+      <div class="grprank-pos">🥇</div>
+      <div class="grpavatar" style="background:#FFB74D">짠</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--td)">나 (짠이)</div>
+        <div style="font-size:11px;color:var(--tl)">₩358,000 사용</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:16px;font-weight:800;color:var(--g)">72%</div>
+        <div style="font-size:10px;color:var(--tl)">잔여 ₩142,000</div>
+      </div>
+    </div>
+    <div class="grprank">
+      <div class="grprank-pos">🥈</div>
+      <div class="grpavatar" style="background:#81C784">수</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--td)">박수민</div>
+        <div style="font-size:11px;color:var(--tl)">₩385,000 사용</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:16px;font-weight:800;color:#F39C12">77%</div>
+        <div style="font-size:10px;color:var(--tl)">잔여 ₩115,000</div>
+      </div>
+    </div>
+    <div class="grprank">
+      <div class="grprank-pos">🥉</div>
+      <div class="grpavatar" style="background:#64B5F6">민</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--td)">이민준</div>
+        <div style="font-size:11px;color:var(--tl)">₩421,000 사용</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:16px;font-weight:800;color:#E67E22">84%</div>
+        <div style="font-size:10px;color:var(--tl)">잔여 ₩79,000</div>
+      </div>
+    </div>
+    <div class="grprank" style="background:#FFF5F5">
+      <div class="grprank-pos">4</div>
+      <div class="grpavatar" style="background:#F06292">지</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--td)">최지은</div>
+        <div style="font-size:11px;color:var(--r)">₩530,000 사용 · 초과!</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:16px;font-weight:800;color:var(--r)">106%</div>
+        <div style="font-size:10px;color:var(--r)">₩30,000 초과</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 지출 피드 -->
+  <div style="padding:6px 20px 8px;font-size:14px;font-weight:800;color:var(--td)">📣 최근 지출</div>
+  <div style="margin:0 16px;display:flex;flex-direction:column;gap:8px">
+    <div class="grpfeed">
+      <div class="grpavatar" style="background:#F06292;width:34px;height:34px;font-size:13px">지</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--td)">최지은 <span style="color:var(--r);font-weight:800">₩52,000</span> 썼어요</div>
+        <div style="font-size:11px;color:var(--tl)">쇼핑 · 1시간 전</div>
+      </div>
+      <div style="display:flex;gap:4px">
+        <button class="grpreact" onclick="this.classList.toggle('on')">😱 2</button>
+        <button class="grpreact" onclick="this.classList.toggle('on')">👍 1</button>
+      </div>
+    </div>
+    <div class="grpfeed">
+      <div class="grpavatar" style="background:#81C784;width:34px;height:34px;font-size:13px">수</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--td)">박수민 <span style="color:var(--r);font-weight:800">₩9,000</span> 썼어요</div>
+        <div style="font-size:11px;color:var(--tl)">식비 · 3시간 전</div>
+      </div>
+      <div style="display:flex;gap:4px">
+        <button class="grpreact" onclick="this.classList.toggle('on')">👍 3</button>
+      </div>
+    </div>
+    <div class="grpfeed">
+      <div class="grpavatar" style="background:#FFB74D;width:34px;height:34px;font-size:13px">짠</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--td)">나 <span style="color:var(--r);font-weight:800">₩4,500</span> 썼어요</div>
+        <div style="font-size:11px;color:var(--tl)">카페 · 오늘 13:24</div>
+      </div>
+      <div style="display:flex;gap:4px">
+        <button class="grpreact" onclick="this.classList.toggle('on')">☕ 4</button>
+      </div>
+    </div>
+    <div class="grpfeed">
+      <div class="grpavatar" style="background:#64B5F6;width:34px;height:34px;font-size:13px">민</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--td)">이민준 <span style="color:var(--g);font-weight:800">오늘 절약!</span></div>
+        <div style="font-size:11px;color:var(--tl)">하루 지출 0원 · 어제</div>
+      </div>
+      <div style="display:flex;gap:4px">
+        <button class="grpreact" onclick="this.classList.toggle('on')">🎉 5</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 초대 버튼 -->
+  <div style="margin:20px 16px 0;padding:16px;background:var(--card);border-radius:16px;box-shadow:var(--ss);display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:14px;font-weight:700;color:var(--td)">친구 초대하기</div>
+      <div style="font-size:12px;color:var(--tl);margin-top:2px">링크를 공유해보세요</div>
+    </div>
+    <button onclick="showToast('링크가 복사됐어요! 📋')" style="background:var(--p);color:#fff;border:none;border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">링크 복사</button>
+  </div>
+</div>
+
+<!-- 모임 만들기 시트 -->
+<div id="grp-create-bg" onclick="closeGroupCreate()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300"></div>
+<div id="grp-create" style="display:none;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-radius:24px 24px 0 0;z-index:301;padding:24px 20px 40px">
+  <div style="font-size:18px;font-weight:800;color:var(--td);margin-bottom:20px">새 절약 모임 만들기</div>
+  <div style="font-size:12px;font-weight:700;color:var(--tl);margin-bottom:6px">모임 이름</div>
+  <input placeholder="예) 7월 짠내 챌린지" style="width:100%;border:1.5px solid var(--bd);border-radius:12px;padding:12px 14px;font-size:14px;font-family:inherit;color:var(--td);outline:none;margin-bottom:14px">
+  <div style="font-size:12px;font-weight:700;color:var(--tl);margin-bottom:6px">1인 목표 예산</div>
+  <input placeholder="예) 500,000" type="number" style="width:100%;border:1.5px solid var(--bd);border-radius:12px;padding:12px 14px;font-size:14px;font-family:inherit;color:var(--td);outline:none;margin-bottom:14px">
+  <div style="font-size:12px;font-weight:700;color:var(--tl);margin-bottom:8px">기간</div>
+  <div style="display:flex;gap:8px;margin-bottom:20px">
+    <div class="grpperiod sel" onclick="selPeriod(this)">이번 달</div>
+    <div class="grpperiod" onclick="selPeriod(this)">2주</div>
+    <div class="grpperiod" onclick="selPeriod(this)">1주</div>
+  </div>
+  <button onclick="showToast('모임이 만들어졌어요! 링크를 공유해보세요 🎉');closeGroupCreate()" style="width:100%;padding:16px;background:var(--p);color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit">만들고 초대 링크 복사</button>
+</div>
+
 <nav class="bnav">
   <div class="ni active" id="n-home" onclick="goTo('home')"><span class="ic">🏠</span><span class="lb">홈</span></div>
   <div class="ni" id="n-history" onclick="goTo('history')"><span class="ic">📋</span><span class="lb">내역</span></div>
   <div class="nadd" onclick="goTo('add')"><div class="ac">＋</div><span class="lb">기록</span></div>
   <div class="ni" id="n-fixed" onclick="goTo('fixed')"><span class="ic">📌</span><span class="lb">고정</span></div>
-  <div class="ni" id="n-budget" onclick="goTo('budget')"><span class="ic">📊</span><span class="lb">예산</span></div>
+  <div class="ni" id="n-group" onclick="goTo('group')"><span class="ic">👥</span><span class="lb">모임</span></div>
 </nav>
 </div>
 
@@ -905,6 +1123,28 @@ function togFx(item) {
     cb.classList.remove('ck'); cb.textContent = '';
     nm.classList.remove('done'); am.classList.remove('done');
   }
+}
+
+// ---- Group ----
+function showGroupDetail(name) {
+  document.getElementById('grp-detail-title').textContent = name === '7월 짠내 챌린지' ? '7월 짠내 챌린지 🔥' : '신혼부부 생활비 관리 💑';
+  document.getElementById('grp-detail').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closeGroupDetail() {
+  document.getElementById('grp-detail').style.display = 'none';
+}
+function showGroupCreate() {
+  document.getElementById('grp-create').style.display = 'block';
+  document.getElementById('grp-create-bg').style.display = 'block';
+}
+function closeGroupCreate() {
+  document.getElementById('grp-create').style.display = 'none';
+  document.getElementById('grp-create-bg').style.display = 'none';
+}
+function selPeriod(el) {
+  document.querySelectorAll('.grpperiod').forEach(e => e.classList.remove('sel'));
+  el.classList.add('sel');
 }
 
 // ---- Fixed tab switch ----
