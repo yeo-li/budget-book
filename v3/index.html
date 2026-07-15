@@ -230,6 +230,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .rxntitle{font-size:21px;font-weight:800;color:var(--td);margin-bottom:8px}
 .rxnsub{font-size:13px;color:var(--tm);line-height:1.6;white-space:pre-line}
 .rxnclose{margin-top:20px;padding:14px 32px;background:var(--p);color:#fff;border:none;border-radius:40px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;width:100%}
+.txdel{width:28px;height:28px;border-radius:8px;border:none;background:transparent;color:var(--tl);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.txdel:active{background:var(--rl);color:var(--r)}
+.txitem-empty{padding:28px 20px;text-align:center;font-size:14px;color:var(--tl);font-weight:600}
 </style>
 
 <div class="app">
@@ -275,8 +278,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
   <div class="hero">
     <div class="hero-lbl">오늘 쓸 수 있는 돈</div>
-    <div class="hero-amt">₩23,400</div>
-    <div class="hero-sub">일 예산 ₩50,000 중 ₩26,600 사용</div>
+    <div class="hero-amt" id="hero-remaining">₩20,700</div>
+    <div class="hero-sub" id="hero-sub">일 예산 ₩50,000 중 ₩29,300 사용</div>
     <div class="hero-row">
       <div class="hero-stat">
         <div class="hero-stat-v">₩167,000</div>
@@ -294,11 +297,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 
   <div class="stitle">오늘 지출</div>
-  <div class="card" style="padding:0;overflow:hidden">
-    <div class="txitem"><div class="txicon" style="background:#FFF3E0">☕</div><div class="txinfo"><div class="txname">스타벅스 아메리카노</div><div class="txtime">카페 · 13:24</div></div><div class="txamt ex">-₩4,500</div></div>
-    <div class="txitem"><div class="txicon" style="background:#F3E5F5">🛒</div><div class="txinfo"><div class="txname">이마트 장보기</div><div class="txtime">마트 · 11:05</div></div><div class="txamt ex">-₩23,400</div></div>
-    <div class="txitem"><div class="txicon" style="background:#E3F2FD">🚇</div><div class="txinfo"><div class="txname">교통비</div><div class="txtime">교통 · 08:20</div></div><div class="txamt ex">-₩1,400</div></div>
-  </div>
+  <div class="card" style="padding:0;overflow:hidden" id="today-list"></div>
   <div style="height:8px"></div>
 </div>
 
@@ -640,7 +639,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <script>
-const DAILY = 23400;
 let cur = '';
 
 function goTo(id) {
@@ -676,6 +674,71 @@ function updAmt() {
   }
 }
 
+// ---- State ----
+const DAILY = 50000;
+const catMap = {
+  '식비': {icon:'🍱', bg:'#E8F5E9'},
+  '카페': {icon:'☕', bg:'#FFF3E0'},
+  '마트': {icon:'🛒', bg:'#F3E5F5'},
+  '교통': {icon:'🚇', bg:'#E3F2FD'},
+  '여가': {icon:'🎮', bg:'#FFF9C4'},
+  '쇼핑': {icon:'👗', bg:'#FCE4EC'},
+  '건강': {icon:'💊', bg:'#E8EAF6'},
+  '기타': {icon:'📦', bg:'#F5F5F5'},
+};
+let txId = 3;
+let todayTxs = [
+  {id:1, cat:'카페',  name:'스타벅스 아메리카노', amt:4500,  time:'13:24', type:'ex'},
+  {id:2, cat:'마트',  name:'이마트 장보기',       amt:23400, time:'11:05', type:'ex'},
+  {id:3, cat:'교통',  name:'교통비',              amt:1400,  time:'08:20', type:'ex'},
+];
+
+function todaySpent() {
+  return todayTxs.filter(t => t.type === 'ex').reduce((s, t) => s + t.amt, 0);
+}
+
+function updateHero() {
+  const spent = todaySpent();
+  const remaining = DAILY - spent;
+  const remEl = document.getElementById('hero-remaining');
+  const subEl = document.getElementById('hero-sub');
+  if (!remEl) return;
+  remEl.textContent = '₩' + Math.abs(remaining).toLocaleString();
+  remEl.style.opacity = remaining < 0 ? '.7' : '1';
+  subEl.textContent = remaining >= 0
+    ? `일 예산 ₩${DAILY.toLocaleString()} 중 ₩${spent.toLocaleString()} 사용`
+    : `일 예산 ₩${DAILY.toLocaleString()} 초과 ₩${Math.abs(remaining).toLocaleString()}`;
+}
+
+function renderTodayList() {
+  const list = document.getElementById('today-list');
+  if (!list) return;
+  if (todayTxs.length === 0) {
+    list.innerHTML = '<div class="txitem-empty">오늘 지출 내역이 없어요 🎉</div>';
+  } else {
+    list.innerHTML = [...todayTxs].reverse().map(tx => {
+      const c = catMap[tx.cat] || {icon:'📦', bg:'#F5F5F5'};
+      const sign = tx.type === 'ex' ? '-' : '+';
+      const cls = tx.type === 'ex' ? 'ex' : 'inc';
+      return `<div class="txitem">
+        <div class="txicon" style="background:${c.bg}">${c.icon}</div>
+        <div class="txinfo">
+          <div class="txname">${tx.name || tx.cat}</div>
+          <div class="txtime">${tx.cat} · ${tx.time}</div>
+        </div>
+        <div class="txamt ${cls}">${sign}₩${tx.amt.toLocaleString()}</div>
+        <button class="txdel" onclick="deleteTx(${tx.id})">×</button>
+      </div>`;
+    }).join('');
+  }
+  updateHero();
+}
+
+function deleteTx(id) {
+  todayTxs = todayTxs.filter(t => t.id !== id);
+  renderTodayList();
+}
+
 function setType(t) {
   document.getElementById('btex').className = 'tbtn' + (t==='ex'?' active ex':' ex');
   document.getElementById('btinc').className = 'tbtn' + (t==='inc'?' active inc':' inc');
@@ -689,13 +752,26 @@ function selCat(el) {
 function submitTx() {
   const amt = parseInt(cur || '0');
   if (!amt) { showToast('금액을 입력해주세요 🤔'); return; }
-  if (amt > DAILY) {
-    showRxn('😤', '짠이가 실망했어요...', `일 예산을 ₩${(amt - DAILY).toLocaleString()}이나 초과했어요!\n내일은 더 아껴봐요. 작은 절약이 큰 저축이 돼요! 💪`);
-  } else if (amt > DAILY * 0.7) {
-    showRxn('😅', '꽤 쓰긴 했지만...', `아직 오늘 ₩${(DAILY - amt).toLocaleString()} 남았어요!\n오늘 저녁은 집밥 어때요? 🏠`);
+
+  const catEl = document.querySelector('.cchip.sel .cclbl');
+  const cat = catEl ? catEl.textContent : '기타';
+  const memo = document.getElementById('memo').value.trim();
+  const isEx = document.getElementById('btex').classList.contains('active');
+  const now = new Date();
+  const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+  todayTxs.push({id: ++txId, cat, name: memo || cat, amt, time, type: isEx ? 'ex' : 'inc'});
+  renderTodayList();
+
+  const remaining = DAILY - todaySpent();
+  if (isEx && remaining < 0) {
+    showRxn('😤', '예산을 초과했어요', `일 예산을 ₩${Math.abs(remaining).toLocaleString()}이나 초과했어요!\n내일은 더 아껴봐요 💪`);
+  } else if (isEx && amt > DAILY * 0.4) {
+    showRxn('😅', '꽤 큰 지출이네요', `아직 오늘 ₩${remaining.toLocaleString()} 남았어요!\n저녁은 집밥 어때요? 🏠`);
   } else {
-    showRxn('🎉', '잘했어요!', `₩${amt.toLocaleString()} 기록 완료!\n남은 일 예산: ₩${(DAILY - amt).toLocaleString()}\n이 페이스면 이번 달 저축 목표 달성해요! 🐷`);
+    showRxn('🎉', '기록 완료!', `₩${amt.toLocaleString()} 기록됐어요\n남은 일 예산: ₩${remaining.toLocaleString()}`);
   }
+
   cur = '';
   updAmt();
   document.getElementById('memo').value = '';
@@ -884,4 +960,7 @@ function saveFx() {
 
   document.getElementById('caldays').innerHTML = html;
 })();
+
+// Init
+renderTodayList();
 </script>
