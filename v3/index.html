@@ -391,12 +391,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <!-- ===== FIXED ===== -->
 <div class="screen" id="s-fixed">
   <div style="padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between">
-    <div style="font-size:20px;font-weight:800;color:var(--td)">📌 고정지출</div>
+    <div style="font-size:20px;font-weight:800;color:var(--td)">📌 고정</div>
     <button onclick="openSheet()" style="background:var(--p);color:#fff;border:none;border-radius:12px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;box-shadow:0 3px 10px rgba(255,140,66,.35)">＋ 추가</button>
+  </div>
+
+  <div style="display:flex;gap:8px;padding:12px 16px 0">
+    <button id="ftab-ex" onclick="switchFxTab('ex')" style="flex:1;padding:10px;border-radius:12px;border:2px solid var(--p);background:var(--p);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s">고정지출</button>
+    <button id="ftab-inc" onclick="switchFxTab('inc')" style="flex:1;padding:10px;border-radius:12px;border:2px solid var(--bd);background:#fff;color:var(--tl);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s">고정수입</button>
   </div>
 
   <div style="height:10px"></div>
 
+  <div id="fx-ex-section">
   <div class="calcont">
     <div class="calhdr">
       <span class="caltitle">2026년 7월</span>
@@ -460,6 +466,37 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
   </div>
   <div style="height:8px"></div>
+  </div><!-- /fx-ex-section -->
+
+  <!-- 고정수입 섹션 -->
+  <div id="fx-inc-section" style="display:none">
+    <div class="fxsum" style="margin-top:4px">
+      <div class="fxsi"><div class="fxsv" style="color:var(--g)">₩2,800,000</div><div class="fxsl">입금 완료</div></div>
+      <div class="fxsi"><div class="fxsv">₩500,000</div><div class="fxsl">입금 예정</div></div>
+      <div class="fxsi"><div class="fxsv">₩3,300,000</div><div class="fxsl">총 고정수입</div></div>
+    </div>
+
+    <div class="fxsect"><span style="color:var(--g)">✓</span> 입금 완료</div>
+    <div class="fxwrap">
+      <div class="fxi" onclick="togFx(this)">
+        <div class="fxcb ck">✓</div>
+        <div class="fxidot" style="background:var(--g)"></div>
+        <div class="fxiinfo"><div class="fxiname done">7월 급여</div><div class="fxidate">7월 10일 입금 완료</div></div>
+        <div class="fxiamt done" style="color:var(--g)">+₩2,800,000</div>
+      </div>
+    </div>
+
+    <div class="fxsect"><span style="color:var(--bl)">⏳</span> 입금 예정</div>
+    <div class="fxwrap" id="inc-unpaid-wrap">
+      <div class="fxi" onclick="togFx(this)">
+        <div class="fxcb"></div>
+        <div class="fxidot" style="background:#1ABC9C"></div>
+        <div class="fxiinfo"><div class="fxiname">프리랜서 수입</div><div class="fxidate">매월 말일 예정</div></div>
+        <div class="fxiamt" style="color:var(--g)">+₩500,000</div>
+      </div>
+    </div>
+    <div style="height:8px"></div>
+  </div><!-- /fx-inc-section -->
 </div>
 
 <!-- ===== BUDGET ===== -->
@@ -574,8 +611,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="bsheet" id="bsheet">
   <div class="bsheet-handle"></div>
   <div class="bsheet-title">
-    고정지출 추가
+    고정 추가
     <span class="bsheet-close" onclick="closeSheet()">×</span>
+  </div>
+  <div style="display:flex;gap:8px;padding:0 16px 12px">
+    <button id="sbtab-ex" onclick="setSheetType('ex')" style="flex:1;padding:9px;border-radius:10px;border:2px solid var(--r);background:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">지출</button>
+    <button id="sbtab-inc" onclick="setSheetType('inc')" style="flex:1;padding:9px;border-radius:10px;border:2px solid var(--bd);background:#fff;color:var(--tl);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">수입</button>
   </div>
 
   <span class="flabel">항목명</span>
@@ -865,6 +906,32 @@ function togFx(item) {
   }
 }
 
+// ---- Fixed tab switch ----
+function switchFxTab(type) {
+  const isEx = type === 'ex';
+  document.getElementById('fx-ex-section').style.display = isEx ? '' : 'none';
+  document.getElementById('fx-inc-section').style.display = isEx ? 'none' : '';
+  document.getElementById('ftab-ex').style.background = isEx ? 'var(--p)' : '#fff';
+  document.getElementById('ftab-ex').style.color = isEx ? '#fff' : 'var(--tl)';
+  document.getElementById('ftab-ex').style.borderColor = isEx ? 'var(--p)' : 'var(--bd)';
+  document.getElementById('ftab-inc').style.background = isEx ? '#fff' : 'var(--g)';
+  document.getElementById('ftab-inc').style.color = isEx ? 'var(--tl)' : '#fff';
+  document.getElementById('ftab-inc').style.borderColor = isEx ? 'var(--bd)' : 'var(--g)';
+}
+
+// ---- Sheet type toggle ----
+let sheetType = 'ex';
+function setSheetType(type) {
+  sheetType = type;
+  const isEx = type === 'ex';
+  document.getElementById('sbtab-ex').style.background = isEx ? 'var(--r)' : '#fff';
+  document.getElementById('sbtab-ex').style.color = isEx ? '#fff' : 'var(--tl)';
+  document.getElementById('sbtab-ex').style.borderColor = isEx ? 'var(--r)' : 'var(--bd)';
+  document.getElementById('sbtab-inc').style.background = isEx ? '#fff' : 'var(--g)';
+  document.getElementById('sbtab-inc').style.color = isEx ? 'var(--tl)' : '#fff';
+  document.getElementById('sbtab-inc').style.borderColor = isEx ? 'var(--bd)' : 'var(--g)';
+}
+
 // ---- Bottom Sheet ----
 function openSheet() {
   document.getElementById('bsbg').classList.add('show');
@@ -918,8 +985,8 @@ function saveFx() {
     dateText = `격달(${m}) ${d}일 예정`;
   }
 
-  // Add to unpaid list
-  const wrap = document.getElementById('unpaid-wrap');
+  // Add to correct section
+  const wrap = document.getElementById(sheetType === 'inc' ? 'inc-unpaid-wrap' : 'unpaid-wrap');
   const item = document.createElement('div');
   item.className = 'fxi';
   item.onclick = function(){ togFx(this); };
