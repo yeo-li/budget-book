@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#F6F4EE">
+<meta name="theme-color" content="#FFFAF3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="세이브포인트">
@@ -13,20 +13,21 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#F6F4EE; --card:#FFFFFF; --ink:#1A1F1C; --sub:#5B655F; --faint:#98A29B;
-  --line:#ECE8DE; --line2:#E2DDD0;
-  --green:#0E7B54; --green-deep:#095C3F; --green-soft:#E5F2EC; --green-mid:#2FA57B;
+  --bg:#FFFAF3; --card:#FFFFFF; --ink:#1A1A2E; --sub:#555; --faint:#999;
+  --line:#F2EDE4; --line2:#E6DECF;
+  --p:#FF8C42; --p-deep:#F0761F; --p-soft:#FFF0E6;
+  --green:#27AE60; --green-deep:#1E8449; --green-soft:#E8F8F0; --green-mid:#2ECC71;
   --gold:#D99A22; --gold-soft:#FBF3E1; --flame:#E8571F; --flame-soft:#FDEEE6;
-  --red:#C7483B; --red-soft:#FBECEA; --amber:#B97F14; --amber-soft:#FBF3DE;
-  --blue:#2C6E9E; --blue-soft:#E8F1F7;
+  --red:#E74C3C; --red-soft:#FDECEA; --amber:#B7791F; --amber-soft:#FBF3DE;
+  --blue:#3498DB; --blue-soft:#EAF4FB;
   --r-lg:22px; --r-md:16px; --r-sm:12px;
-  --sh:0 1px 2px rgba(26,31,28,.04),0 6px 24px rgba(26,31,28,.06);
-  --sh-lift:0 4px 12px rgba(26,31,28,.08),0 16px 40px rgba(26,31,28,.12);
+  --sh:0 1px 2px rgba(26,26,46,.04),0 6px 24px rgba(26,26,46,.06);
+  --sh-lift:0 4px 12px rgba(26,26,46,.08),0 16px 40px rgba(26,26,46,.12);
 }
 html{font-size:16px}
 body{
   font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
-  background:#E9E5DC; color:var(--ink); min-height:100dvh;
+  background:#EDE8E0; color:var(--ink); min-height:100dvh;
   display:flex; justify-content:center;
   font-feature-settings:'tnum';
   -webkit-font-smoothing:antialiased;
@@ -34,7 +35,7 @@ body{
 #app{
   width:100%; max-width:440px; min-height:100dvh; background:var(--bg);
   position:relative; overflow-x:hidden;
-  background-image:radial-gradient(circle at 20% -5%, #FDFCF8 0%, transparent 45%);
+  background-image:radial-gradient(circle at 20% -5%, #FFFDF8 0%, transparent 45%);
 }
 button{font:inherit;border:none;background:none;cursor:pointer;color:inherit}
 input,select,textarea{font:inherit;color:inherit}
@@ -47,7 +48,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 @keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top)) 20px 6px}
 .wordmark{font-size:17px;font-weight:900;letter-spacing:-.02em;display:flex;align-items:center;gap:7px}
-.wordmark .dot{width:9px;height:9px;border-radius:50%;background:var(--green);display:inline-block;box-shadow:0 0 0 3px var(--green-soft)}
+.wordmark .dot{width:9px;height:9px;border-radius:50%;background:var(--p);display:inline-block;box-shadow:0 0 0 3px var(--p-soft)}
 .iconbtn{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--sub);transition:background .15s}
 .iconbtn:active{background:var(--line)}
 /* 듀오링고식 상단 스탯 필 */
@@ -63,7 +64,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .close-btn{width:100%;padding:18px;border-radius:18px;background:var(--ink);color:#fff;font-size:16.5px;font-weight:900;
   display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 8px 22px rgba(26,31,28,.22);transition:transform .12s;
   position:relative;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
-.close-btn .fill{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,rgba(47,165,123,.85),rgba(14,123,84,.95));border-radius:inherit}
+.close-btn .fill{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,rgba(255,164,94,.9),rgba(240,118,31,.95));border-radius:inherit}
 .close-btn.holding{transform:scale(.975)}
 .close-btn.holding .fill{width:100%;transition:width .9s linear}
 .close-btn .lb{position:relative;z-index:1;display:flex;align-items:center;gap:9px}
@@ -82,7 +83,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 @keyframes coinbob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-7px)}}
 .jar-amt{position:absolute;inset:12px 0 0;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:900;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.4);z-index:2;letter-spacing:-.02em}
 .mini-bar{height:8px;background:var(--line);border-radius:5px;overflow:hidden;margin-top:6px}
-.mini-bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--green-mid),var(--green));transition:width .6s ease}
+.mini-bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#FFA45E,var(--p));transition:width .6s ease}
 /* 스트릭 캘린더 */
 .st-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:13px;font-weight:700;color:var(--sub);position:relative}
 .st-day.ok{background:var(--green);color:#fff;font-weight:900}
@@ -91,6 +92,12 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .st-day.pend{background:var(--amber-soft);color:var(--amber)}
 .st-day.dim{opacity:.3}
 .st-day.today::after{content:'';position:absolute;inset:-3px;border:2px solid var(--ink);border-radius:14px}
+/* 분석 도넛 */
+.donut{width:188px;height:188px;border-radius:50%;margin:12px auto 4px;position:relative}
+.donut::after{content:'';position:absolute;inset:40px;background:var(--card);border-radius:50%;box-shadow:inset 0 1px 6px rgba(26,26,46,.05)}
+.donut .ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1}
+.donut .ctr b{font-size:22px;font-weight:900;letter-spacing:-.02em}
+.donut .ctr span{font-size:12px;color:var(--faint);font-weight:700;margin-top:2px}
 .st-hero{text-align:center;padding:6px 0 16px}
 .st-hero .fl{font-size:44px}
 .st-hero .n{font-size:26px;font-weight:900;letter-spacing:-.02em;margin-top:4px}
@@ -108,24 +115,24 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .nav-item .ic{font-size:21px;filter:grayscale(1) opacity(.45);transition:filter .15s}
 .nav-item .lb{font-size:10.5px;font-weight:700;color:var(--faint)}
 .nav-item.on .ic{filter:none}
-.nav-item.on .lb{color:var(--green-deep)}
+.nav-item.on .lb{color:var(--p-deep)}
 .nav-plus{flex:1;display:flex;align-items:center;justify-content:center}
-.nav-plus .circle{width:52px;height:52px;border-radius:50%;background:linear-gradient(145deg,var(--green-mid),var(--green-deep));
+.nav-plus .circle{width:52px;height:52px;border-radius:50%;background:linear-gradient(145deg,#FFA45E,var(--p-deep));
   color:#fff;font-size:26px;font-weight:300;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 6px 18px rgba(14,123,84,.38);transform:translateY(-12px);transition:transform .15s}
+  box-shadow:0 6px 18px rgba(255,140,66,.45);transform:translateY(-12px);transition:transform .15s}
 .nav-plus:active .circle{transform:translateY(-12px) scale(.92)}
 
 /* ---------- home ---------- */
 .hero{margin:8px 16px 12px;padding:26px 22px 22px;border-radius:26px;
-  background:linear-gradient(155deg,#0F3D2C 0%,#0B5C3E 55%,#0E7B54 100%);
-  color:#fff;box-shadow:0 12px 32px rgba(11,74,50,.28);position:relative;overflow:hidden}
+  background:linear-gradient(155deg,#FF9C50 0%,#FF8C42 55%,#F0761F 100%);
+  color:#fff;box-shadow:0 12px 32px rgba(240,118,31,.32);position:relative;overflow:hidden}
 .hero::after{content:'';position:absolute;right:-60px;top:-70px;width:200px;height:200px;border-radius:50%;
   background:radial-gradient(circle,rgba(255,255,255,.12),transparent 65%)}
 .hero .cap{font-size:13.5px;font-weight:600;opacity:.75}
 .hero .big{font-size:38px;font-weight:900;letter-spacing:-.035em;margin:6px 0 2px}
 .hero .meta{font-size:13px;opacity:.65;font-weight:500}
 .hero .bar{height:8px;background:rgba(255,255,255,.18);border-radius:5px;margin-top:16px;overflow:hidden}
-.hero .bar i{display:block;height:100%;background:linear-gradient(90deg,#8FE3BF,#DFF7EC);border-radius:5px;transition:width .8s cubic-bezier(.3,.8,.3,1)}
+.hero .bar i{display:block;height:100%;background:linear-gradient(90deg,#FFE3C9,#FFF6EC);border-radius:5px;transition:width .8s cubic-bezier(.3,.8,.3,1)}
 .hero .barrow{display:flex;justify-content:space-between;font-size:12px;opacity:.7;margin-top:7px;font-weight:600}
 
 .pace-card{position:relative}
@@ -166,7 +173,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .fx-name{font-size:14.5px;font-weight:700}
 .fx-day{font-size:12px;color:var(--faint);font-weight:600;margin-top:1px}
 .fx-amt{margin-left:auto;font-size:14.5px;font-weight:800;white-space:nowrap}
-.dday{font-size:10.5px;font-weight:800;background:var(--green-soft);color:var(--green-deep);border-radius:6px;padding:2px 6px;margin-left:6px;vertical-align:1px}
+.dday{font-size:10.5px;font-weight:800;background:var(--p-soft);color:var(--p-deep);border-radius:6px;padding:2px 6px;margin-left:6px;vertical-align:1px}
 .dday.today{background:var(--flame-soft);color:var(--flame)}
 
 /* ---------- record tab ---------- */
@@ -177,7 +184,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .chip-btn{flex:1;padding:11px 4px;border-radius:12px;font-size:13.5px;font-weight:800;transition:transform .12s;text-align:center}
 .chip-btn:active{transform:scale(.96)}
 .chip-btn.ghost{background:var(--bg);color:var(--sub);border:1px solid var(--line2)}
-.chip-btn.solid{background:var(--green);color:#fff}
+.chip-btn.solid{background:var(--p);color:#fff}
 .chip-btn.gold{background:var(--gold-soft);color:var(--gold);border:1px solid #F1E3C2}
 
 .cal{margin:0 16px 12px;background:var(--card);border-radius:var(--r-lg);box-shadow:var(--sh);padding:18px;border:1px solid rgba(236,232,222,.6)}
@@ -241,7 +248,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .fx-edit{display:flex;align-items:center;gap:13px;padding:14px 20px;background:var(--card);border-bottom:1px solid var(--line)}
 .fx-list{margin:0 16px 12px;border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh);border:1px solid rgba(236,232,222,.6)}
 .fx-edit:active{background:var(--bg)}
-.add-row{width:100%;padding:16px;text-align:center;font-size:14.5px;font-weight:800;color:var(--green-deep);background:var(--card)}
+.add-row{width:100%;padding:16px;text-align:center;font-size:14.5px;font-weight:800;color:var(--p-deep);background:var(--card)}
 
 /* ---------- vault tab ---------- */
 .vault-hero{margin:8px 16px 12px;padding:30px 22px 26px;border-radius:26px;text-align:center;
@@ -282,12 +289,12 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .field input[type=text],.field input[type=number],.field input[type=date],.field input[type=time],.field select,.field textarea{
   width:100%;padding:14px 16px;border:1.5px solid var(--line2);border-radius:14px;font-size:16px;font-weight:700;
   background:var(--bg);outline:none;transition:border-color .15s;-webkit-appearance:none}
-.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--green);background:#fff}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--p);background:#fff}
 .field textarea{min-height:110px;font-weight:500;font-size:14px;line-height:1.5;resize:none}
 .won-wrap{position:relative}
 .won-wrap input{padding-right:44px !important;text-align:right;font-size:20px !important;font-weight:800 !important}
 .won-wrap::after{content:'원';position:absolute;right:16px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--sub)}
-.cta{width:100%;padding:17px;border-radius:16px;background:var(--green);color:#fff;font-size:16.5px;font-weight:800;transition:transform .12s,opacity .15s;margin-top:6px}
+.cta{width:100%;padding:17px;border-radius:16px;background:var(--p);color:#fff;font-size:16.5px;font-weight:800;transition:transform .12s,opacity .15s;margin-top:6px}
 .cta:active{transform:scale(.98)}
 .cta:disabled{opacity:.35}
 .cta.dark{background:var(--ink)}
@@ -301,32 +308,32 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .cat-cell{padding:11px 2px;border-radius:13px;background:var(--bg);border:1.5px solid transparent;text-align:center;transition:all .12s}
 .cat-cell .ci{font-size:20px}
 .cat-cell .cl{font-size:11px;font-weight:700;color:var(--sub);margin-top:3px}
-.cat-cell.on{border-color:var(--green);background:var(--green-soft)}
-.cat-cell.on .cl{color:var(--green-deep)}
+.cat-cell.on{border-color:var(--p);background:var(--p-soft)}
+.cat-cell.on .cl{color:var(--p-deep)}
 
 .ocr-drop{border:2px dashed var(--line2);border-radius:18px;padding:34px 20px;text-align:center;background:var(--bg);transition:border-color .15s;width:100%}
-.ocr-drop:active{border-color:var(--green)}
+.ocr-drop:active{border-color:var(--p)}
 .ocr-drop .oi{font-size:36px}
 .ocr-drop .ot{font-size:14.5px;font-weight:800;margin-top:10px}
 .ocr-drop .os{font-size:12.5px;color:var(--faint);font-weight:600;margin-top:4px;line-height:1.5}
 .ocr-status{text-align:center;padding:26px 10px}
-.spinner{width:34px;height:34px;border:3.5px solid var(--line);border-top-color:var(--green);border-radius:50%;margin:0 auto 14px;animation:spin .8s linear infinite}
+.spinner{width:34px;height:34px;border:3.5px solid var(--line);border-top-color:var(--p);border-radius:50%;margin:0 auto 14px;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .cand-box{background:var(--green-soft);border:1.5px solid #CBE6DA;border-radius:16px;padding:14px 16px;margin-bottom:16px}
 .cand-box .ct{font-size:12px;font-weight:800;color:var(--green-deep);margin-bottom:6px}
 .cand-box .cv{font-size:13.5px;font-weight:600;color:var(--sub);line-height:1.6;word-break:break-all;max-height:76px;overflow-y:auto}
 
 /* ---------- onboarding ---------- */
-#onb{position:fixed;inset:0;z-index:100;display:none;justify-content:center;background:#E9E5DC}
+#onb{position:fixed;inset:0;z-index:100;display:none;justify-content:center;background:#EDE8E0}
 #onb.show{display:flex}
 .onb-inner{width:100%;max-width:440px;background:var(--bg);display:flex;flex-direction:column;min-height:100dvh;position:relative;overflow-y:auto}
 .onb-step{display:none;flex-direction:column;flex:1;padding:calc(28px + env(safe-area-inset-top)) 26px calc(24px + env(safe-area-inset-bottom))}
 .onb-step.active{display:flex;animation:fadein .25s ease}
 .onb-progress{display:flex;gap:6px;margin-bottom:34px}
 .onb-progress i{height:4px;border-radius:3px;flex:1;background:var(--line2)}
-.onb-progress i.on{background:var(--green)}
+.onb-progress i.on{background:var(--p)}
 .onb-h{font-size:26px;font-weight:900;letter-spacing:-.03em;line-height:1.32}
-.onb-h em{font-style:normal;color:var(--green)}
+.onb-h em{font-style:normal;color:var(--p-deep)}
 .onb-s{font-size:14.5px;color:var(--sub);font-weight:500;margin-top:10px;line-height:1.6}
 .splash{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
 .splash .logo{font-size:64px;animation:bob 2.6s ease-in-out infinite}
@@ -339,14 +346,14 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .preset .pi{font-size:23px}
 .preset .pn{font-size:12.5px;font-weight:800;margin-top:5px}
 .preset .ph{font-size:10.5px;color:var(--faint);font-weight:700;margin-top:2px}
-.preset.on{border-color:var(--green);background:var(--green-soft)}
-.preset.on .ph{color:var(--green-deep)}
+.preset.on{border-color:var(--p);background:var(--p-soft)}
+.preset.on .ph{color:var(--p-deep)}
 .picked-list{margin-top:20px}
 .picked{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:11px 14px;margin-bottom:8px;box-shadow:var(--sh)}
 .picked .pi{font-size:19px}
 .picked .pn{font-size:13.5px;font-weight:800;flex-shrink:0}
 .picked input{width:0;flex:1;min-width:60px;text-align:right;border:none;background:none;font-size:15px;font-weight:800;outline:none;border-bottom:1.5px solid var(--line2);padding:2px 4px}
-.picked input:focus{border-color:var(--green)}
+.picked input:focus{border-color:var(--p)}
 .picked .u{font-size:12.5px;color:var(--faint);font-weight:700}
 .picked select{border:none;background:var(--bg);border-radius:8px;padding:4px 6px;font-size:12px;font-weight:700;color:var(--sub);outline:none}
 .picked .rm{color:var(--faint);font-size:16px;padding:2px 0 2px 6px}
@@ -413,7 +420,10 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 
   <!-- ============ RECORD ============ -->
   <section class="screen" id="scr-record">
-    <div class="topbar"><div class="wordmark"><span class="dot"></span>기록</div></div>
+    <div class="topbar">
+      <div class="wordmark"><span class="dot"></span>기록</div>
+      <button class="chip-btn ghost" style="flex:none;padding:8px 15px;font-size:13px" onclick="openAnalysis()">📊 분석</button>
+    </div>
     <div id="record-body"></div>
   </section>
 
@@ -444,7 +454,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
   <!-- input sheet -->
   <div class="sheet" id="sheet-input">
     <div class="sheet-grip"></div>
-    <div class="sheet-head"><div class="sheet-title">지출 입력</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-head"><div class="sheet-title">지출·수입 입력</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
     <div class="sheet-body">
       <div class="seg" id="input-seg">
         <button data-m="manual" class="on">✏️ 직접</button>
@@ -488,6 +498,20 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
     <div class="sheet-grip"></div>
     <div class="sheet-head"><div class="sheet-title">🔥 예산 안에서 산 날</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
     <div class="sheet-body" id="streak-body"></div>
+  </div>
+
+  <!-- categories sheet -->
+  <div class="sheet" id="sheet-cats">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head"><div class="sheet-title">🏷️ 카테고리 관리</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-body" id="cats-body"></div>
+  </div>
+
+  <!-- analysis sheet -->
+  <div class="sheet" id="sheet-ana">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head"><div class="sheet-title">📊 지출 분석</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-body" id="ana-body"></div>
   </div>
 
   <!-- day detail sheet -->
@@ -573,7 +597,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 
 // ---------- state ----------
 const KEY='savepoint_v4';
-const DEFAULT={v:1,onboarded:false,income:0,startDate:null,fixed:[],exp:[],conf:{},rep:{},goals:[],seenMilestones:[],fxPaid:{},catBudget:{},fxOv:{}};
+const DEFAULT={v:1,onboarded:false,income:0,startDate:null,fixed:[],exp:[],conf:{},rep:{},goals:[],seenMilestones:[],fxPaid:{},catBudget:{},fxOv:{},cats:[],catsOff:[]};
 let S=load();
 function load(){
   try{
@@ -596,6 +620,8 @@ function load(){
       if(!Array.isArray(o.goals))o.goals=[];
       if(!o.catBudget)o.catBudget={};
       if(!o.fxOv)o.fxOv={};
+      if(!Array.isArray(o.cats))o.cats=[];
+      if(!Array.isArray(o.catsOff))o.catsOff=[];
       if(!o.fxPaid)o.fxPaid={};
       return o;
     }
@@ -630,16 +656,17 @@ function num(s){return parseInt(String(s).replace(/[^\d]/g,''),10)||0;}
 function fmtInput(el){const n=num(el.value);el.value=n?n.toLocaleString('ko-KR'):'';}
 
 // ---------- categories ----------
-const CATS=[
+const DEFAULT_CATS=[
   {id:'food',ic:'🍚',name:'식비'},{id:'cafe',ic:'☕',name:'카페'},
   {id:'trans',ic:'🚌',name:'교통'},{id:'shop',ic:'🛍️',name:'쇼핑'},
   {id:'life',ic:'🧺',name:'생활'},{id:'play',ic:'🎬',name:'문화'},
   {id:'health',ic:'💊',name:'의료'},{id:'etc',ic:'💸',name:'기타'},
 ];
-function cat(id){return CATS.find(c=>c.id===id)||CATS[7];}
+function cats(){return DEFAULT_CATS.filter(c=>!(S.catsOff||[]).includes(c.id)).concat(S.cats||[]);}
+function cat(id){return DEFAULT_CATS.concat(S.cats||[]).find(c=>c.id===id)||DEFAULT_CATS[7];}
 
 // ---------- fixed payment helpers ----------
-const FXCOLORS=['#0E7B54','#2C6E9E','#D99A22','#C7483B','#7B5EA7','#E8571F','#3A8FA3','#8A6D3B'];
+const FXCOLORS=['#E74C3C','#3498DB','#27AE60','#9B59B6','#F39C12','#E8571F','#16A085','#8E44AD'];
 function fxColor(id){const i=S.fixed.findIndex(f=>f.id===id);return FXCOLORS[(i<0?0:i)%FXCOLORS.length];}
 function fxRange(f,y,m){ // 해당 월에 맞게 결제 범위 클램프
   const t=dim(y,m);
@@ -748,7 +775,7 @@ function autoBudget(y,m){ // 자동 계산 예산: 고정 수입 − 고정 지�
 function calc(){
   const t=today();
   const res={days:[],byDate:{},months:[],vault:0,streak:0,successTotal:0,queue:[],
-             todayPace:0,todaySpent:0,monthBudget:0,monthRemaining:0,monthSpent:0,fixedTotal:0};
+             todayPace:0,todaySpent:0,todayInc:0,todayNet:0,monthBudget:0,monthRemaining:0,monthSpent:0,fixedTotal:0};
   // 이번 달 기준 고정 지출/수입 합계 (주기 반영)
   const now0=new Date();
   res.fixedTotal=S.fixed.filter(f=>f.kind!=='inc').reduce((a,f)=>a+fxMonthAmt(f,now0.getFullYear(),now0.getMonth()+1),0);
@@ -781,19 +808,21 @@ function calc(){
       const daysLeft=total-d+1;
       const pace=remaining>0?remaining/daysLeft:0;
       const exps=expByDate[date]||[];
-      const spent=exps.reduce((a,e)=>a+e.amt,0);
+      const spent=exps.filter(e=>e.kind!=='inc').reduce((a,e)=>a+e.amt,0);
+      const inc=exps.filter(e=>e.kind==='inc').reduce((a,e)=>a+e.amt,0);
+      const net=spent-inc; // 하루 순 지출 (변동 수입 반영)
       const settled=!!S.conf[date];
       const repaired=!!S.rep[date];
       let success=null,saved=0;
       if(settled){
         if(repaired){success='rep';}
-        else if(spent<=pace+0.5){success=true;saved=Math.max(0,Math.round(pace-spent));}
+        else if(net<=pace+0.5){success=true;saved=Math.max(0,Math.round(pace-net));}
         else success=false;
       }
-      const rec={date,pace,spent,exps,settled,success,saved,repaired,isToday:date===t};
+      const rec={date,pace,spent,inc,net,exps,settled,success,saved,repaired,isToday:date===t};
       res.days.push(rec);res.byDate[date]=rec;
-      remaining-=spent;
-      if(isCurMonth&&date===t){res.todayPace=pace;res.todaySpent=spent;}
+      remaining-=net;
+      if(isCurMonth&&date===t){res.todayPace=pace;res.todaySpent=spent;res.todayInc=inc;res.todayNet=net;}
     }
     // full-month spent (incl. days beyond lastD? none)
     if(isCurMonth){res.monthBudget=budget;res.monthRemaining=remaining;res.monthSpent=budget-remaining;}
@@ -801,16 +830,22 @@ function calc(){
     cm++;if(cm>12){cm=1;cy++;}
   }
 
-  // vault / streak / queue
-  let streak=0;
+  // vault / streak / queue — 저금통은 시간순으로 쌓이고, 초과한 날 마감 시 부족분을 꺼내 메꿈
+  let streak=0,vault=0;
   res.days.forEach(r=>{
     if(r.settled){
-      if(r.success===true){streak++;res.successTotal++;res.vault+=r.saved;}
-      else if(r.success===false)streak=0;
+      if(r.success===true){streak++;res.successTotal++;vault+=r.saved;}
+      else if(r.success===false){
+        streak=0;
+        const over=Math.max(0,Math.round(r.net-r.pace));
+        r.withdraw=Math.min(vault,over); // 저금통 보전 (있는 만큼만)
+        vault-=r.withdraw;
+      }
       /* repaired: 유지 */
     }
     // 미마감 지난 날: 스트릭을 깨지도, 잇지도 않음 (밀림 ≠ 실패)
   });
+  res.vault=vault;
   res.streak=streak;
 
   const qFrom=addDays(t,-14);
@@ -857,18 +892,18 @@ function renderHome(){
   const t=today(),d=pd(t);
   const totalD=dim(d.getFullYear(),d.getMonth()+1);
   const usedPct=C.monthBudget>0?Math.min(100,C.monthSpent/C.monthBudget*100):0;
-  const pace=C.todayPace,spent=C.todaySpent;
-  const ratio=pace>0?spent/pace:(spent>0?2:0);
+  const pace=C.todayPace,spent=C.todaySpent,tInc=C.todayInc,net=C.todayNet;
+  const ratio=pace>0?Math.max(0,net)/pace:(net>0?2:0);
   const status=ratio>1?'over':ratio>0.8?'warn':'ok';
   const stMsg={ok:spent===0?'아직 지출이 없어요. 이 페이스면 아주 안전해요':'이 페이스면 월말까지 안전하게 착지해요',
     warn:'페이스에 가까워졌어요. 오늘은 여기까지가 안전선이에요',
-    over:'오늘 페이스를 넘었어요. 괜찮아요 — 내일 페이스가 자동으로 조정돼요'}[status];
+    over:C.vault>0?'페이스를 넘었어요. 마감하면 부족분은 저금통에서 꺼내 메꿔요':'오늘 페이스를 넘었어요. 괜찮아요 — 내일 페이스가 자동으로 조정돼요'}[status];
   const stLabel={ok:'안전 페이스',warn:'페이스 주의',over:'페이스 초과'}[status];
 
   const todayRec=C.byDate[t];
   const todayConfirmed=todayRec&&todayRec.settled;
   const paceDisp=Math.floor(pace/100)*100;
-  const paceLeft=paceDisp-spent;
+  const paceLeft=paceDisp-net; // 변동 수입까지 반영한 오늘 잔여
 
   // 7일 내 예정(또는 진행 중인) 고정 수입·지출 + 이번 달 체크 상태
   const dd=d.getDate();
@@ -924,7 +959,7 @@ function renderHome(){
       <span class="badge ${status}">${stLabel}</span>
     </div>
     <div class="pace-num num" style="font-size:36px;margin:12px 0 4px;${paceLeft<0?'color:var(--red)':''}">${won(paceLeft)}</div>
-    <div class="pace-sub num">안전 페이스 ${won(paceDisp)} / 하루 · 기록하면 바로 갱신</div>
+    <div class="pace-sub num">안전 페이스 ${won(paceDisp)} / 하루${tInc>0?` · <span style="color:var(--green);font-weight:800">오늘 수입 +${won(tInc)}</span>`:''}</div>
     <div class="pace-sub" style="margin-top:4px;font-size:12px">${stMsg}</div>
     <div class="pstat-row">
       <div class="pstat"><b class="num">${won(spent)}</b><span>오늘 지출</span></div>
@@ -949,7 +984,7 @@ function renderHome(){
   ${ovNow?`
   <div class="section-label">카테고리 예산</div>
   <div class="card" style="padding:10px 20px 16px">
-    ${CATS.filter(c=>ovNow[c.id]>0).map(c=>{
+    ${cats().filter(c=>ovNow[c.id]>0).map(c=>{
       const b=+ovNow[c.id],sp=catSpent[c.id]||0;
       const p=Math.min(100,b>0?sp/b*100:0),over=sp>b;
       return `<div style="padding:8px 0">
@@ -1067,13 +1102,13 @@ function renderRecord(){
     const repairBtn=(r.settled&&r.success===false&&C.repairAvail>0)?`<button class="chip-btn gold" style="flex:none;padding:6px 12px;font-size:12px" onclick="repairDay('${r.date}')">🩹 리페어</button>`:'';
     return `<div class="day-group">
       <div class="day-head"><span class="d">${fmtDate(r.date,true)}</span>${tag}${repairBtn}
-        <span class="sum num">${r.spent?won(r.spent):'지출 없음'}</span></div>
+        <span class="sum num">${r.inc?`<b style="color:var(--green)">+${won(r.inc)}</b> · `:''}${r.spent?won(r.spent):'지출 없음'}</span></div>
       ${r.exps.map(e=>`
         <div class="exp-row">
-          <div class="exp-ic">${cat(e.cat).ic}</div>
-          <div><div class="exp-name">${esc(e.name)||cat(e.cat).name}</div>
-          <div class="exp-src">${e.time?e.time+' · ':''}${cat(e.cat).name}${e.src==='ocr'?' · 📷 캡처':e.src==='paste'?' · 📋 붙여넣기':''}</div></div>
-          <div class="exp-amt num">${won(e.amt)}</div>
+          <div class="exp-ic">${e.kind==='inc'?'💰':cat(e.cat).ic}</div>
+          <div><div class="exp-name">${esc(e.name)||(e.kind==='inc'?'수입':cat(e.cat).name)}</div>
+          <div class="exp-src">${e.time?e.time+' · ':''}${e.kind==='inc'?'수입':cat(e.cat).name}${e.src==='ocr'?' · 📷 캡처':e.src==='paste'?' · 📋 붙여넣기':''}</div></div>
+          <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
           <button class="exp-del" onclick="delExp('${e.id}')">✕</button>
         </div>`).join('')}
     </div>`;
@@ -1122,13 +1157,15 @@ function openDay(date){
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">${tag}</div>
       <div class="calc-preview" style="margin:0 0 16px">
         <div class="calc-row"><span>이날의 안전 페이스</span><b class="num">${won(Math.floor(r.pace))}</b></div>
-        <div class="calc-row"><span>지출 합계</span><b class="num ${r.spent>r.pace?'neg':''}">${won(r.spent)}</b></div>
+        <div class="calc-row"><span>지출 합계</span><b class="num">${won(r.spent)}</b></div>
+        ${r.inc?`<div class="calc-row"><span>수입</span><b class="num pos">+${won(r.inc)}</b></div>
+        <div class="calc-row"><span>순 지출</span><b class="num ${r.net>r.pace?'neg':''}">${won(r.net)}</b></div>`:''}
       </div>
       ${r.exps.length?r.exps.map(e=>`
         <div class="exp-row" style="padding:11px 2px">
-          <div class="exp-ic">${cat(e.cat).ic}</div>
-          <div><div class="exp-name">${esc(e.name)||cat(e.cat).name}${e.time?`<span style="color:var(--faint);font-weight:600;font-size:12px"> · ${e.time}</span>`:''}</div></div>
-          <div class="exp-amt num">${won(e.amt)}</div>
+          <div class="exp-ic">${e.kind==='inc'?'💰':cat(e.cat).ic}</div>
+          <div><div class="exp-name">${esc(e.name)||(e.kind==='inc'?'수입':cat(e.cat).name)}${e.time?`<span style="color:var(--faint);font-weight:600;font-size:12px"> · ${e.time}</span>`:''}</div></div>
+          <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
           <button class="exp-del" onclick="delExp('${e.id}');openDay('${date}')">✕</button>
         </div>`).join(''):'<div class="hint" style="text-align:center;margin:4px 0 14px">기록된 지출이 없어요</div>'}
       ${due.length?`<div class="section-label" style="padding:14px 2px 4px">이날 예정된 고정 수입·지출</div>
@@ -1274,7 +1311,8 @@ function renderFixed(){
   el.innerHTML=`
   <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 20px 2px">
     <div style="font-size:18px;font-weight:900;letter-spacing:-.02em">${cy}년 ${cm}월${isCur?'':' <span style="font-size:11.5px;color:var(--faint);font-weight:700">다른 달</span>'}</div>
-    <div class="cal-nav">
+    <div class="cal-nav" style="align-items:center">
+      ${isCur?'':`<button style="width:auto;padding:0 11px;font-size:12px;font-weight:800;color:var(--p-deep);background:var(--p-soft);height:32px" onclick="fxViewYM=null;renderFixed()">이번 달</button>`}
       <button onclick="moveFxMonth(-1)">‹</button><button onclick="moveFxMonth(1)">›</button>
     </div>
   </div>
@@ -1314,13 +1352,8 @@ function openFixedSheet(id,kind){
   const ymV=fxViewYM||today().slice(0,7); // 고정 탭에서 보고 있는 달 기준
   const ov=f?((S.fxOv[ymV]||{})[f.id]||{}):{};
   document.getElementById('fx-sheet-title').textContent=(inc?'고정 수입':'고정 지출')+(f?' 수정':' 추가');
-  const P=inc?INC_PRESETS:PRESETS.slice(0,8);
   const body=document.getElementById('fx-sheet-body');
   body.innerHTML=`
-    ${!f?`<div class="field"><label>빠른 선택</label>
-    <div class="cat-grid">
-      ${P.map((p,i)=>`<button class="cat-cell" onclick="fxPreset(${i})"><div class="ci">${p.ic}</div><div class="cl">${p.name}</div></button>`).join('')}
-    </div></div>`:''}
     <div class="field"><label>이름</label><input type="text" id="fx-name" value="${f?esc(f.name):''}" placeholder="${inc?'예: 월급':'예: 넷플릭스'}"></div>
     <div class="field"><label>이모지 (선택)</label>
       <div style="display:flex;align-items:center;gap:10px">
@@ -1403,19 +1436,6 @@ function renderCycleFields(f){
     box.innerHTML=`<select id="fx-week" style="width:100%">${[1,2,3,4,5].map(n=>`<option value="${n}" ${week===n?'selected':''}>매달 ${n}번째 주</option>`).join('')}</select>
       <div class="hint" style="margin-top:8px">달력의 그 주 전체에 바로 표시돼요. 그 주가 없는 달엔 마지막 주로 잡혀요.</div>`;
   }
-}
-function fxPreset(i){
-  const P=fxSheetKind==='inc'?INC_PRESETS:PRESETS;
-  const p=P[i];
-  document.getElementById('fx-name').value=p.name;
-  document.getElementById('fx-amt').value=p.amt.toLocaleString('ko-KR');
-  pickEmo(p.ic);
-  const ci=document.getElementById('fx-ic-custom');if(ci)ci.value=p.ic;
-  fxSheetCycle='m';
-  document.querySelectorAll('#fx-cycle-seg button').forEach(x=>x.classList.toggle('on',x.dataset.cy==='m'));
-  renderCycleFields(null);
-  const d=document.getElementById('fx-day'),de=document.getElementById('fx-day-end');
-  if(d){d.value=p.day;de.value=p.day;}
 }
 function saveFixed(id){
   const name=document.getElementById('fx-name').value.trim();
@@ -1524,7 +1544,7 @@ function renderVault(){
       <div class="e-t">아직 비어 있어요</div>
       <div class="e-s">하루를 페이스 안에서 마감하면<br>차액이 자동으로 쌓여요</div></div>`}
   </div>
-  <div class="hint" style="padding:0 24px">저금통은 가상이에요. 실제 이체는 일어나지 않고, 예산 완충으로도 쓰이지 않아요(성역).</div>`;
+  <div class="hint" style="padding:0 24px">저금통은 가상이에요. 페이스보다 아끼면 쌓이고, 초과한 날을 마감하면 부족분만큼 자동으로 꺼내 메꿔요.</div>`;
 }
 function openGoal(id){
   const g=id?S.goals.find(x=>x.id===id):null;
@@ -1608,14 +1628,20 @@ function renderConfirmForm(cand,idx,total){
   p.innerHTML=`
     ${cand.raw?`<div class="cand-box"><div class="ct">📄 읽어낸 내용${multi?` — 후보 ${idx+1} / ${total}`:''} (확인·수정해 주세요)</div>
     <div class="cv">${esc(cand.raw).slice(0,300)}</div></div>`:''}
+    <div class="seg" id="in-kind" style="margin-bottom:16px">
+      <button class="${cand.kind==='inc'?'':'on'}" data-k="exp" onclick="pickKind('exp',this)">💸 지출</button>
+      <button class="${cand.kind==='inc'?'on':''}" data-k="inc" onclick="pickKind('inc',this)">💰 수입</button>
+    </div>
     <div class="field"><label>금액</label>
       <div class="won-wrap"><input type="text" inputmode="numeric" id="in-amt" value="${cand.amt?(+cand.amt).toLocaleString('ko-KR'):''}" placeholder="0" oninput="fmtInput(this)"></div></div>
-    <div class="field"><label>어디에 썼나요?</label>
-      <input type="text" id="in-name" value="${esc(cand.name||'')}" placeholder="예: 스타벅스"></div>
+    <div class="field"><label>내용</label>
+      <input type="text" id="in-name" value="${esc(cand.name||'')}" placeholder="예: 스타벅스 / 당근 판매"></div>
+    <div id="in-cat-wrap" style="${cand.kind==='inc'?'display:none':''}">
     <div class="field"><label>분류</label>
       <div class="cat-grid" id="in-cats">
-        ${CATS.map(c=>`<button class="cat-cell ${c.id===(cand.cat||'food')?'on':''}" data-c="${c.id}"><div class="ci">${c.ic}</div><div class="cl">${c.name}</div></button>`).join('')}
+        ${cats().map(c=>`<button class="cat-cell ${c.id===(cand.cat||'food')?'on':''}" data-c="${c.id}"><div class="ci">${c.ic}</div><div class="cl">${c.name}</div></button>`).join('')}
       </div></div>
+    </div>
     <div style="display:flex;gap:10px">
       <div class="field" style="flex:1.2"><label>날짜 (필수)</label>
         <input type="date" id="in-date" value="${cand.date||inputDate}" max="${today()}"></div>
@@ -1631,10 +1657,16 @@ function renderConfirmForm(cand,idx,total){
     });
   });
 }
+function pickKind(k,btn){
+  btn.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===btn));
+  const w=document.getElementById('in-cat-wrap');
+  if(w)w.style.display=k==='inc'?'none':'';
+}
 function saveExp(src){
   const amt=num(document.getElementById('in-amt').value);
   const name=document.getElementById('in-name').value.trim();
-  const catId=document.querySelector('#in-cats .cat-cell.on')?.dataset.c||'etc';
+  const kind=document.querySelector('#in-kind button.on')?.dataset.k||'exp';
+  const catId=kind==='inc'?'etc':(document.querySelector('#in-cats .cat-cell.on')?.dataset.c||'etc');
   let d=document.getElementById('in-date').value;
   const time=document.getElementById('in-time')?.value||'';
   if(!amt){toast('금액을 입력해주세요');return;}
@@ -1643,9 +1675,11 @@ function saveExp(src){
   // 시작일 이전 날짜로 기록하면 시작일을 그 날로 당김 (날짜는 절대 바꾸지 않는다)
   let movedStart=false;
   if(S.startDate&&d<S.startDate){S.startDate=d;movedStart=true;}
-  S.exp.push({id:uid(),d,amt,name,cat:catId,src,time});
+  const rec={id:uid(),d,amt,name,cat:catId,src,time};
+  if(kind==='inc')rec.kind='inc';
+  S.exp.push(rec);
   save();
-  toast(movedStart?`✓ ${won(amt)} 기록 · 시작일을 ${fmtDate(d)}로 당겼어요`:`✓ ${won(amt)} 기록했어요`);
+  toast(movedStart?`✓ 기록 · 시작일을 ${fmtDate(d)}로 당겼어요`:kind==='inc'?`✓ +${won(amt)} 수입 기록했어요`:`✓ ${won(amt)} 기록했어요`);
   if(candQueue.length&&candIdx<candQueue.length-1){candIdx++;render();showCand();}
   else{candQueue=[];closeSheets();render();}
 }
@@ -1797,6 +1831,7 @@ function openSettings(){
     <button class="cta" onclick="closeSheets();go('fixed')">고정 수입 관리하러 가기</button>
     <div style="height:14px"></div>
     <button class="settings-row" onclick="closeSheets();openBudgetSheet()"><span>📊 이번 달 예산 직접 설정</span><span class="sv">카테고리별</span></button>
+    <button class="settings-row" onclick="closeSheets();openCats()"><span>🏷️ 카테고리 관리</span><span class="sv">추가·삭제</span></button>
     <button class="settings-row" onclick="exportData()"><span>📤 데이터 내보내기 (JSON)</span><span class="sv">백업</span></button>
     <button class="settings-row" onclick="document.getElementById('import-file').click()"><span>📥 데이터 가져오기</span><span class="sv">복원</span></button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this.files[0])">
@@ -1814,7 +1849,7 @@ function openBudgetSheet(){
   document.getElementById('budget-body').innerHTML=`
     <div class="hint" style="margin:0 0 16px">자동 계산 예산은 <b class="num">${won(auto)}</b>(고정 수입 − 고정 지출${S.startDate&&ym===S.startDate.slice(0,7)?', 남은 날 일할':''})이에요.<br>
     월 중간에 시작해 예산이 애매하면, 아래에 카테고리별로 직접 적으세요. <b>합계가 이번 달 예산</b>이 돼요.</div>
-    ${CATS.map(c=>`
+    ${cats().map(c=>`
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
         <div class="fx-ic" style="width:38px;height:38px;font-size:17px;flex-shrink:0">${c.ic}</div>
         <div style="font-size:14px;font-weight:800;width:40px;flex-shrink:0">${c.name}</div>
@@ -1833,13 +1868,13 @@ function openBudgetSheet(){
   showSheet('sheet-budget');
 }
 function bgTotal(){
-  const s=CATS.reduce((a,c)=>a+num(document.getElementById('bg-'+c.id)?.value||0),0);
+  const s=cats().reduce((a,c)=>a+num(document.getElementById('bg-'+c.id)?.value||0),0);
   const el=document.getElementById('bg-total');if(el)el.textContent=won(s);
 }
 function saveBudget(){
   const ym=today().slice(0,7);
   const o={};let s=0;
-  CATS.forEach(c=>{const v=num(document.getElementById('bg-'+c.id).value);if(v>0){o[c.id]=v;s+=v;}});
+  cats().forEach(c=>{const v=num(document.getElementById('bg-'+c.id).value);if(v>0){o[c.id]=v;s+=v;}});
   if(s>0)S.catBudget[ym]=o;
   else delete S.catBudget[ym];
   save();closeSheets();render();
@@ -1897,6 +1932,96 @@ function renderStreak(){
       <span><i class="st over"></i>초과</span><span><i class="st pend"></i>확인 대기</span>
     </div>
     <div class="hint" style="text-align:center;margin-top:10px">돈을 안 쓴 날은 자동 성공 · 밀린 날은 스트릭을 깨지 않아요</div>`;
+}
+
+// --- 카테고리 관리 ---
+function openCats(){
+  const active=cats();
+  const offs=DEFAULT_CATS.filter(c=>(S.catsOff||[]).includes(c.id));
+  document.getElementById('cats-body').innerHTML=`
+    ${active.map(c=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line)">
+        <div class="fx-ic" style="width:38px;height:38px;font-size:17px">${c.ic}</div>
+        <div style="flex:1;font-size:14.5px;font-weight:800">${esc(c.name)}</div>
+        ${c.id==='etc'?'<span class="sv" style="font-size:11.5px;color:var(--faint);font-weight:700">기본</span>':`<button class="exp-del" onclick="delCat('${c.id}')">✕</button>`}
+      </div>`).join('')}
+    ${offs.length?`<div class="section-label" style="padding:14px 2px 4px">삭제한 기본 카테고리</div>
+    ${offs.map(c=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:9px 2px;opacity:.55">
+        <div class="fx-ic" style="width:34px;height:34px;font-size:15px">${c.ic}</div>
+        <div style="flex:1;font-size:13.5px;font-weight:700">${esc(c.name)}</div>
+        <button class="chip-btn ghost" style="flex:none;padding:7px 13px;font-size:12px" onclick="restoreCat('${c.id}')">복구</button>
+      </div>`).join('')}`:''}
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <input type="text" id="newcat-ic" placeholder="😀" maxlength="4" style="width:58px;padding:12px 0;text-align:center;border:1.5px solid var(--line2);border-radius:12px;background:var(--bg);font-size:17px;outline:none">
+      <input type="text" id="newcat-name" placeholder="새 카테고리 이름" style="flex:1;padding:12px 14px;border:1.5px solid var(--line2);border-radius:12px;background:var(--bg);font-size:14.5px;font-weight:700;outline:none">
+      <button class="chip-btn solid" style="flex:none;padding:12px 18px" onclick="addCat()">추가</button>
+    </div>`;
+  showSheet('sheet-cats');
+}
+function addCat(){
+  const ic=document.getElementById('newcat-ic').value.trim()||'🏷️';
+  const name=document.getElementById('newcat-name').value.trim();
+  if(!name){toast('이름을 입력해주세요');return;}
+  S.cats.push({id:'c'+uid(),ic,name});
+  save();openCats();render();toast(`🏷️ '${name}' 카테고리를 추가했어요`);
+}
+function delCat(id){
+  if(id==='etc'){toast('기타는 지울 수 없어요');return;}
+  if(DEFAULT_CATS.some(c=>c.id===id))S.catsOff.push(id);
+  else S.cats=S.cats.filter(c=>c.id!==id);
+  save();openCats();render();toast('삭제했어요. 기존 기록은 그대로 보여요');
+}
+function restoreCat(id){
+  S.catsOff=S.catsOff.filter(x=>x!==id);
+  save();openCats();render();
+}
+
+// --- 카테고리별 지출 분석 (도넛) ---
+const ANA_COLORS=['#FF8C42','#3498DB','#2ECC71','#9B59B6','#E74C3C','#F1C40F','#16A085','#95A5A6','#E8571F','#8E44AD'];
+let anaYM=null;
+function openAnalysis(){
+  anaYM=calMonth||today().slice(0,7);
+  renderAna();
+  showSheet('sheet-ana');
+}
+function moveAna(n){
+  let[y,m]=anaYM.split('-').map(Number);m+=n;
+  if(m<1){m=12;y--;}if(m>12){m=1;y++;}
+  anaYM=y+'-'+String(m).padStart(2,'0');renderAna();
+}
+function renderAna(){
+  const[y,m]=anaYM.split('-').map(Number);
+  const totals={};let total=0,cnt=0;
+  S.exp.forEach(e=>{
+    if(e.kind!=='inc'&&e.d.slice(0,7)===anaYM){totals[e.cat]=(totals[e.cat]||0)+e.amt;total+=e.amt;cnt++;}
+  });
+  const list=Object.entries(totals).map(([id,amt])=>({c:cat(id),amt})).sort((a,b)=>b.amt-a.amt);
+  let acc=0;
+  const stops=list.map((x,i)=>{
+    const from=acc/total*100;acc+=x.amt;
+    return `${ANA_COLORS[i%ANA_COLORS.length]} ${from}% ${acc/total*100}%`;
+  }).join(',');
+  document.getElementById('ana-body').innerHTML=`
+    <div class="cal-head" style="margin-bottom:6px">
+      <div class="cal-title">${y}년 ${m}월</div>
+      <div class="cal-nav"><button onclick="moveAna(-1)">‹</button><button onclick="moveAna(1)">›</button></div>
+    </div>
+    ${total?`
+    <div class="donut" style="background:conic-gradient(${stops})">
+      <div class="ctr"><b class="num">${manwon(total)}</b><span class="num">${cnt}건</span></div>
+    </div>
+    <div style="margin-top:6px">
+      ${list.map((x,i)=>`
+        <div style="display:flex;align-items:center;gap:11px;padding:10px 2px;border-bottom:1px solid var(--line)">
+          <span style="width:11px;height:11px;border-radius:4px;background:${ANA_COLORS[i%ANA_COLORS.length]};flex-shrink:0"></span>
+          <span style="font-size:14px;font-weight:800">${x.c.ic} ${esc(x.c.name)}</span>
+          <span style="margin-left:auto;font-size:14px;font-weight:800" class="num">${won(x.amt)}</span>
+          <span style="width:44px;text-align:right;font-size:12.5px;color:var(--faint);font-weight:700" class="num">${Math.round(x.amt/total*100)}%</span>
+        </div>`).join('')}
+    </div>`:`
+    <div class="empty" style="padding:36px 10px"><div class="e-ic">📊</div>
+    <div class="e-t">이 달의 지출 기록이 없어요</div></div>`}`;
 }
 
 function exportData(){
@@ -2065,7 +2190,7 @@ function onbBudgetMode(m){
   if(m==='auto'){p.innerHTML='';document.getElementById('onb-done').disabled=false;return;}
   p.innerHTML=`
     <div class="hint" style="margin:12px 0 10px">이번 달에 쓸 금액을 카테고리별로 적어주세요. <b>합계가 이번 달 예산</b>이 돼요. 다음 달부터는 자동 계산으로 돌아가요.</div>
-    ${CATS.map(c=>`
+    ${cats().map(c=>`
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
       <span style="font-size:17px;width:24px;text-align:center">${c.ic}</span>
       <span style="font-size:13px;font-weight:800;width:36px;flex-shrink:0">${c.name}</span>
@@ -2079,7 +2204,7 @@ function onbBudgetMode(m){
 }
 function onbCatTotal(){
   let s=0;
-  CATS.forEach(c=>{const el=document.getElementById('ob-'+c.id);if(el){onbCat[c.id]=num(el.value);s+=onbCat[c.id];}});
+  cats().forEach(c=>{const el=document.getElementById('ob-'+c.id);if(el){onbCat[c.id]=num(el.value);s+=onbCat[c.id];}});
   const el=document.getElementById('ob-total');if(el)el.textContent=won(s);
   document.getElementById('onb-done').disabled=(onbBMode==='direct'&&s<=0);
 }
@@ -2095,7 +2220,7 @@ function onbFinish(){
   S.startDate=today();
   if(onbBMode==='direct'){
     const o={};let s=0;
-    CATS.forEach(c=>{const v=onbCat[c.id]||0;if(v>0){o[c.id]=v;s+=v;}});
+    cats().forEach(c=>{const v=onbCat[c.id]||0;if(v>0){o[c.id]=v;s+=v;}});
     if(s>0)S.catBudget[today().slice(0,7)]=o;
   }
   S.onboarded=true;
