@@ -61,8 +61,12 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .pstat b{font-size:16.5px;font-weight:900;display:block;letter-spacing:-.02em}
 .pstat span{font-size:11.5px;color:var(--faint);font-weight:700;margin-top:3px;display:block}
 .close-btn{width:100%;padding:18px;border-radius:18px;background:var(--ink);color:#fff;font-size:16.5px;font-weight:900;
-  display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 8px 22px rgba(26,31,28,.22);transition:transform .12s}
-.close-btn:active{transform:scale(.97)}
+  display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 8px 22px rgba(26,31,28,.22);transition:transform .12s;
+  position:relative;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.close-btn .fill{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,rgba(47,165,123,.85),rgba(14,123,84,.95));border-radius:inherit}
+.close-btn.holding{transform:scale(.975)}
+.close-btn.holding .fill{width:100%;transition:width .9s linear}
+.close-btn .lb{position:relative;z-index:1;display:flex;align-items:center;gap:9px}
 .close-btn.done{background:var(--green-soft);color:var(--green-deep);box-shadow:none;pointer-events:none}
 .hero-edit{position:absolute;top:16px;right:16px;z-index:2;font-size:11.5px;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);border-radius:100px;padding:6px 12px}
 .hero-edit:active{background:rgba(255,255,255,.3)}
@@ -931,7 +935,7 @@ function renderHome(){
 
   <div style="margin:0 16px 12px">
     ${!todayConfirmed?`
-    <button class="close-btn" onclick="confirmDay('${t}')">🌙 오늘 하루 마감하기</button>`:`
+    <button class="close-btn" id="close-hold"><span class="fill"></span><span class="lb">🌙 꾹 눌러서 하루 마감</span></button>`:`
     <button class="close-btn done">✅ 오늘 마감 완료 — 푹 쉬어요</button>`}
   </div>
 
@@ -970,6 +974,32 @@ function renderHome(){
       </div>`).join('')}
   </div>`:''}
   <div style="height:8px"></div>`;
+  bindHold();
+}
+
+// 마감 버튼 롱프레스 (0.9초 꾹 누르면 마감 — 오터치 방지)
+function bindHold(){
+  const btn=document.getElementById('close-hold');
+  if(!btn)return;
+  let timer=null;
+  const start=e=>{
+    e.preventDefault();
+    btn.classList.add('holding');
+    timer=setTimeout(()=>{
+      timer=null;
+      btn.classList.remove('holding');
+      confirmDay(today());
+    },900);
+  };
+  const cancel=()=>{
+    if(timer){clearTimeout(timer);timer=null;}
+    btn.classList.remove('holding');
+  };
+  btn.addEventListener('pointerdown',start);
+  btn.addEventListener('pointerup',cancel);
+  btn.addEventListener('pointercancel',cancel);
+  btn.addEventListener('pointerleave',cancel);
+  btn.addEventListener('contextmenu',e=>e.preventDefault());
 }
 
 // ---------- RECORD ----------
@@ -1242,16 +1272,21 @@ function renderFixed(){
   const incs=vis.filter(f=>f.kind==='inc').sort((a,b)=>a.day-b.day);
   const exps=vis.filter(f=>f.kind!=='inc').sort((a,b)=>a.day-b.day);
   el.innerHTML=`
-  <div class="fixed-hero">
-    <div style="display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1">
-      <div class="cap">${cy}년 ${cm}월 고정 지출${isCur?'':' (다른 달 보기)'}</div>
-      <div style="display:flex;gap:2px">
-        <button style="width:30px;height:30px;border-radius:9px;color:#fff;background:rgba(255,255,255,.14);font-size:15px" onclick="moveFxMonth(-1)">‹</button>
-        <button style="width:30px;height:30px;border-radius:9px;color:#fff;background:rgba(255,255,255,.14);font-size:15px" onclick="moveFxMonth(1)">›</button>
-      </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 20px 2px">
+    <div style="font-size:18px;font-weight:900;letter-spacing:-.02em">${cy}년 ${cm}월${isCur?'':' <span style="font-size:11.5px;color:var(--faint);font-weight:700">다른 달</span>'}</div>
+    <div class="cal-nav">
+      <button onclick="moveFxMonth(-1)">‹</button><button onclick="moveFxMonth(1)">›</button>
     </div>
-    <div class="big num">−${won(expT)}</div>
-    <div class="meta">${incT?`고정 수입 +${won(incT)} · `:''}항목을 누르면 이 달만 금액 조정·쉬어감이 가능해요</div>
+  </div>
+  <div class="duo" style="margin-top:10px">
+    <div class="card" style="margin:0">
+      <div class="mini-cap">고정 수입</div>
+      <div class="mini-num num" style="color:var(--green)">+${won(incT)}</div>
+    </div>
+    <div class="card" style="margin:0">
+      <div class="mini-cap">고정 지출</div>
+      <div class="mini-num num">−${won(expT)}</div>
+    </div>
   </div>
   <div class="section-label">고정 수입</div>
   <div class="fx-list">
@@ -1262,8 +1297,7 @@ function renderFixed(){
   <div class="fx-list">
     ${exps.map(rowOf).join('')}
     <button class="add-row" onclick="openFixedSheet(null,'exp')">＋ 고정 지출 추가</button>
-  </div>
-  <div class="hint" style="padding:0 24px">리스트(기본값)는 매달 반복돼요. 특정 달만 다르면 그 달로 이동해 항목을 눌러 조정하세요 — 다른 달엔 영향 없어요.</div>`;
+  </div>`;
 }
 const INC_PRESETS=[
   {ic:'💼',name:'월급',amt:2500000,day:25},{ic:'💸',name:'부수입',amt:300000,day:10},
@@ -1606,10 +1640,12 @@ function saveExp(src){
   if(!amt){toast('금액을 입력해주세요');return;}
   if(!d){toast('날짜를 입력해주세요');return;}
   if(d>today())d=today();
-  if(S.startDate&&d<S.startDate)d=S.startDate;
+  // 시작일 이전 날짜로 기록하면 시작일을 그 날로 당김 (날짜는 절대 바꾸지 않는다)
+  let movedStart=false;
+  if(S.startDate&&d<S.startDate){S.startDate=d;movedStart=true;}
   S.exp.push({id:uid(),d,amt,name,cat:catId,src,time});
   save();
-  toast(`✓ ${won(amt)} 기록했어요`);
+  toast(movedStart?`✓ ${won(amt)} 기록 · 시작일을 ${fmtDate(d)}로 당겼어요`:`✓ ${won(amt)} 기록했어요`);
   if(candQueue.length&&candIdx<candQueue.length-1){candIdx++;render();showCand();}
   else{candQueue=[];closeSheets();render();}
 }
