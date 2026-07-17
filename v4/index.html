@@ -1110,19 +1110,27 @@ function renderRecord(){
   }).join(''):`<div class="empty"><div class="e-ic">🧾</div><div class="e-t">이 달의 기록이 아직 없어요</div>
     <div class="e-s">＋ 버튼으로 기록해 보세요</div></div>`;
 
-  // 이번(보고 있는) 달 지출·수입 합계
-  let mSpent=0,mInc=0;
+  // 이번(보고 있는) 달 지출·수입 합계 — 변동 기록 + 결제 체크한 고정 항목
+  let mSpent=0,mInc=0,fxSpent=0,fxInc=0;
   S.exp.forEach(e=>{if(e.d.slice(0,7)===calMonth){if(e.kind==='inc')mInc+=e.amt;else mSpent+=e.amt;}});
+  S.fixed.forEach(f=>{
+    if(!fxPaidOn(f.id,calMonth))return;
+    const a=fxMonthAmt(f,cy,cm);if(!a)return;
+    if(f.kind==='inc')fxInc+=a;else fxSpent+=a;
+  });
+  const mSpentAll=mSpent+fxSpent, mIncAll=mInc+fxInc;
 
   el.innerHTML=`
   <div class="duo" style="margin-top:8px">
     <div class="card" style="margin:0">
       <div class="mini-cap">${cm}월 지출</div>
-      <div class="mini-num num">${won(mSpent)}</div>
+      <div class="mini-num num">${won(mSpentAll)}</div>
+      ${fxSpent?`<div class="mini-sub num">변동 ${won(mSpent)} · 고정 ${won(fxSpent)}</div>`:''}
     </div>
     <div class="card" style="margin:0">
       <div class="mini-cap">${cm}월 수입</div>
-      <div class="mini-num num" style="color:var(--green)">+${won(mInc)}</div>
+      <div class="mini-num num" style="color:var(--green)">+${won(mIncAll)}</div>
+      ${fxInc?`<div class="mini-sub num">변동 ${won(mInc)} · 고정 ${won(fxInc)}</div>`:''}
     </div>
   </div>
   <div class="cal">
