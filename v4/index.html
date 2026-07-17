@@ -65,10 +65,12 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
   display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 8px 22px rgba(26,31,28,.22);transition:transform .12s;
   position:relative;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
 .close-btn .fill{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,rgba(255,164,94,.9),rgba(240,118,31,.95));border-radius:inherit}
+.close-btn .fill.cancel{background:linear-gradient(90deg,rgba(231,76,60,.35),rgba(231,76,60,.6))}
 .close-btn.holding{transform:scale(.975)}
-.close-btn.holding .fill{width:100%;transition:width .9s linear}
+.close-btn.holding .fill{width:100%;transition:width 1.5s linear}
 .close-btn .lb{position:relative;z-index:1;display:flex;align-items:center;gap:9px}
-.close-btn.done{background:var(--green-soft);color:var(--green-deep);box-shadow:none;pointer-events:none}
+.close-btn.done{background:var(--green-soft);color:var(--green-deep);box-shadow:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.close-btn.done.holding{transform:scale(.975)}
 .hero-edit{position:absolute;top:16px;right:16px;z-index:2;font-size:11.5px;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);border-radius:100px;padding:6px 12px}
 .hero-edit:active{background:rgba(255,255,255,.3)}
 /* 유리병 저금통 */
@@ -643,7 +645,13 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 
 // ---------- date helpers ----------
 function ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function today(){return ds(new Date());}
+// 하루의 경계는 자정이 아니라 새벽 5시. 5시 전이면 아직 '어제'로 친다.
+const DAY_START_HOUR=5;
+function today(){
+  const d=new Date();
+  if(d.getHours()<DAY_START_HOUR)d.setDate(d.getDate()-1);
+  return ds(d);
+}
 function pd(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
 function dim(y,m){return new Date(y,m,0).getDate();} // m: 1-12
 const DOW=['일','월','화','수','목','금','토'];
@@ -786,8 +794,8 @@ function calc(){
   const t=today();
   const res={days:[],byDate:{},months:[],vault:0,streak:0,successTotal:0,queue:[],
              todayPace:0,todaySpent:0,todayInc:0,todayNet:0,monthBudget:0,monthRemaining:0,monthSpent:0,fixedTotal:0};
-  // 이번 달 기준 고정 지출/수입 합계 (주기 반영)
-  const now0=new Date();
+  // 이번 달 기준 고정 지출/수입 합계 (주기 반영) — logical day 기준
+  const now0=pd(t);
   res.fixedTotal=S.fixed.filter(f=>f.kind!=='inc').reduce((a,f)=>a+fxMonthAmt(f,now0.getFullYear(),now0.getMonth()+1),0);
   res.incTotal=S.fixed.filter(f=>f.kind==='inc').reduce((a,f)=>a+fxMonthAmt(f,now0.getFullYear(),now0.getMonth()+1),0);
   if(!S.startDate)return res;
@@ -979,7 +987,7 @@ function renderHome(){
   <div style="margin:0 16px 12px">
     ${!todayConfirmed?`
     <button class="close-btn" id="close-hold"><span class="fill"></span><span class="lb">🌙 꾹 눌러서 하루 마감</span></button>`:`
-    <button class="close-btn done">✅ 오늘 마감 완료</button>`}
+    <button class="close-btn done" id="close-cancel"><span class="fill cancel"></span><span class="lb">✅ 마감 완료 · 꾹 눌러 취소</span></button>`}
   </div>
 
   ${C.queue.length?`
@@ -1020,29 +1028,32 @@ function renderHome(){
   bindHold();
 }
 
-// 마감 버튼 롱프레스 (0.9초 꾹 누르면 마감 — 오터치 방지)
-function bindHold(){
-  const btn=document.getElementById('close-hold');
+// 마감/취소 버튼 롱프레스 (1.5초 꾹 눌러야 실행 — 오터치 방지)
+const HOLD_MS=1500;
+function longPress(btn,action){
   if(!btn)return;
   let timer=null;
   const start=e=>{
     e.preventDefault();
     btn.classList.add('holding');
-    timer=setTimeout(()=>{
-      timer=null;
-      btn.classList.remove('holding');
-      confirmDay(today());
-    },900);
+    timer=setTimeout(()=>{timer=null;btn.classList.remove('holding');action();},HOLD_MS);
   };
-  const cancel=()=>{
-    if(timer){clearTimeout(timer);timer=null;}
-    btn.classList.remove('holding');
-  };
+  const cancel=()=>{if(timer){clearTimeout(timer);timer=null;}btn.classList.remove('holding');};
   btn.addEventListener('pointerdown',start);
   btn.addEventListener('pointerup',cancel);
   btn.addEventListener('pointercancel',cancel);
   btn.addEventListener('pointerleave',cancel);
   btn.addEventListener('contextmenu',e=>e.preventDefault());
+}
+function bindHold(){
+  longPress(document.getElementById('close-hold'),()=>confirmDay(today()));
+  longPress(document.getElementById('close-cancel'),()=>cancelClose(today()));
+}
+function cancelClose(date){
+  delete S.conf[date];
+  delete S.rep[date]; // 리페어로 지킨 것도 함께 해제
+  save();render();
+  toast('마감을 취소했어요');
 }
 
 // ---------- RECORD ----------
@@ -2324,6 +2335,14 @@ function onbClose(){
 /* ================================================================
    BOOT
 ================================================================ */
+let _lastDay=today();
+function watchDayRollover(){
+  // 앱이 열린 채 새벽 5시를 넘으면 오늘 예산·페이스가 자동으로 갱신되도록
+  setInterval(()=>{
+    const now=today();
+    if(now!==_lastDay){_lastDay=now;calMonth=null;render();}
+  },30000);
+}
 function boot(){
   if(!S.onboarded){
     document.getElementById('onb').classList.add('show');
@@ -2331,6 +2350,7 @@ function boot(){
     onbGo(0);
   }
   go('home');
+  watchDayRollover();
 }
 boot();
 </script>
