@@ -424,7 +424,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
   <section class="screen" id="scr-record">
     <div class="topbar">
       <div class="wordmark"><span class="dot"></span>기록</div>
-      <button class="chip-btn ghost" style="flex:none;padding:8px 15px;font-size:13px" onclick="openAnalysis()">📊 분석</button>
+      <div style="display:flex;gap:6px" id="record-actions"></div>
     </div>
     <div id="record-body"></div>
   </section>
@@ -514,6 +514,13 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
     <div class="sheet-grip"></div>
     <div class="sheet-head"><div class="sheet-title">📊 지출 분석</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
     <div class="sheet-body" id="ana-body"></div>
+  </div>
+
+  <!-- queue sheet (확인 안 한 날) -->
+  <div class="sheet" id="sheet-queue">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head"><div class="sheet-title">📥 확인 안 한 날</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-body" id="queue-body"></div>
   </div>
 
   <!-- day detail sheet -->
@@ -979,7 +986,7 @@ function renderHome(){
   </div>
 
   ${C.queue.length?`
-  <button class="banner todo" onclick="go('record')">
+  <button class="banner todo" onclick="openQueue()">
     <span class="bic">📥</span>
     <span>확인 안 한 날 ${C.queue.length}일</span>
     <span class="arrow">›</span>
@@ -1049,22 +1056,11 @@ function renderRecord(){
   const[cy,cm]=calMonth.split('-').map(Number);
   const total=dim(cy,cm),first=new Date(cy,cm-1,1).getDay();
 
-  // queue section
-  const qHtml=C.queue.length?`
-    <div class="section-label">확인할 날</div>
-    ${C.queue.map(r=>`
-    <div class="q-card">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div><div class="q-date">${fmtDate(r.date,true)}</div>
-        <div class="q-sub num">${r.exps.length?`기록된 지출 ${won(r.spent)} · ${r.exps.length}건`:'아직 기록이 없어요'} · 페이스 ${won(Math.floor(r.pace))}</div></div>
-      </div>
-      <div class="q-actions">
-        <button class="chip-btn ghost" onclick="openInput('${r.date}')">＋ 지출 추가</button>
-        ${r.exps.length
-          ?`<button class="chip-btn solid" onclick="confirmDay('${r.date}')">이대로 마감</button>`
-          :`<button class="chip-btn solid" onclick="confirmDay('${r.date}')">지출 없었어요</button>`}
-      </div>
-    </div>`).join('')}`:'';
+  // topbar 액션: 확인 안 한 날 버튼 + 분석
+  const ra=document.getElementById('record-actions');
+  if(ra)ra.innerHTML=`
+    ${C.queue.length?`<button class="chip-btn solid" style="flex:none;padding:8px 14px;font-size:13px" onclick="openQueue()">📥 확인 ${C.queue.length}</button>`:''}
+    <button class="chip-btn ghost" style="flex:none;padding:8px 15px;font-size:13px" onclick="openAnalysis()">📊 분석</button>`;
 
   // calendar — 주 단위 + 고정지출 예정 바 (탭하면 결제 확인 체크)
   function dayCell(d){
@@ -1123,7 +1119,7 @@ function renderRecord(){
   let mSpent=0,mInc=0;
   S.exp.forEach(e=>{if(e.d.slice(0,7)===calMonth){if(e.kind==='inc')mInc+=e.amt;else mSpent+=e.amt;}});
 
-  el.innerHTML=`${qHtml}
+  el.innerHTML=`
   <div class="duo" style="margin-top:8px">
     <div class="card" style="margin:0">
       <div class="mini-cap">${cm}월 지출</div>
@@ -1601,6 +1597,7 @@ function openInput(date){
   inputDate=date||today();
   inputMode='manual';
   candQueue=[];candIdx=0;
+  returnToQueue=false;
   document.querySelectorAll('#input-seg button').forEach(x=>x.classList.toggle('on',x.dataset.m==='manual'));
   renderInputPanel();
   showSheet('sheet-input');
@@ -1697,7 +1694,10 @@ function saveExp(src){
   save();
   toast(movedStart?`✓ 기록 · 시작일을 ${fmtDate(d)}로 당겼어요`:kind==='inc'?`✓ +${won(amt)} 수입 기록했어요`:`✓ ${won(amt)} 기록했어요`);
   if(candQueue.length&&candIdx<candQueue.length-1){candIdx++;render();showCand();}
-  else{candQueue=[];closeSheets();render();}
+  else{candQueue=[];render();
+    if(returnToQueue){openQueue();} // 대기열에서 왔으면 다시 그 화면으로 (추가된 금액이 보이게)
+    else closeSheets();
+  }
 }
 function delExp(id){
   S.exp=S.exp.filter(e=>e.id!==id);
@@ -1899,6 +1899,60 @@ function saveBudget(){
 function resetBudget(){
   delete S.catBudget[today().slice(0,7)];
   save();closeSheets();render();toast('자동 계산 예산으로 돌아갔어요');
+}
+
+// --- 확인 안 한 날: 날짜별 추가 + 마감 ---
+let returnToQueue=false;
+function openQueue(){
+  renderQueue();
+  showSheet('sheet-queue');
+}
+function renderQueue(){
+  C=calc();
+  const q=C.queue;
+  const body=document.getElementById('queue-body');
+  if(!q.length){
+    body.innerHTML=`<div class="empty" style="padding:30px 10px"><div class="e-ic">✅</div>
+      <div class="e-t">확인 안 한 날이 없어요</div><div class="e-s">모두 정리했어요!</div></div>`;
+    return;
+  }
+  body.innerHTML=q.map(r=>`
+    <div class="q-card" style="margin:0 0 12px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="q-date">${fmtDate(r.date,true)}</div>
+        <div class="q-sub num">페이스 ${won(Math.floor(r.pace))}</div>
+      </div>
+      ${r.exps.length?`<div style="margin-top:10px">
+        ${r.exps.map(e=>`
+          <div class="exp-row" style="padding:8px 0">
+            <div class="exp-ic" style="width:32px;height:32px;font-size:15px">${e.kind==='inc'?'💰':cat(e.cat).ic}</div>
+            <div><div class="exp-name" style="font-size:13.5px">${esc(e.name)||(e.kind==='inc'?'수입':cat(e.cat).name)}</div>
+            <div class="exp-src">${e.time?e.time+' · ':''}${e.kind==='inc'?'수입':cat(e.cat).name}</div></div>
+            <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
+            <button class="exp-del" onclick="delExp('${e.id}');renderQueue()">✕</button>
+          </div>`).join('')}
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 2px 2px;border-top:1px solid var(--line);margin-top:4px">
+          <span style="font-size:12.5px;font-weight:800;color:var(--sub)">합계</span>
+          <b class="num" style="font-size:14.5px">${r.inc?`<span style="color:var(--green)">+${won(r.inc)}</span> · `:''}${won(r.spent)}</b>
+        </div>
+      </div>`:`<div class="q-sub" style="margin-top:8px">아직 기록이 없어요</div>`}
+      <div class="q-actions">
+        <button class="chip-btn ghost" onclick="queueAdd('${r.date}')">＋ 추가</button>
+        <button class="chip-btn solid" onclick="queueConfirm('${r.date}')">${r.exps.length?'이대로 마감':'지출 없었어요'}</button>
+      </div>
+    </div>`).join('');
+}
+function queueAdd(date){
+  openInput(date);
+  returnToQueue=true; // openInput이 false로 초기화한 뒤 다시 켠다
+}
+function queueConfirm(date){
+  S.conf[date]=1;save();
+  const c2=calc();const rr=c2.byDate[date];
+  // 대기열에서는 축하 모달 없이 조용히 정리 (몰아서 처리하기 좋게) — 스트릭·저금통은 그대로 적립
+  toast(rr&&rr.success===false?'마감 · 부족분은 저금통에서 메꿨어요':rr&&rr.saved>0?`마감 · 🪙 ${won(rr.saved)} 저금통에 쌓였어요`:'마감했어요');
+  render();
+  if(c2.queue.length)renderQueue();else closeSheets();
 }
 
 // --- 스트릭 캘린더 ---
