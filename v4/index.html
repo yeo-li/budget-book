@@ -187,31 +187,28 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .chip-btn.solid{background:var(--p);color:#fff}
 .chip-btn.gold{background:var(--gold-soft);color:var(--gold);border:1px solid #F1E3C2}
 
-.cal{margin:0 16px 12px;background:var(--card);border-radius:var(--r-lg);box-shadow:var(--sh);padding:18px;border:1px solid rgba(236,232,222,.6)}
-.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal{margin:0 16px 12px;background:var(--card);border-radius:var(--r-lg);box-shadow:var(--sh);padding:14px 12px;border:1px solid rgba(236,232,222,.6)}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px}
 .cal-title{font-size:15.5px;font-weight:800}
 .cal-nav{display:flex;gap:4px}
 .cal-nav button{width:32px;height:32px;border-radius:10px;color:var(--sub);font-size:15px}
 .cal-nav button:active{background:var(--bg)}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-.cal-dow{font-size:11px;font-weight:700;color:var(--faint);text-align:center;padding:4px 0}
-.cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:10px;font-size:13px;font-weight:600;color:var(--sub);position:relative}
+.cal-dow{font-size:11px;font-weight:700;color:var(--faint);text-align:center;padding:2px 0 4px}
+.caldrow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day{min-height:52px;display:flex;flex-direction:column;align-items:stretch;gap:1px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--sub);position:relative;padding:3px 2px 2px;overflow:hidden}
 .cal-day:active{background:var(--bg)}
-.cal-day.dim{opacity:.28}
-.cal-day.today{background:var(--ink);color:#fff;font-weight:800}
-.cal-day .st{width:6px;height:6px;border-radius:50%}
+.cal-day.dim{opacity:.32}
+.cal-day .dn{display:flex;align-items:center;justify-content:center;gap:3px;height:17px;flex-shrink:0}
+.cal-day.today .dn{background:var(--ink);color:#fff;font-weight:800;border-radius:6px;width:22px;height:22px;margin:0 auto}
+.cal-day .st{width:5px;height:5px;border-radius:50%}
 .st.ok{background:var(--green-mid)}
 .st.over{background:var(--red)}
 .st.pend{background:var(--amber);animation:pulse 1.6s infinite}
 .st.rep{background:var(--gold)}
-.st.none{background:transparent}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-/* 고정지출 예정 바 (v3 스타일 주간 스팬) */
-.caldrow{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-.calevrow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px 3px;margin:2px 0 6px}
-.calev{font-size:9.5px;font-weight:800;padding:3px 5px;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border-left:2.5px solid transparent;transition:opacity .15s,transform .1s}
-.calev:active{transform:scale(.97)}
-.calev.paid{opacity:.4;text-decoration:line-through}
+.cal-ev{font-size:8px;font-weight:700;line-height:1.35;padding:0 2px 0 3px;border-radius:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:2px solid transparent;text-align:left}
+.cal-ev.paid{opacity:.4;text-decoration:line-through}
+.cal-more{font-size:8px;font-weight:800;color:var(--faint);padding-left:3px}
 .payck{width:27px;height:27px;border-radius:50%;border:2px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:transparent;flex-shrink:0;transition:all .15s;background:#fff;cursor:pointer}
 .payck.on{background:var(--green);border-color:var(--green);color:#fff}
 .fx-row.paid .fx-name,.fx-row.paid .fx-amt{opacity:.45;text-decoration:line-through}
@@ -1062,7 +1059,12 @@ function renderRecord(){
     ${C.queue.length?`<button class="chip-btn solid" style="flex:none;padding:8px 14px;font-size:13px" onclick="openQueue()">📥 확인 ${C.queue.length}</button>`:''}
     <button class="chip-btn ghost" style="flex:none;padding:8px 15px;font-size:13px" onclick="openAnalysis()">📊 분석</button>`;
 
-  // calendar — 주 단위 + 고정지출 예정 바 (탭하면 결제 확인 체크)
+  // calendar — 셀 안에 고정지출 라벨(최대 3개, 초과 시 +N). 탭하면 상세로.
+  function evsOf(date){
+    const ddn=+date.slice(8,10);
+    return S.fixed.flatMap(f=>fxBarsInMonth(f,cy,cm).filter(b=>ddn>=b.s&&ddn<=b.e).slice(0,1)
+      .map(()=>({f,paid:fxPaidOn(f.id,calMonth),color:fxColor(f.id)})));
+  }
   function dayCell(d){
     const date=cy+'-'+String(cm).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     const r=C.byDate[date];
@@ -1072,26 +1074,19 @@ function renderRecord(){
       if(r.settled)st=r.success===true?'ok':r.success==='rep'?'rep':'over';
       else if(date<t)st='pend';
     }
+    const evs=evsOf(date);
+    const shown=evs.slice(0,3);
+    const evHtml=shown.map(x=>`<span class="cal-ev ${x.paid?'paid':''}" style="border-left-color:${x.color};color:${x.color};background:${x.color}14">${x.f.kind==='inc'?'＋':''}${esc(x.f.name)}</span>`).join('')
+      +(evs.length>3?`<span class="cal-more">+${evs.length-3}</span>`:'');
     return `<button class="cal-day ${dimmed} ${date===t?'today':''}" onclick="openDay('${date}')">
-      <span>${d}</span><span class="st ${st}"></span></button>`;
+      <span class="dn">${d}${st!=='none'?`<i class="st ${st}"></i>`:''}</span>${evHtml}</button>`;
   }
   const weeks=[];let wk=Array(first).fill(0);
   for(let d=1;d<=total;d++){wk.push(d);if(wk.length===7){weeks.push(wk);wk=[];}}
   if(wk.length){while(wk.length<7)wk.push(0);weeks.push(wk);}
-  const fxItems=S.fixed.flatMap(f=>fxBarsInMonth(f,cy,cm).map(b=>({f,...b,paid:fxPaidOn(f.id,calMonth),color:fxColor(f.id)})));
   let grid='<div class="caldrow">'+DOW.map(w=>`<div class="cal-dow">${w}</div>`).join('')+'</div>';
   weeks.forEach(w=>{
     grid+='<div class="caldrow">'+w.map(d=>d?dayCell(d):'<div></div>').join('')+'</div>';
-    const valid=w.filter(Boolean);
-    const wS=valid[0],wE=valid[valid.length-1];
-    const bars=fxItems.filter(x=>x.e>=wS&&x.s<=wE);
-    if(bars.length){
-      grid+='<div class="calevrow">'+bars.map(x=>{
-        const bs=Math.max(x.s,wS),be=Math.min(x.e,wE);
-        const col=w.indexOf(bs)+1,span=be-bs+1;
-        return `<div class="calev ${x.paid?'paid':''}" style="grid-column:${col}/span ${span};background:${x.color}16;border-left-color:${x.color};color:${x.color}" onclick="togglePaid('${x.f.id}','${calMonth}')">${x.paid?'✓ ':''}${x.f.kind==='inc'?'＋':''}${esc(x.f.name)}</div>`;
-      }).join('')+'</div>';
-    }
   });
 
   // expense list of shown month (desc)
@@ -1157,12 +1152,24 @@ function openDay(date){
   const r=C.byDate[date];
   document.getElementById('day-sheet-title').textContent=fmtDate(date,true);
   const body=document.getElementById('day-sheet-body');
-  if(!r){body.innerHTML=`<div class="empty" style="padding:30px"><div class="e-ic">📭</div><div class="e-t">예산 기간 밖의 날이에요</div></div>`;}
+  const t=today();
+  const[yy,mm,ddn]=date.split('-').map(Number);
+  const ym=date.slice(0,7);
+  const due=S.fixed.flatMap(f=>fxBarsInMonth(f,yy,mm).filter(b=>ddn>=b.s&&ddn<=b.e).slice(0,1).map(b=>({f,...b,amt:fxEff(f,yy,mm).amt,paid:fxPaidOn(f.id,ym)})));
+  const dueHtml=due.length?`<div class="section-label" style="padding:14px 2px 4px">이날 예정된 고정 수입·지출</div>
+    ${due.map(x=>`
+      <div class="fx-row ${x.paid?'paid':''}" style="padding:9px 0">
+        <button class="payck ${x.paid?'on':''}" onclick="togglePaid('${x.f.id}','${ym}');openDay('${date}')">✓</button>
+        <div class="fx-ic">${x.f.ic}</div>
+        <div><div class="fx-name">${esc(x.f.name)}</div><div class="fx-day">${cycleDesc(x.f)}${x.paid?' · 확인됨':''}</div></div>
+        <div class="fx-amt num" ${x.f.kind==='inc'?'style="color:var(--green)"':''}>${x.f.kind==='inc'?'+':''}${won(x.amt)}</div>
+      </div>`).join('')}`:'';
+  if(!r){
+    // 예산 기간 밖(미래 등) — 고정지출 예정만이라도 보여준다
+    body.innerHTML=due.length?dueHtml
+      :`<div class="empty" style="padding:30px"><div class="e-ic">📭</div><div class="e-t">예정된 내역이 없어요</div></div>`;
+  }
   else{
-    const t=today();
-    const[yy,mm,ddn]=date.split('-').map(Number);
-    const ym=date.slice(0,7);
-    const due=S.fixed.flatMap(f=>fxBarsInMonth(f,yy,mm).filter(b=>ddn>=b.s&&ddn<=b.e).slice(0,1).map(b=>({f,...b,amt:fxEff(f,yy,mm).amt,paid:fxPaidOn(f.id,ym)})));
     const tag=r.settled?(r.success===true?`<span class="tag ok">성공 · ${won(r.saved)} 적립 ✓</span>`:r.success==='rep'?'<span class="tag rep">리페어로 지킴 🩹</span>':'<span class="tag over">페이스 초과</span>')
       :(r.date<t?'<span class="tag pend">확인 대기</span>':r.isToday?'<span class="tag pend">진행 중</span>':'');
     body.innerHTML=`
@@ -1180,14 +1187,7 @@ function openDay(date){
           <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
           <button class="exp-del" onclick="delExp('${e.id}');openDay('${date}')">✕</button>
         </div>`).join(''):'<div class="hint" style="text-align:center;margin:4px 0 14px">기록된 지출이 없어요</div>'}
-      ${due.length?`<div class="section-label" style="padding:14px 2px 4px">이날 예정된 고정 수입·지출</div>
-      ${due.map(x=>`
-        <div class="fx-row ${x.paid?'paid':''}" style="padding:9px 0">
-          <button class="payck ${x.paid?'on':''}" onclick="togglePaid('${x.f.id}','${ym}');openDay('${date}')">✓</button>
-          <div class="fx-ic">${x.f.ic}</div>
-          <div><div class="fx-name">${esc(x.f.name)}</div><div class="fx-day">${cycleDesc(x.f)}${x.paid?' · 확인됨':''}</div></div>
-          <div class="fx-amt num" ${x.f.kind==='inc'?'style="color:var(--green)"':''}>${x.f.kind==='inc'?'+':''}${won(x.amt)}</div>
-        </div>`).join('')}`:''}
+      ${dueHtml}
       <div style="display:flex;gap:8px;margin-top:14px">
         ${date<=t?`<button class="chip-btn ghost" style="padding:13px" onclick="closeSheets();openInput('${date}')">＋ 지출 추가</button>`:''}
         ${!r.settled&&date<=t?`<button class="chip-btn solid" style="padding:13px" onclick="confirmDay('${date}')">${r.exps.length?'이대로 마감':'지출 없었어요'}</button>`:''}
