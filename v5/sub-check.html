@@ -241,15 +241,64 @@
     flex-wrap:wrap;
     gap:6px;
     margin-top:8px;
+    max-height:160px;
+    overflow-y:auto;
   }
   .suggest-list button{
-    font-size:12px;
-    padding:5px 9px;
+    font-size:13px;
+    padding:8px 12px;
     border-radius:8px;
     border:1px solid var(--border);
     background:#fafafa;
     color:var(--text);
   }
+  .suggest-list button.selected{
+    background:var(--text);
+    color:#fff;
+    border-color:var(--text);
+  }
+  .suggest-empty{
+    font-size:12px;
+    color:var(--sub);
+    padding:8px 2px;
+  }
+  .plan-list{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    margin-top:8px;
+  }
+  .plan-list button{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    width:100%;
+    text-align:left;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:#fafafa;
+    font-size:14px;
+    color:var(--text);
+  }
+  .plan-list button .plan-price{
+    font-weight:700;
+    white-space:nowrap;
+    margin-left:8px;
+  }
+  .plan-list button.selected{
+    border-color:var(--primary);
+    background:#fff3ec;
+  }
+  .plan-list button.selected .plan-price{
+    color:var(--primary-dark);
+  }
+  .selected-summary{
+    font-size:13px;
+    color:var(--sub);
+    margin-top:6px;
+  }
+  .selected-summary b{color:var(--text);}
   .modal-actions{
     display:flex;
     gap:8px;
@@ -264,6 +313,7 @@
   }
   .btn-cancel{background:#f0f0f2;color:var(--text);}
   .btn-save{background:var(--primary);color:#fff;font-weight:700;}
+  .btn-save:disabled{background:#f0c9b3;color:#fff;}
   .dump-overlay{
     position:fixed;inset:0;
     background:#fff;
@@ -314,32 +364,24 @@
   <div class="modal">
     <h2>구독 추가</h2>
     <div class="field">
-      <label>서비스명</label>
-      <input type="text" id="f-name" placeholder="예: 넷플릭스" autocomplete="off">
+      <label>서비스 검색</label>
+      <input type="text" id="f-search" placeholder="예: 넷플릭스" autocomplete="off">
       <div class="suggest-list" id="suggest-list"></div>
     </div>
-    <div class="field">
-      <label>금액 (원)</label>
-      <input type="number" id="f-amount" placeholder="0" min="0" step="1">
+    <div class="field" id="plan-field" style="display:none;">
+      <label>요금제 선택</label>
+      <div class="plan-list" id="plan-list"></div>
     </div>
-    <div class="field">
-      <label>결제 주기</label>
-      <div class="toggle">
-        <button type="button" id="cycle-monthly" class="active">월</button>
-        <button type="button" id="cycle-yearly">년</button>
-      </div>
+    <div class="field" id="summary-field" style="display:none;">
+      <div class="selected-summary" id="selected-summary"></div>
     </div>
     <div class="field">
       <label>다음 결제일</label>
       <input type="date" id="f-date">
     </div>
-    <div class="field">
-      <label>해지/관리 URL (선택)</label>
-      <input type="url" id="f-cancel-url" placeholder="https://...">
-    </div>
     <div class="modal-actions">
       <button class="btn-cancel" id="modal-cancel">취소</button>
-      <button class="btn-save" id="modal-save">저장</button>
+      <button class="btn-save" id="modal-save" disabled>저장</button>
     </div>
   </div>
 </div>
@@ -358,24 +400,109 @@
 (function(){
   "use strict";
 
-  // 대표 구독 → 해지 URL 매핑
-  var CANCEL_URL_MAP = {
-    "넷플릭스": "TODO-개발자입력",
-    "유튜브 프리미엄": "TODO-개발자입력",
-    "쿠팡와우": "TODO-개발자입력",
-    "티빙": "TODO-개발자입력",
-    "왓챠": "TODO-개발자입력",
-    "디즈니+": "TODO-개발자입력",
-    "스포티파이": "TODO-개발자입력",
-    "챗지피티": "TODO-개발자입력",
-    "네이버플러스": "TODO-개발자입력",
-    "밀리의서재": "TODO-개발자입력",
-    "왓챠피디아": "TODO-개발자입력",
-    "애플뮤직": "TODO-개발자입력",
-    "유데미": "TODO-개발자입력",
-    "리디셀렉트": "TODO-개발자입력"
-  };
-  var SUB_NAMES = Object.keys(CANCEL_URL_MAP);
+  // 대표 구독 카탈로그: 요금제(이름/금액/결제주기) + 해지·관리 URL (2026년 7월 기준 공식 정가)
+  var SUB_CATALOG = [
+    {
+      name: "넷플릭스",
+      cancelUrl: "https://www.netflix.com/YourAccount",
+      plans: [
+        { label: "광고형 스탠다드", amount: 7000, cycle: "monthly" },
+        { label: "스탠다드", amount: 13500, cycle: "monthly" },
+        { label: "프리미엄", amount: 17000, cycle: "monthly" }
+      ]
+    },
+    {
+      name: "유튜브 프리미엄",
+      cancelUrl: "https://www.youtube.com/paid_memberships",
+      plans: [
+        { label: "프리미엄 라이트", amount: 8500, cycle: "monthly" },
+        { label: "프리미엄 개인", amount: 14900, cycle: "monthly" }
+      ]
+    },
+    {
+      name: "쿠팡와우",
+      cancelUrl: "https://www.coupang.com/np/wow/membership",
+      plans: [
+        { label: "와우 멤버십", amount: 7890, cycle: "monthly" }
+      ]
+    },
+    {
+      name: "티빙",
+      cancelUrl: "https://www.tving.com/bill/subscription/plan",
+      plans: [
+        { label: "광고형 스탠다드", amount: 5500, cycle: "monthly" },
+        { label: "베이직", amount: 9500, cycle: "monthly" },
+        { label: "스탠다드", amount: 13500, cycle: "monthly" },
+        { label: "프리미엄", amount: 17000, cycle: "monthly" }
+      ]
+    },
+    {
+      name: "왓챠",
+      cancelUrl: "https://watcha.com/settings/membership",
+      plans: [
+        { label: "베이직", amount: 7900, cycle: "monthly" },
+        { label: "프리미엄", amount: 12900, cycle: "monthly" }
+      ]
+    },
+    {
+      name: "디즈니+",
+      cancelUrl: "https://www.disneyplus.com/account/subscription",
+      plans: [
+        { label: "스탠다드", amount: 9900, cycle: "monthly" },
+        { label: "프리미엄", amount: 13900, cycle: "monthly" }
+      ]
+    },
+    {
+      name: "스포티파이",
+      cancelUrl: "https://www.spotify.com/kr-ko/account/subscription/",
+      plans: [
+        { label: "베이직", amount: 8690, cycle: "monthly" },
+        { label: "개인", amount: 11990, cycle: "monthly" },
+        { label: "듀오", amount: 17985, cycle: "monthly" },
+        { label: "학생", amount: 6600, cycle: "monthly" }
+      ]
+    },
+    {
+      name: "챗지피티",
+      cancelUrl: "https://chatgpt.com/#settings/Subscription",
+      plans: [
+        { label: "Plus", amount: 29000, cycle: "monthly" },
+        { label: "Pro (5x)", amount: 159000, cycle: "monthly" },
+        { label: "Pro (20x)", amount: 299000, cycle: "monthly" }
+      ]
+    },
+    {
+      name: "네이버플러스",
+      cancelUrl: "https://membership.naver.com",
+      plans: [
+        { label: "월간", amount: 4900, cycle: "monthly" },
+        { label: "연간(월 환산)", amount: 3900, cycle: "yearly" }
+      ]
+    },
+    {
+      name: "밀리의서재",
+      cancelUrl: "https://www.millie.co.kr/v3/mymillie/subscribe",
+      plans: [
+        { label: "월간(웹)", amount: 11900, cycle: "monthly" },
+        { label: "연간(월 환산)", amount: 9900, cycle: "yearly" }
+      ]
+    },
+    {
+      name: "애플뮤직",
+      cancelUrl: "https://apps.apple.com/account/subscriptions",
+      plans: [
+        { label: "개인", amount: 8900, cycle: "monthly" },
+        { label: "가족", amount: 13500, cycle: "monthly" }
+      ]
+    },
+    {
+      name: "리디셀렉트",
+      cancelUrl: "https://select.ridibooks.com/mypage/subscribe",
+      plans: [
+        { label: "월정액", amount: 4900, cycle: "monthly" }
+      ]
+    }
+  ];
 
   var LS_SUBS = "subs";
   var LS_EVENTS = "events";
@@ -548,42 +675,96 @@
   // ---------- 모달 ----------
 
   var modalOverlay = document.getElementById("modal-overlay");
-  var currentCycle = "monthly";
+  var selectedService = null; // SUB_CATALOG 항목
+  var selectedPlan = null;    // { label, amount, cycle }
 
   function openModal(){
-    document.getElementById("f-name").value = "";
-    document.getElementById("f-amount").value = "";
+    document.getElementById("f-search").value = "";
     document.getElementById("f-date").value = todayStr();
-    document.getElementById("f-cancel-url").value = "";
-    currentCycle = "monthly";
-    document.getElementById("cycle-monthly").classList.add("active");
-    document.getElementById("cycle-yearly").classList.remove("active");
-    renderSuggestList();
+    selectedService = null;
+    selectedPlan = null;
+    document.getElementById("plan-field").style.display = "none";
+    document.getElementById("summary-field").style.display = "none";
+    document.getElementById("plan-list").innerHTML = "";
+    updateSaveEnabled();
+    renderSuggestList("");
     modalOverlay.classList.remove("hidden");
+    document.getElementById("f-search").focus();
   }
   function closeModal(){
     modalOverlay.classList.add("hidden");
   }
 
-  function renderSuggestList(){
+  function renderSuggestList(query){
     var box = document.getElementById("suggest-list");
     box.innerHTML = "";
-    SUB_NAMES.forEach(function(name){
+    var q = query.trim().toLowerCase();
+    var matches = SUB_CATALOG.filter(function(s){
+      return !q || s.name.toLowerCase().indexOf(q) !== -1;
+    });
+
+    if(matches.length === 0){
+      box.innerHTML = '<div class="suggest-empty">일치하는 구독 서비스가 없어요.</div>';
+      return;
+    }
+
+    matches.forEach(function(service){
       var btn = document.createElement("button");
       btn.type = "button";
-      btn.textContent = name;
+      btn.textContent = service.name;
+      if(selectedService === service) btn.classList.add("selected");
       btn.addEventListener("click", function(){
-        document.getElementById("f-name").value = name;
-        applyCancelUrlSuggestion(name);
+        selectService(service);
       });
       box.appendChild(btn);
     });
   }
 
-  function applyCancelUrlSuggestion(name){
-    if(CANCEL_URL_MAP.hasOwnProperty(name)){
-      document.getElementById("f-cancel-url").value = CANCEL_URL_MAP[name];
-    }
+  function selectService(service){
+    selectedService = service;
+    selectedPlan = null;
+    document.getElementById("f-search").value = service.name;
+    renderSuggestList(service.name);
+    renderPlanList(service);
+    document.getElementById("plan-field").style.display = "block";
+    document.getElementById("summary-field").style.display = "none";
+    updateSaveEnabled();
+  }
+
+  function renderPlanList(service){
+    var box = document.getElementById("plan-list");
+    box.innerHTML = "";
+    service.plans.forEach(function(plan){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.innerHTML = '<span>' + escapeHtml(plan.label) + '</span>' +
+        '<span class="plan-price">' + fmtAmount(plan.amount) + ' / ' + (plan.cycle === "yearly" ? "년" : "월") + '</span>';
+      btn.addEventListener("click", function(){
+        selectPlan(plan, btn);
+      });
+      box.appendChild(btn);
+    });
+  }
+
+  function selectPlan(plan, btnEl){
+    selectedPlan = plan;
+    Array.prototype.forEach.call(document.querySelectorAll("#plan-list button"), function(b){
+      b.classList.remove("selected");
+    });
+    btnEl.classList.add("selected");
+
+    var summaryField = document.getElementById("summary-field");
+    summaryField.style.display = "block";
+    document.getElementById("selected-summary").innerHTML =
+      '선택됨: <b>' + escapeHtml(selectedService.name) + ' · ' + escapeHtml(plan.label) + '</b> · ' +
+      fmtAmount(plan.amount) + ' (' + (plan.cycle === "yearly" ? "매년" : "매월") + ')';
+
+    updateSaveEnabled();
+  }
+
+  function updateSaveEnabled(){
+    var date = document.getElementById("f-date").value;
+    document.getElementById("modal-save").disabled = !(selectedService && selectedPlan && date);
   }
 
   document.getElementById("add-btn").addEventListener("click", openModal);
@@ -592,42 +773,31 @@
     if(e.target === modalOverlay) closeModal();
   });
 
-  document.getElementById("cycle-monthly").addEventListener("click", function(){
-    currentCycle = "monthly";
-    this.classList.add("active");
-    document.getElementById("cycle-yearly").classList.remove("active");
-  });
-  document.getElementById("cycle-yearly").addEventListener("click", function(){
-    currentCycle = "yearly";
-    this.classList.add("active");
-    document.getElementById("cycle-monthly").classList.remove("active");
+  document.getElementById("f-search").addEventListener("input", function(){
+    if(selectedService && this.value.trim() !== selectedService.name){
+      selectedService = null;
+      selectedPlan = null;
+      document.getElementById("plan-field").style.display = "none";
+      document.getElementById("summary-field").style.display = "none";
+      updateSaveEnabled();
+    }
+    renderSuggestList(this.value);
   });
 
-  document.getElementById("f-name").addEventListener("input", function(){
-    var name = this.value.trim();
-    if(CANCEL_URL_MAP.hasOwnProperty(name)){
-      applyCancelUrlSuggestion(name);
-    }
-  });
+  document.getElementById("f-date").addEventListener("change", updateSaveEnabled);
 
   document.getElementById("modal-save").addEventListener("click", function(){
-    var name = document.getElementById("f-name").value.trim();
-    var amount = Number(document.getElementById("f-amount").value);
     var date = document.getElementById("f-date").value;
-    var cancelUrl = document.getElementById("f-cancel-url").value.trim() || null;
-
-    if(!name){ alert("서비스명을 입력해주세요."); return; }
-    if(!amount || amount <= 0){ alert("금액을 입력해주세요."); return; }
-    if(!date){ alert("다음 결제일을 입력해주세요."); return; }
+    if(!selectedService || !selectedPlan || !date) return;
 
     var subs = loadSubs();
     var sub = {
       id: uid(),
-      name: name,
-      amount: amount,
-      cycle: currentCycle,
+      name: selectedService.name,
+      amount: selectedPlan.amount,
+      cycle: selectedPlan.cycle,
       nextPaymentDate: date,
-      cancelUrl: cancelUrl,
+      cancelUrl: selectedService.cancelUrl,
       createdAt: new Date().toISOString()
     };
     subs.push(sub);
