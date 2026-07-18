@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>구독 결제일 확인</title>
+<style>
+  :root{
+    --bg:#f7f7f8;
+    --card:#ffffff;
+    --border:#e5e5ea;
+    --text:#1c1c1e;
+    --sub:#8e8e93;
+    --accent:#ff3b30;
+    --accent-bg:#fff1f0;
+    --primary:#ff7a3d;
+    --primary-dark:#e8621f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    padding-bottom:40px;
+  }
+  header{
+    padding:20px 16px 12px;
+    position:sticky;
+    top:0;
+    background:var(--bg);
+    z-index:5;
+  }
+  header h1{
+    font-size:20px;
+    margin:0;
+    font-weight:700;
+  }
+  .banner{
+    margin:0 16px 12px;
+    background:var(--accent-bg);
+    border:1px solid #ffd4d1;
+    border-radius:14px;
+    padding:14px;
+  }
+  .banner-title{
+    font-size:14px;
+    font-weight:700;
+    color:var(--accent);
+    margin-bottom:6px;
+  }
+  .banner-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .banner-actions{
+    display:flex;
+    gap:6px;
+    margin-top:10px;
+    flex-wrap:wrap;
+  }
+  .banner-actions button{
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:8px;
+    border:1px solid #ffd4d1;
+    background:#fff;
+    color:var(--accent);
+  }
+  .banner-helpful{
+    margin-top:8px;
+    font-size:12px;
+    color:var(--sub);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .banner-helpful button{
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:8px;
+    padding:4px 8px;
+    font-size:12px;
+  }
+  main{padding:0 16px;}
+  .list{display:flex;flex-direction:column;gap:10px;}
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px;
+  }
+  .card.urgent{
+    border-color:#ffb3ab;
+    background:linear-gradient(0deg,#fff,#fff),var(--accent-bg);
+    box-shadow:0 0 0 1px #ffd4d1 inset;
+  }
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+  }
+  .card-name{font-size:16px;font-weight:700;}
+  .card-amount{font-size:14px;color:var(--sub);margin-top:2px;}
+  .dday{
+    font-size:13px;
+    font-weight:700;
+    padding:4px 8px;
+    border-radius:8px;
+    background:#f0f0f2;
+    color:var(--text);
+    white-space:nowrap;
+  }
+  .dday.urgent{
+    background:var(--accent);
+    color:#fff;
+  }
+  .card-bottom{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:10px;
+  }
+  .cycle-tag{
+    font-size:11px;
+    color:var(--sub);
+    background:#f0f0f2;
+    padding:2px 8px;
+    border-radius:6px;
+  }
+  .cancel-btn{
+    font-size:13px;
+    padding:6px 12px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text);
+  }
+  .cancel-btn.enabled{
+    background:var(--text);
+    color:#fff;
+    border-color:var(--text);
+  }
+  .cancel-btn:disabled{
+    color:#c7c7cc;
+    cursor:not-allowed;
+  }
+  .empty{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--sub);
+  }
+  .empty p{margin:8px 0 0;font-size:14px;}
+  .fab{
+    position:fixed;
+    left:50%;
+    bottom:20px;
+    transform:translateX(-50%);
+    width:calc(100% - 32px);
+    max-width:448px;
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    border-radius:14px;
+    padding:15px;
+    font-size:16px;
+    font-weight:700;
+    box-shadow:0 4px 12px rgba(0,0,0,.15);
+  }
+  .fab:active{background:var(--primary-dark);}
+  .datalink{
+    display:block;
+    text-align:center;
+    color:var(--sub);
+    font-size:12px;
+    margin:24px 0 90px;
+  }
+  .modal-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.4);
+    display:flex;
+    align-items:flex-end;
+    z-index:20;
+  }
+  .modal-overlay.hidden{display:none;}
+  .modal{
+    background:#fff;
+    width:100%;
+    max-width:480px;
+    margin:0 auto;
+    border-radius:20px 20px 0 0;
+    padding:20px 16px calc(20px + env(safe-area-inset-bottom));
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  .modal h2{margin:0 0 16px;font-size:18px;}
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-size:13px;
+    color:var(--sub);
+    margin-bottom:6px;
+  }
+  .field input[type=text],
+  .field input[type=number],
+  .field input[type=date],
+  .field input[type=url]{
+    width:100%;
+    padding:12px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    font-size:15px;
+    background:#fafafa;
+  }
+  .toggle{
+    display:flex;
+    gap:8px;
+  }
+  .toggle button{
+    flex:1;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:#fafafa;
+    font-size:14px;
+  }
+  .toggle button.active{
+    background:var(--text);
+    color:#fff;
+    border-color:var(--text);
+  }
+  .suggest-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:8px;
+  }
+  .suggest-list button{
+    font-size:12px;
+    padding:5px 9px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:#fafafa;
+    color:var(--text);
+  }
+  .modal-actions{
+    display:flex;
+    gap:8px;
+    margin-top:8px;
+  }
+  .modal-actions button{
+    flex:1;
+    padding:14px;
+    border-radius:10px;
+    font-size:15px;
+    border:none;
+  }
+  .btn-cancel{background:#f0f0f2;color:var(--text);}
+  .btn-save{background:var(--primary);color:#fff;font-weight:700;}
+  .dump-overlay{
+    position:fixed;inset:0;
+    background:#fff;
+    z-index:30;
+    padding:16px;
+    overflow-y:auto;
+    max-width:480px;
+    margin:0 auto;
+  }
+  .dump-overlay.hidden{display:none;}
+  .dump-overlay h2{font-size:16px;margin:0 0 12px;}
+  .dump-overlay pre{
+    white-space:pre-wrap;
+    word-break:break-all;
+    font-size:12px;
+    background:#f7f7f8;
+    padding:12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+  }
+  .dump-overlay button{
+    margin-bottom:12px;
+    padding:10px 14px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:#fff;
+    font-size:14px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>내 구독</h1>
+</header>
+
+<div id="banner-area"></div>
+
+<main>
+  <div class="list" id="list"></div>
+</main>
+
+<button class="fab" id="add-btn">+ 구독 추가</button>
+
+<a href="#" class="datalink" id="dump-link">내 데이터 보기 (subs/events 덤프)</a>
+
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal">
+    <h2>구독 추가</h2>
+    <div class="field">
+      <label>서비스명</label>
+      <input type="text" id="f-name" placeholder="예: 넷플릭스" autocomplete="off">
+      <div class="suggest-list" id="suggest-list"></div>
+    </div>
+    <div class="field">
+      <label>금액 (원)</label>
+      <input type="number" id="f-amount" placeholder="0" min="0" step="1">
+    </div>
+    <div class="field">
+      <label>결제 주기</label>
+      <div class="toggle">
+        <button type="button" id="cycle-monthly" class="active">월</button>
+        <button type="button" id="cycle-yearly">년</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>다음 결제일</label>
+      <input type="date" id="f-date">
+    </div>
+    <div class="field">
+      <label>해지/관리 URL (선택)</label>
+      <input type="url" id="f-cancel-url" placeholder="https://...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modal-cancel">취소</button>
+      <button class="btn-save" id="modal-save">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="dump-overlay hidden" id="dump-overlay">
+  <button id="dump-close">← 닫기</button>
+  <h2>subs</h2>
+  <pre id="dump-subs"></pre>
+  <h2>events</h2>
+  <pre id="dump-events"></pre>
+  <h2>lastOpen</h2>
+  <pre id="dump-lastopen"></pre>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // 대표 구독 → 해지 URL 매핑
+  var CANCEL_URL_MAP = {
+    "넷플릭스": "TODO-개발자입력",
+    "유튜브 프리미엄": "TODO-개발자입력",
+    "쿠팡와우": "TODO-개발자입력",
+    "티빙": "TODO-개발자입력",
+    "왓챠": "TODO-개발자입력",
+    "디즈니+": "TODO-개발자입력",
+    "스포티파이": "TODO-개발자입력",
+    "챗지피티": "TODO-개발자입력",
+    "네이버플러스": "TODO-개발자입력",
+    "밀리의서재": "TODO-개발자입력",
+    "왓챠피디아": "TODO-개발자입력",
+    "애플뮤직": "TODO-개발자입력",
+    "유데미": "TODO-개발자입력",
+    "리디셀렉트": "TODO-개발자입력"
+  };
+  var SUB_NAMES = Object.keys(CANCEL_URL_MAP);
+
+  var LS_SUBS = "subs";
+  var LS_EVENTS = "events";
+  var LS_LASTOPEN = "lastOpen";
+
+  function loadSubs(){
+    try{ return JSON.parse(localStorage.getItem(LS_SUBS)) || []; }catch(e){ return []; }
+  }
+  function saveSubs(subs){
+    localStorage.setItem(LS_SUBS, JSON.stringify(subs));
+  }
+  function loadEvents(){
+    try{ return JSON.parse(localStorage.getItem(LS_EVENTS)) || []; }catch(e){ return []; }
+  }
+  function logEvent(type, subId){
+    var events = loadEvents();
+    events.push({ type: type, subId: subId, ts: new Date().toISOString() });
+    localStorage.setItem(LS_EVENTS, JSON.stringify(events));
+  }
+
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
+  }
+  function pad(n){ return n < 10 ? "0"+n : ""+n; }
+
+  function daysUntil(dateStr){
+    var today = new Date(todayStr() + "T00:00:00");
+    var target = new Date(dateStr + "T00:00:00");
+    return Math.round((target - today) / 86400000);
+  }
+
+  function addCycle(dateStr, cycle){
+    var parts = dateStr.split("-").map(Number);
+    var y = parts[0], m = parts[1], d = parts[2];
+    if(cycle === "yearly"){
+      y += 1;
+    } else {
+      m += 1;
+      if(m > 12){ m = 1; y += 1; }
+    }
+    // 말일 보정 (예: 1/31 + 1개월 -> 2월 마지막날)
+    var lastDay = new Date(y, m, 0).getDate();
+    if(d > lastDay) d = lastDay;
+    return y + "-" + pad(m) + "-" + pad(d);
+  }
+
+  function rolloverPastDue(){
+    var subs = loadSubs();
+    var today = todayStr();
+    var changed = false;
+    subs.forEach(function(s){
+      var guard = 0;
+      while(s.nextPaymentDate < today && guard < 240){
+        s.nextPaymentDate = addCycle(s.nextPaymentDate, s.cycle);
+        changed = true;
+        guard++;
+      }
+    });
+    if(changed) saveSubs(subs);
+    return subs;
+  }
+
+  function fmtAmount(n){
+    return "₩" + Number(n).toLocaleString("ko-KR");
+  }
+
+  function uid(){
+    return "s" + Date.now() + Math.random().toString(36).slice(2,8);
+  }
+
+  // ---------- 렌더링 ----------
+
+  function render(){
+    var subs = loadSubs().slice().sort(function(a,b){
+      return a.nextPaymentDate.localeCompare(b.nextPaymentDate);
+    });
+    renderBanner(subs);
+    renderList(subs);
+  }
+
+  function renderBanner(subs){
+    var area = document.getElementById("banner-area");
+    area.innerHTML = "";
+    var urgent = subs.filter(function(s){ return daysUntil(s.nextPaymentDate) <= 3; });
+    if(urgent.length === 0) return;
+
+    urgent.forEach(function(s){
+      var d = daysUntil(s.nextPaymentDate);
+      var ddayText = d <= 0 ? "D-day" : ("D-" + d);
+      var box = document.createElement("div");
+      box.className = "banner";
+      box.innerHTML =
+        '<div class="banner-title">결제 임박</div>' +
+        '<div class="banner-row">' +
+          '<span>' + escapeHtml(s.name) + ' 결제 ' + ddayText + ' · ' + fmtAmount(s.amount) + '</span>' +
+        '</div>' +
+        '<div class="banner-actions">' +
+          '<button type="button" class="banner-cancel-btn" ' + (s.cancelUrl ? "" : "disabled") + '>해지하러 가기</button>' +
+        '</div>' +
+        '<div class="banner-helpful">' +
+          '<span>미리 알아서 도움됐어요?</span>' +
+          '<button type="button" class="helpful-yes">예</button>' +
+          '<button type="button" class="helpful-no">아니오</button>' +
+        '</div>';
+
+      box.querySelector(".banner-cancel-btn").addEventListener("click", function(){
+        if(!s.cancelUrl) return;
+        window.open(s.cancelUrl, "_blank");
+        logEvent("cancel_click", s.id);
+      });
+      box.querySelector(".helpful-yes").addEventListener("click", function(){
+        logEvent("helpful_yes", s.id);
+        box.querySelector(".banner-helpful").innerHTML = "<span>응답 감사합니다</span>";
+      });
+      box.querySelector(".helpful-no").addEventListener("click", function(){
+        logEvent("helpful_no", s.id);
+        box.querySelector(".banner-helpful").innerHTML = "<span>응답 감사합니다</span>";
+      });
+
+      area.appendChild(box);
+    });
+  }
+
+  function renderList(subs){
+    var list = document.getElementById("list");
+    list.innerHTML = "";
+
+    if(subs.length === 0){
+      list.innerHTML = '<div class="empty">아직 등록된 구독이 없어요.<p>+ 구독 추가로 시작해보세요.</p></div>';
+      return;
+    }
+
+    subs.forEach(function(s){
+      var d = daysUntil(s.nextPaymentDate);
+      var isUrgent = d <= 3;
+      var ddayText = d < 0 ? ("D+" + Math.abs(d)) : (d === 0 ? "D-day" : ("D-" + d));
+
+      var card = document.createElement("div");
+      card.className = "card" + (isUrgent ? " urgent" : "");
+      card.innerHTML =
+        '<div class="card-top">' +
+          '<div>' +
+            '<div class="card-name">' + escapeHtml(s.name) + '</div>' +
+            '<div class="card-amount">' + fmtAmount(s.amount) + '</div>' +
+          '</div>' +
+          '<div class="dday' + (isUrgent ? ' urgent' : '') + '">' + ddayText + '</div>' +
+        '</div>' +
+        '<div class="card-bottom">' +
+          '<span class="cycle-tag">' + (s.cycle === "yearly" ? "매년" : "매월") + ' · ' + s.nextPaymentDate + '</span>' +
+          '<button type="button" class="cancel-btn' + (s.cancelUrl ? " enabled" : "") + '" ' + (s.cancelUrl ? "" : "disabled") + '>해지하러 가기</button>' +
+        '</div>';
+
+      card.querySelector(".cancel-btn").addEventListener("click", function(){
+        if(!s.cancelUrl) return;
+        window.open(s.cancelUrl, "_blank");
+        logEvent("cancel_click", s.id);
+      });
+
+      list.appendChild(card);
+    });
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+
+  // ---------- 모달 ----------
+
+  var modalOverlay = document.getElementById("modal-overlay");
+  var currentCycle = "monthly";
+
+  function openModal(){
+    document.getElementById("f-name").value = "";
+    document.getElementById("f-amount").value = "";
+    document.getElementById("f-date").value = todayStr();
+    document.getElementById("f-cancel-url").value = "";
+    currentCycle = "monthly";
+    document.getElementById("cycle-monthly").classList.add("active");
+    document.getElementById("cycle-yearly").classList.remove("active");
+    renderSuggestList();
+    modalOverlay.classList.remove("hidden");
+  }
+  function closeModal(){
+    modalOverlay.classList.add("hidden");
+  }
+
+  function renderSuggestList(){
+    var box = document.getElementById("suggest-list");
+    box.innerHTML = "";
+    SUB_NAMES.forEach(function(name){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = name;
+      btn.addEventListener("click", function(){
+        document.getElementById("f-name").value = name;
+        applyCancelUrlSuggestion(name);
+      });
+      box.appendChild(btn);
+    });
+  }
+
+  function applyCancelUrlSuggestion(name){
+    if(CANCEL_URL_MAP.hasOwnProperty(name)){
+      document.getElementById("f-cancel-url").value = CANCEL_URL_MAP[name];
+    }
+  }
+
+  document.getElementById("add-btn").addEventListener("click", openModal);
+  document.getElementById("modal-cancel").addEventListener("click", closeModal);
+  modalOverlay.addEventListener("click", function(e){
+    if(e.target === modalOverlay) closeModal();
+  });
+
+  document.getElementById("cycle-monthly").addEventListener("click", function(){
+    currentCycle = "monthly";
+    this.classList.add("active");
+    document.getElementById("cycle-yearly").classList.remove("active");
+  });
+  document.getElementById("cycle-yearly").addEventListener("click", function(){
+    currentCycle = "yearly";
+    this.classList.add("active");
+    document.getElementById("cycle-monthly").classList.remove("active");
+  });
+
+  document.getElementById("f-name").addEventListener("input", function(){
+    var name = this.value.trim();
+    if(CANCEL_URL_MAP.hasOwnProperty(name)){
+      applyCancelUrlSuggestion(name);
+    }
+  });
+
+  document.getElementById("modal-save").addEventListener("click", function(){
+    var name = document.getElementById("f-name").value.trim();
+    var amount = Number(document.getElementById("f-amount").value);
+    var date = document.getElementById("f-date").value;
+    var cancelUrl = document.getElementById("f-cancel-url").value.trim() || null;
+
+    if(!name){ alert("서비스명을 입력해주세요."); return; }
+    if(!amount || amount <= 0){ alert("금액을 입력해주세요."); return; }
+    if(!date){ alert("다음 결제일을 입력해주세요."); return; }
+
+    var subs = loadSubs();
+    var sub = {
+      id: uid(),
+      name: name,
+      amount: amount,
+      cycle: currentCycle,
+      nextPaymentDate: date,
+      cancelUrl: cancelUrl,
+      createdAt: new Date().toISOString()
+    };
+    subs.push(sub);
+    saveSubs(subs);
+    logEvent("add", sub.id);
+
+    closeModal();
+    render();
+  });
+
+  // ---------- 데이터 덤프 ----------
+
+  var dumpOverlay = document.getElementById("dump-overlay");
+  document.getElementById("dump-link").addEventListener("click", function(e){
+    e.preventDefault();
+    document.getElementById("dump-subs").textContent = JSON.stringify(loadSubs(), null, 2);
+    document.getElementById("dump-events").textContent = JSON.stringify(loadEvents(), null, 2);
+    document.getElementById("dump-lastopen").textContent = localStorage.getItem(LS_LASTOPEN) || "(none)";
+    dumpOverlay.classList.remove("hidden");
+  });
+  document.getElementById("dump-close").addEventListener("click", function(){
+    dumpOverlay.classList.add("hidden");
+  });
+
+  // ---------- 초기화 ----------
+
+  function init(){
+    rolloverPastDue();
+    logEvent("open", null);
+    localStorage.setItem(LS_LASTOPEN, new Date().toISOString());
+    render();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
