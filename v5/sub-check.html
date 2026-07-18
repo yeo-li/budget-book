@@ -25,7 +25,54 @@
     max-width:480px;
     margin:0 auto;
     min-height:100vh;
-    padding-bottom:40px;
+    padding-bottom:76px;
+  }
+  .view.hidden{display:none;}
+  .tabbar{
+    position:fixed;
+    left:50%;
+    bottom:0;
+    transform:translateX(-50%);
+    width:100%;
+    max-width:480px;
+    display:flex;
+    background:#fff;
+    border-top:1px solid var(--border);
+    z-index:15;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .tabbar button{
+    flex:1;
+    padding:12px 0 10px;
+    background:none;
+    border:none;
+    font-size:12px;
+    color:var(--sub);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+  }
+  .tabbar button .tab-icon{font-size:18px;}
+  .tabbar button.active{color:var(--primary);font-weight:700;}
+  .settings-section{
+    margin:8px 16px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .settings-btn{
+    text-align:left;
+    padding:12px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:#fff;
+    font-size:13px;
+    color:var(--text);
+  }
+  .settings-btn.danger{
+    color:var(--accent);
+    border-color:#ffd4d1;
   }
   header{
     padding:20px 16px 12px;
@@ -182,7 +229,7 @@
   .fab{
     position:fixed;
     left:50%;
-    bottom:20px;
+    bottom:calc(76px + env(safe-area-inset-bottom));
     transform:translateX(-50%);
     width:calc(100% - 32px);
     max-width:448px;
@@ -368,20 +415,33 @@
 <body>
 
 <header>
-  <h1>내 구독</h1>
+  <h1 id="header-title">내 구독</h1>
 </header>
 
-<div id="banner-area"></div>
+<div class="view" id="view-home">
+  <div id="banner-area"></div>
+  <div class="total-card" id="total-card"></div>
+  <div class="settings-section">
+    <a href="#" class="settings-btn" id="dump-link">내 데이터 보기 (subs/events 덤프)</a>
+    <button type="button" class="settings-btn danger" id="reset-btn">데이터 초기화</button>
+  </div>
+</div>
 
-<div class="total-card" id="total-card"></div>
+<div class="view hidden" id="view-subs">
+  <main>
+    <div class="list" id="list"></div>
+  </main>
+  <button class="fab" id="add-btn">+ 구독 추가</button>
+</div>
 
-<main>
-  <div class="list" id="list"></div>
-</main>
-
-<button class="fab" id="add-btn">+ 구독 추가</button>
-
-<a href="#" class="datalink" id="dump-link">내 데이터 보기 (subs/events 덤프)</a>
+<nav class="tabbar">
+  <button type="button" class="tab-btn active" id="tab-home" data-view="view-home">
+    <span class="tab-icon">🏠</span><span>홈</span>
+  </button>
+  <button type="button" class="tab-btn" id="tab-subs" data-view="view-subs">
+    <span class="tab-icon">📋</span><span>구독</span>
+  </button>
+</nav>
 
 <div class="modal-overlay hidden" id="modal-overlay">
   <div class="modal">
@@ -864,6 +924,31 @@
   });
   document.getElementById("dump-close").addEventListener("click", function(){
     dumpOverlay.classList.add("hidden");
+  });
+
+  document.getElementById("reset-btn").addEventListener("click", function(){
+    if(!confirm("모든 구독·기록 데이터를 삭제할까요? 되돌릴 수 없어요.")) return;
+    localStorage.removeItem(LS_SUBS);
+    localStorage.removeItem(LS_EVENTS);
+    localStorage.removeItem(LS_LASTOPEN);
+    render();
+    alert("데이터가 초기화됐어요.");
+  });
+
+  // ---------- 탭 전환 ----------
+
+  var tabButtons = document.querySelectorAll(".tab-btn");
+  function switchTab(viewId){
+    document.querySelectorAll(".view").forEach(function(v){
+      v.classList.toggle("hidden", v.id !== viewId);
+    });
+    tabButtons.forEach(function(btn){
+      btn.classList.toggle("active", btn.dataset.view === viewId);
+    });
+    document.getElementById("header-title").textContent = viewId === "view-subs" ? "구독 목록" : "내 구독";
+  }
+  tabButtons.forEach(function(btn){
+    btn.addEventListener("click", function(){ switchTab(btn.dataset.view); });
   });
 
   // ---------- 초기화 ----------
