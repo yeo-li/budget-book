@@ -158,6 +158,27 @@
     color:var(--sub);
   }
   .empty p{margin:8px 0 0;font-size:14px;}
+  .total-card{
+    margin:0 16px 16px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:16px;
+  }
+  .total-label{
+    font-size:13px;
+    color:var(--sub);
+  }
+  .total-amount{
+    font-size:26px;
+    font-weight:800;
+    margin-top:4px;
+  }
+  .total-sub{
+    font-size:12px;
+    color:var(--sub);
+    margin-top:6px;
+  }
   .fab{
     position:fixed;
     left:50%;
@@ -351,6 +372,8 @@
 </header>
 
 <div id="banner-area"></div>
+
+<div class="total-card" id="total-card"></div>
 
 <main>
   <div class="list" id="list"></div>
@@ -581,7 +604,28 @@
       return a.nextPaymentDate.localeCompare(b.nextPaymentDate);
     });
     renderBanner(subs);
+    renderTotal(subs);
     renderList(subs);
+  }
+
+  function monthlyAmount(s){
+    return s.cycle === "yearly" ? s.amount / 12 : s.amount;
+  }
+
+  function renderTotal(subs){
+    var card = document.getElementById("total-card");
+    if(subs.length === 0){
+      card.innerHTML =
+        '<div class="total-label">월 예상 구독료</div>' +
+        '<div class="total-amount">₩0</div>';
+      return;
+    }
+    var monthly = subs.reduce(function(sum, s){ return sum + monthlyAmount(s); }, 0);
+    var yearly = monthly * 12;
+    card.innerHTML =
+      '<div class="total-label">월 예상 구독료 (구독 ' + subs.length + '개)</div>' +
+      '<div class="total-amount">' + fmtAmount(Math.round(monthly)) + '</div>' +
+      '<div class="total-sub">연간 환산 ' + fmtAmount(Math.round(yearly)) + '</div>';
   }
 
   function renderBanner(subs){
