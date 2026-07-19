@@ -71,6 +71,13 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .close-btn .lb{position:relative;z-index:1;display:flex;align-items:center;gap:9px}
 .close-btn.done{background:var(--green-soft);color:var(--green-deep);box-shadow:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
 .close-btn.done.holding{transform:scale(.975)}
+.save-preview{width:100%;margin-top:9px;padding:11px 14px;border-radius:13px;background:var(--gold-soft);color:var(--amber);
+  font-size:13px;font-weight:700;text-align:center;border:1px solid #F1E3C2;transition:transform .12s}
+.save-preview b{font-weight:900;color:var(--gold)}
+.save-preview:active{transform:scale(.98)}
+.save-preview.done{background:var(--green-soft);color:var(--green-deep);border-color:#CBE6DA}
+.save-preview.done b{color:var(--green-deep)}
+.save-preview.flat{background:var(--bg);color:var(--faint);border-color:var(--line);pointer-events:none}
 .hero-edit{position:absolute;top:16px;right:16px;z-index:2;font-size:11.5px;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);border-radius:100px;padding:6px 12px}
 .hero-edit:active{background:rgba(255,255,255,.3)}
 /* 유리병 저금통 */
@@ -548,12 +555,12 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
     <div class="onb-step" id="onb-1">
       <button class="onb-back" onclick="onbGo(0)">‹</button>
       <div class="onb-progress"><i class="on"></i><i></i><i></i><i></i></div>
-      <div class="onb-h">매달 <em>자동으로 나가는 돈</em>,<br>체크만 해보세요</div>
-      <div class="onb-s">타이핑할 필요 없어요. 해당하는 걸 누르면 금액은 나중에 고칠 수 있게 미리 채워둘게요.</div>
+      <div class="onb-h">매달 <em>자동으로 나가는 돈</em>,<br>해당하는 걸 담아만 주세요</div>
+      <div class="onb-s">금액은 지금 안 적어도 돼요 — 예상값을 넣어둘게요.<br>정확한 금액은 나중에 고정 탭에서 맞추면 돼요.</div>
       <div class="preset-grid" id="preset-grid"></div>
       <div class="picked-list" id="picked-list"></div>
       <div class="onb-foot">
-        <div class="onb-total"><span class="l">매달 나가는 돈</span><span class="v num" id="onb-fixed-total">0원</span></div>
+        <div class="onb-total"><span class="l">예상 지출 합계</span><span class="v num" id="onb-fixed-total">0원</span></div>
         <button class="cta" id="onb-1-next" onclick="onbGo(2)">다음</button>
       </div>
     </div>
@@ -569,11 +576,11 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
       <button class="onb-back" onclick="onbGo(2)">‹</button>
       <div class="onb-progress"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
       <div class="onb-h">이번엔 <em>들어오는 돈</em>,<br>고정 수입을 담아주세요</div>
-      <div class="onb-s">월급, 지원금, 용돈 — 매달 들어오는 돈이면 뭐든요.<br>금액은 담은 뒤에 바로 고칠 수 있어요.</div>
+      <div class="onb-s">월급, 지원금, 용돈 — 매달 들어오는 돈이면 뭐든요.<br>금액은 나중에 고정 탭에서 맞추면 돼요.</div>
       <div class="preset-grid" id="inc-preset-grid"></div>
       <div class="picked-list" id="inc-picked-list"></div>
       <div class="onb-foot">
-        <div class="onb-total"><span class="l">매달 들어오는 돈</span><span class="v num" id="onb-inc-total">0원</span></div>
+        <div class="onb-total"><span class="l">예상 수입 합계</span><span class="v num" id="onb-inc-total">0원</span></div>
         <button class="cta" id="onb-3-next" disabled onclick="onbGo(4)">다음</button>
       </div>
     </div>
@@ -896,6 +903,8 @@ function go(scr){
   window.scrollTo(0,0);
 }
 function render(){
+  // 날짜가 바뀌었으면(새벽 5시 경계 통과) 오늘 기준을 새로 잡는다 → 오늘 남은 돈 초기화
+  if(typeof _lastDay!=='undefined'&&_lastDay&&today()!==_lastDay){_lastDay=today();calMonth=null;}
   C=calc();
   if(CUR==='home')renderHome();
   if(CUR==='record')renderRecord();
@@ -986,8 +995,11 @@ function renderHome(){
 
   <div style="margin:0 16px 12px">
     ${!todayConfirmed?`
-    <button class="close-btn" id="close-hold"><span class="fill"></span><span class="lb">🌙 꾹 눌러서 하루 마감</span></button>`:`
-    <button class="close-btn done" id="close-cancel"><span class="fill cancel"></span><span class="lb">✅ 마감 완료 · 꾹 눌러 취소</span></button>`}
+    <button class="close-btn" id="close-hold"><span class="fill"></span><span class="lb">🌙 꾹 눌러서 하루 마감</span></button>
+    ${paceLeft>0?`<button class="save-preview" onclick="go('vault')">🐷 지금 마감하면 <b>+${won(paceLeft)}</b> 저금통에 쌓여요</button>`
+      :`<div class="save-preview flat">오늘은 페이스를 넘었어요 · 마감하면 저금통에서 메꿔요</div>`}`:`
+    <button class="close-btn done" id="close-cancel"><span class="fill cancel"></span><span class="lb">✅ 마감 완료 · 꾹 눌러 취소</span></button>
+    ${todayRec&&todayRec.saved>0?`<button class="save-preview done" onclick="go('vault')">🐷 오늘 아껴서 <b>+${won(todayRec.saved)}</b> 저금통에 쌓았어요</button>`:''}`}
   </div>
 
   ${C.queue.length?`
@@ -1372,7 +1384,67 @@ const INC_PRESETS=[
   {ic:'💼',name:'월급',amt:2500000,day:25},{ic:'💸',name:'부수입',amt:300000,day:10},
   {ic:'🎁',name:'용돈',amt:100000,day:1},{ic:'🏦',name:'이자·배당',amt:10000,day:15},
 ];
+// 자주 쓰는 구독·고정지출 표준 요금 DB (대략값, 사용자가 확인·수정)
+const SUBS=[
+  {ic:'🎬',name:'넷플릭스 광고형',amt:5500,kw:'netflix 넷플'},
+  {ic:'🎬',name:'넷플릭스 스탠다드',amt:13500,kw:'netflix 넷플'},
+  {ic:'🎬',name:'넷플릭스 프리미엄',amt:17000,kw:'netflix 넷플'},
+  {ic:'▶️',name:'유튜브 프리미엄',amt:14900,kw:'youtube 유튜브 유툽'},
+  {ic:'🏰',name:'디즈니플러스',amt:9900,kw:'disney 디즈니'},
+  {ic:'📺',name:'티빙',amt:9500,kw:'tving 티빙'},
+  {ic:'🌊',name:'웨이브',amt:9900,kw:'wavve 웨이브'},
+  {ic:'🎞️',name:'왓챠',amt:7900,kw:'watcha 왓챠'},
+  {ic:'📦',name:'쿠팡 와우',amt:7890,kw:'coupang 쿠팡 와우'},
+  {ic:'🟢',name:'네이버플러스 멤버십',amt:4900,kw:'naver 네이버 멤버십'},
+  {ic:'🎵',name:'멜론',amt:10900,kw:'melon 멜론'},
+  {ic:'🎧',name:'스포티파이',amt:10900,kw:'spotify 스포티파이'},
+  {ic:'🍎',name:'애플뮤직',amt:8900,kw:'apple music 애플뮤직'},
+  {ic:'🎶',name:'유튜브뮤직',amt:8690,kw:'youtube music 유튜브뮤직'},
+  {ic:'🎼',name:'지니뮤직',amt:8400,kw:'genie 지니'},
+  {ic:'🤖',name:'ChatGPT Plus',amt:29000,kw:'chatgpt gpt 챗지피티 오픈ai openai'},
+  {ic:'🧠',name:'Claude Pro',amt:29000,kw:'claude 클로드 anthropic'},
+  {ic:'✨',name:'Gemini Advanced',amt:29000,kw:'gemini 제미나이 구글ai'},
+  {ic:'🅿️',name:'퍼플렉시티 Pro',amt:29000,kw:'perplexity 퍼플렉시티'},
+  {ic:'☁️',name:'iCloud+ 50GB',amt:1100,kw:'icloud 아이클라우드 애플'},
+  {ic:'☁️',name:'iCloud+ 200GB',amt:4400,kw:'icloud 아이클라우드 애플'},
+  {ic:'🗄️',name:'구글 One 100GB',amt:2400,kw:'google one 구글원 드라이브'},
+  {ic:'📄',name:'Microsoft 365',amt:8900,kw:'microsoft office 오피스 엠에스'},
+  {ic:'🎨',name:'어도비 CC',amt:24000,kw:'adobe 어도비 포토샵'},
+  {ic:'📝',name:'노션 플러스',amt:14000,kw:'notion 노션'},
+  {ic:'😀',name:'카카오 이모티콘 플러스',amt:3900,kw:'kakao 카카오 이모티콘'},
+  {ic:'🛵',name:'배민클럽',amt:3990,kw:'baemin 배민 배달'},
+  {ic:'📱',name:'SKT 5G 요금제',amt:59000,kw:'skt sk 에스케이 통신'},
+  {ic:'📱',name:'KT 5G 요금제',amt:59000,kw:'kt 케이티 통신'},
+  {ic:'📱',name:'LG U+ 5G 요금제',amt:59000,kw:'lg lgu 엘지 유플러스 통신'},
+  {ic:'🏋️',name:'헬스장',amt:60000,kw:'gym 헬스 피트니스'},
+  {ic:'🏠',name:'월세',amt:500000,kw:'rent 월세 집'},
+  {ic:'🌐',name:'인터넷',amt:22000,kw:'internet 인터넷 와이파이'},
+  {ic:'🛡️',name:'보험',amt:100000,kw:'insurance 보험'},
+];
 let fxSheetKind='exp',fxSheetCycle='m',fxSheetIc='🔁';
+function searchSubs(){
+  const q=(document.getElementById('sub-search').value||'').trim().toLowerCase();
+  const box=document.getElementById('sub-results');
+  if(!q){box.innerHTML='';return;}
+  const hits=SUBS.filter(s=>s.name.toLowerCase().includes(q)||(s.kw||'').toLowerCase().includes(q)).slice(0,8);
+  box.innerHTML=hits.length?hits.map((s,i)=>{
+    const gi=SUBS.indexOf(s);
+    return `<button class="sub-row" onclick="pickSub(${gi})">
+      <span class="fx-ic" style="width:34px;height:34px;font-size:16px">${s.ic}</span>
+      <span style="flex:1;font-size:14px;font-weight:700;text-align:left">${esc(s.name)}</span>
+      <span class="num" style="font-size:14px;font-weight:800">${won(s.amt)}</span></button>`;
+  }).join(''):`<div class="hint" style="padding:10px 4px">검색 결과가 없어요 · 아래에 직접 입력해도 돼요</div>`;
+}
+function pickSub(i){
+  const s=SUBS[i];
+  document.getElementById('fx-name').value=s.name;
+  document.getElementById('fx-amt').value=s.amt.toLocaleString('ko-KR');
+  pickEmo(s.ic);
+  const ci=document.getElementById('fx-ic-custom');if(ci)ci.value=s.ic;
+  document.getElementById('sub-search').value='';
+  document.getElementById('sub-results').innerHTML='';
+  toast(`${s.name} · ${won(s.amt)} 채웠어요 — 확인·수정하세요`);
+}
 
 function openFixedSheet(id,kind){
   const f=id?S.fixed.find(x=>x.id===id):null;
@@ -1385,6 +1457,11 @@ function openFixedSheet(id,kind){
   document.getElementById('fx-sheet-title').textContent=(inc?'고정 수입':'고정 지출')+(f?' 수정':' 추가');
   const body=document.getElementById('fx-sheet-body');
   body.innerHTML=`
+    ${!f&&!inc?`<div class="field">
+      <label>🔍 구독 검색 — 고르면 요금이 자동으로 채워져요</label>
+      <input type="text" id="sub-search" placeholder="넷플릭스, 유튜브, ChatGPT, 통신비..." oninput="searchSubs()" autocomplete="off">
+      <div id="sub-results" class="sub-results"></div>
+    </div>`:''}
     <div class="field"><label>이름</label><input type="text" id="fx-name" value="${f?esc(f.name):''}" placeholder="${inc?'예: 월급':'예: 넷플릭스'}"></div>
     <div class="field"><label>이모지 (선택)</label>
       <div style="display:flex;align-items:center;gap:10px">
@@ -1543,6 +1620,13 @@ function renderVault(){
     <div class="meta num">지금까지 ${won(C.vault)}${totalGoal>0?` · 목표 합계의 ${Math.round(fillPct)}%`:''}</div>
   </div>
 
+  ${(()=>{const cur=today().slice(0,7);const md=C.days.filter(r=>r.date.slice(0,7)===cur&&r.saved>0);
+    const ms=md.reduce((a,r)=>a+r.saved,0);
+    return ms>0?`<div class="duo" style="margin-top:2px">
+      <div class="card" style="margin:0"><div class="mini-cap">이번 달 절약</div><div class="mini-num num" style="color:var(--gold)">+${won(ms)}</div></div>
+      <div class="card" style="margin:0"><div class="mini-cap">아낀 날</div><div class="mini-num num">${md.length}일</div></div>
+    </div>`:''})()}
+
   <div class="section-label">목표 — 위에서부터 순서대로 채워져요</div>
   <div class="card" style="padding:6px 20px">
     ${galloc.length?galloc.map(g=>`
@@ -1566,9 +1650,9 @@ function renderVault(){
   <div class="card" style="padding:8px 20px">
     ${deposits.length?deposits.map(r=>`
       <div class="dep-row">
-        <div>💰</div>
+        <div>🐷</div>
         <div><div class="dep-date">${fmtDate(r.date,true)}</div>
-        <div class="dep-note num">페이스 ${won(Math.floor(r.pace))} − 지출 ${won(r.spent)}</div></div>
+        <div class="dep-note num">안전 페이스보다 ${won(r.saved)} 덜 썼어요</div></div>
         <div class="dep-amt num">+${won(r.saved)}</div>
       </div>`).join(''):`
       <div class="empty" style="padding:30px 10px"><div class="e-ic">🫙</div>
@@ -2177,8 +2261,7 @@ function renderPresets(){
   list.innerHTML=onbPicked.map((p,i)=>`
     <div class="picked">
       <span class="pi">${p.ic}</span><span class="pn">${esc(p.name)}</span>
-      <input type="text" inputmode="numeric" value="${p.amt.toLocaleString('ko-KR')}" oninput="fmtInput(this);onbPicked[${i}].amt=num(this.value);onbTotal()">
-      <span class="u">원</span>
+      <span class="u num" style="margin-left:auto;color:var(--faint)">예상 ${manwon(p.amt)}</span>
       <button class="rm" onclick="onbPicked.splice(${i},1);renderPresets()">✕</button>
     </div>`).join('');
   onbTotal();
@@ -2231,10 +2314,9 @@ function renderIncPresets(){
     <div class="picked">
       <span class="pi">${p.ic}</span>
       ${p.custom
-        ?`<input type="text" value="${esc(p.name)}" placeholder="이름" style="flex:none;width:76px;border:none;background:none;font-size:13.5px;font-weight:800;outline:none;border-bottom:1.5px solid var(--line2);padding:2px 0" oninput="onbIncomes[${i}].name=this.value">`
+        ?`<input type="text" value="${esc(p.name)}" placeholder="이름" style="flex:1;border:none;background:none;font-size:13.5px;font-weight:800;outline:none;border-bottom:1.5px solid var(--line2);padding:2px 0" oninput="onbIncomes[${i}].name=this.value">`
         :`<span class="pn">${esc(p.name)}</span>`}
-      <input type="text" inputmode="numeric" value="${p.amt?p.amt.toLocaleString('ko-KR'):''}" placeholder="0" oninput="fmtInput(this);onbIncomes[${i}].amt=num(this.value);onbIncTotal()">
-      <span class="u">원</span>
+      <span class="u num" style="margin-left:auto;color:var(--faint)">${p.amt?'예상 '+manwon(p.amt):'미정'}</span>
       <button class="rm" onclick="onbIncomes.splice(${i},1);renderIncPresets()">✕</button>
     </div>`).join('');
   onbIncTotal();
@@ -2250,7 +2332,7 @@ function addIncCustom(){onbIncomes.push({ic:'💰',name:'',amt:0,day:25,custom:t
 function onbIncTotal(){
   const t=onbIncomes.reduce((a,p)=>a+(p.amt||0),0);
   document.getElementById('onb-inc-total').textContent=won(t);
-  document.getElementById('onb-3-next').disabled=t<=0;
+  document.getElementById('onb-3-next').disabled=onbIncomes.length===0; // 금액 아닌 '담김'으로 판단
 }
 
 // --- 온보딩: 예산 설정 페이지 ---
@@ -2299,12 +2381,11 @@ function onbCatTotal(){
 }
 
 function onbFinish(){
-  const incTotal=onbIncomes.reduce((a,p)=>a+(p.amt||0),0);
-  if(!incTotal)return;
+  if(!onbIncomes.length)return;
   S.income=0; // 소득은 별도 값이 아니라 고정 수입 항목으로
   S.fixed=[
     ...onbPicked.map(p=>({id:uid(),name:p.name,amt:p.amt,day:p.day,dayEnd:p.day,ic:p.ic,kind:'exp',cycle:'m'})),
-    ...onbIncomes.filter(p=>p.amt>0).map(p=>({id:uid(),name:p.name.trim()||'수입',amt:p.amt,day:p.day||25,dayEnd:p.day||25,ic:p.ic,kind:'inc',cycle:'m'}))
+    ...onbIncomes.map(p=>({id:uid(),name:p.name.trim()||'수입',amt:p.amt||0,day:p.day||25,dayEnd:p.day||25,ic:p.ic,kind:'inc',cycle:'m'}))
   ];
   S.startDate=today();
   if(onbBMode==='direct'){
@@ -2339,9 +2420,12 @@ let _lastDay=today();
 function watchDayRollover(){
   // 앱이 열린 채 새벽 5시를 넘으면 오늘 예산·페이스가 자동으로 갱신되도록
   setInterval(()=>{
-    const now=today();
-    if(now!==_lastDay){_lastDay=now;calMonth=null;render();}
+    if(today()!==_lastDay){_lastDay=today();calMonth=null;render();}
   },30000);
+  // 앱을 다시 켰을 때(포그라운드 복귀) 즉시 날짜 확인 후 갱신
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible'&&today()!==_lastDay){_lastDay=today();calMonth=null;render();}
+  });
 }
 function boot(){
   if(!S.onboarded){
