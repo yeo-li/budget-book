@@ -125,6 +125,12 @@
   .tab-item{flex:1; text-align:center; background:none; border:none; padding:6px 0; cursor:pointer; color:var(--sub); font-size:11px;}
   .tab-item .tab-emoji{display:block; font-size:20px; margin-bottom:2px;}
   .tab-item.active{color:var(--accent);}
+  .tab-item .tab-emoji{position:relative;}
+  .tab-badge{
+    position:absolute; top:-4px; right:-8px; min-width:15px; height:15px; padding:0 3px;
+    border-radius:8px; background:var(--accent); color:#fff; font-size:9px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
 
   .footer-link{
     display:block; text-align:center; margin-top:20px; font-size:12px; color:var(--sub);
@@ -194,12 +200,17 @@
       <div class="summary-count" id="summary-count">구독 0개</div>
     </div>
 
-    <div id="banner-slot"></div>
-
     <div class="sub-list" id="sub-list"></div>
     <div class="empty" id="home-empty" style="display:none;">아직 등록된 구독이 없어요</div>
 
     <button class="footer-link" onclick="showScreen('data')">내 데이터 보기</button>
+  </div>
+
+  <!-- 화면: 알림 -->
+  <div id="screen-alerts" class="screen">
+    <div class="connect-header">결제 알림</div>
+    <div id="alert-list"></div>
+    <div class="empty" id="alert-empty" style="display:none;">임박한 결제가 없어요</div>
   </div>
 
   <!-- 화면: 직접 추가 / 수정 -->
@@ -233,6 +244,7 @@
 
   <div class="tabbar" id="tabbar" style="display:none;">
     <button class="tab-item active" id="tab-home" onclick="showScreen('home')"><span class="tab-emoji">🏠</span>홈</button>
+    <button class="tab-item" id="tab-alerts" onclick="showScreen('alerts')"><span class="tab-emoji">🔔<span class="tab-badge" id="tab-alert-badge" style="display:none;"></span></span>알림</button>
     <button class="tab-item" id="tab-data" onclick="showScreen('data')"><span class="tab-emoji">📋</span>데이터</button>
   </div>
 
@@ -303,15 +315,18 @@ function showScreen(name){
   document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   const tabbar = document.getElementById('tabbar');
-  const showTabbar = (name === 'home' || name === 'data');
+  const showTabbar = (name === 'home' || name === 'alerts' || name === 'data');
   tabbar.style.display = showTabbar ? 'flex' : 'none';
   document.getElementById('app').classList.toggle('has-tabbar', showTabbar);
   if (showTabbar){
     document.getElementById('tab-home').classList.toggle('active', name==='home');
+    document.getElementById('tab-alerts').classList.toggle('active', name==='alerts');
     document.getElementById('tab-data').classList.toggle('active', name==='data');
   }
   if (name === 'home') renderHome();
+  if (name === 'alerts') renderAlerts();
   if (name === 'data') renderData();
+  updateAlertBadge();
   window.scrollTo(0,0);
 }
 
@@ -403,7 +418,7 @@ function renderHome(){
   document.getElementById('summary-amount').textContent = '₩' + total.toLocaleString();
   document.getElementById('summary-count').textContent = `구독 ${subs.length}개`;
 
-  renderBanner(subs);
+  updateAlertBadge();
 
   const listEl = document.getElementById('sub-list');
   const emptyEl = document.getElementById('home-empty');
@@ -448,18 +463,37 @@ function clickCancel(subId){
   window.open(sub.cancelUrl, '_blank');
 }
 
-/* ---------------- 결제 임박 배너 ---------------- */
-function renderBanner(subs){
-  const slot = document.getElementById('banner-slot');
-  const urgentSubs = subs.filter(s => dDay(s.nextPaymentDate) <= 3);
-  if (urgentSubs.length === 0){ slot.innerHTML = ''; return; }
+/* ---------------- 결제 임박 알림 ---------------- */
+function getUrgentSubs(){
+  let subs = getSubs().map(rollForward);
+  return subs.filter(s => dDay(s.nextPaymentDate) <= 3)
+    .sort((a,b) => new Date(a.nextPaymentDate) - new Date(b.nextPaymentDate));
+}
 
-  const target = urgentSubs[0];
-  const dd = dDay(target.nextPaymentDate);
-  const bannerKey = 'bannerFeedback_' + target.id + '_' + target.nextPaymentDate;
-  const already = localStorage.getItem(bannerKey);
+function updateAlertBadge(){
+  const badge = document.getElementById('tab-alert-badge');
+  const count = getUrgentSubs().length;
+  badge.style.display = count > 0 ? 'flex' : 'none';
+  badge.textContent = count;
+}
 
-  slot.innerHTML = `
+function renderAlerts(){
+  const urgentSubs = getUrgentSubs();
+  const listEl = document.getElementById('alert-list');
+  const emptyEl = document.getElementById('alert-empty');
+
+  if (urgentSubs.length === 0){
+    listEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  listEl.innerHTML = urgentSubs.map(target => {
+    const dd = dDay(target.nextPaymentDate);
+    const bannerKey = 'bannerFeedback_' + target.id + '_' + target.nextPaymentDate;
+    const already = localStorage.getItem(bannerKey);
+    return `
     <div class="banner">
       <div class="banner-top">🔔 결제 임박</div>
       <div class="banner-text"><b>${target.name}</b> 결제 ${ddayLabel(dd)} · ₩${target.amount.toLocaleString()}</div>
@@ -474,14 +508,14 @@ function renderBanner(subs){
              <button class="fb-btn" onclick="bannerFeedback('${bannerKey}', false)">아니오</button>
            </div>`
       }
-    </div>
-  `;
+    </div>`;
+  }).join('');
 }
 
 function bannerFeedback(key, yes){
   logEvent(yes ? 'helpful_yes' : 'helpful_no');
   localStorage.setItem(key, '1');
-  renderHome();
+  renderAlerts();
 }
 
 /* ---------------- 직접 추가 / 수정 ---------------- */
