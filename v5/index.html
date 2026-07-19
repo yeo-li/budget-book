@@ -18,12 +18,13 @@
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",sans-serif; background:var(--bg); color:var(--text);}
   #app{max-width:480px; margin:0 auto; min-height:100vh; background:var(--bg); position:relative; padding-bottom:24px;}
+  #app.has-tabbar{padding-bottom:calc(24px + 66px + env(safe-area-inset-bottom));}
   .screen{display:none; padding:24px 20px; animation:fadeIn .25s ease;}
   .screen.active{display:block;}
   @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
 
   /* ---------- Onboarding ---------- */
-  #screen-onboarding{min-height:100vh; display:flex; flex-direction:column; justify-content:center; text-align:center; padding:40px 28px;}
+  #screen-onboarding.active{min-height:100vh; display:flex; flex-direction:column; justify-content:center; text-align:center; padding:40px 28px;}
   .onboard-emoji{font-size:56px; margin-bottom:20px;}
   .onboard-title{font-size:24px; font-weight:800; line-height:1.4; margin:0 0 12px;}
   .onboard-sub{font-size:15px; color:var(--sub); line-height:1.6; margin:0 0 40px;}
@@ -38,7 +39,7 @@
   }
 
   /* ---------- Connect simulation ---------- */
-  #screen-connect{min-height:100vh; display:flex; flex-direction:column;}
+  #screen-connect.active{min-height:100vh; display:flex; flex-direction:column;}
   .connect-header{padding:20px 4px; font-size:18px; font-weight:800;}
   .bank-list{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px;}
   .bank-item{
@@ -59,7 +60,7 @@
   .loading-progress-bar{height:100%; background:var(--accent); width:0%; transition:width .3s ease;}
 
   /* ---------- Result ---------- */
-  #screen-result{min-height:100vh; display:flex; flex-direction:column; padding-top:60px;}
+  #screen-result.active{min-height:100vh; display:flex; flex-direction:column; padding-top:60px;}
   .result-headline{font-size:22px; font-weight:800; text-align:center; margin-bottom:6px;}
   .result-sub{font-size:14px; color:var(--sub); text-align:center; margin-bottom:28px;}
   .result-list{flex:1; display:flex; flex-direction:column; gap:10px;}
@@ -301,12 +302,12 @@ function showScreen(name){
   document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
   const tabbar = document.getElementById('tabbar');
-  if (name === 'home' || name === 'data'){
-    tabbar.style.display = 'flex';
+  const showTabbar = (name === 'home' || name === 'data');
+  tabbar.style.display = showTabbar ? 'flex' : 'none';
+  document.getElementById('app').classList.toggle('has-tabbar', showTabbar);
+  if (showTabbar){
     document.getElementById('tab-home').classList.toggle('active', name==='home');
     document.getElementById('tab-data').classList.toggle('active', name==='data');
-  } else {
-    tabbar.style.display = 'none';
   }
   if (name === 'home') renderHome();
   if (name === 'data') renderData();
