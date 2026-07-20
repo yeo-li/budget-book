@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#FFFAF3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="세이브포인트">
+<title>세이브 포인트 · 5일 챌린지</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#FFFAF3; --card:#FFFFFF; --ink:#1A1A2E; --sub:#555; --faint:#999;
+  --line:#F2EDE4; --line2:#E6DECF;
+  --p:#FF8C42; --p-deep:#F0761F; --p-soft:#FFF0E6;
+  --green:#27AE60; --green-deep:#1E8449; --green-soft:#E8F8F0; --green-mid:#2ECC71;
+  --gold:#D99A22; --gold-soft:#FBF3E1; --flame:#E8571F; --flame-soft:#FDEEE6;
+  --red:#E74C3C; --red-soft:#FDECEA; --amber:#B7791F; --amber-soft:#FBF3DE;
+  --blue:#3498DB; --blue-soft:#EAF4FB;
+  --r-lg:22px; --r-md:16px; --r-sm:12px;
+  --sh:0 1px 2px rgba(26,26,46,.04),0 6px 24px rgba(26,26,46,.06);
+  --sh-lift:0 4px 12px rgba(26,26,46,.08),0 16px 40px rgba(26,26,46,.12);
+}
+html{font-size:16px}
+body{
+  font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  background:#EDE8E0; color:var(--ink); min-height:100dvh;
+  display:flex; justify-content:center;
+  font-feature-settings:'tnum';
+  -webkit-font-smoothing:antialiased;
+}
+#app{
+  width:100%; max-width:440px; min-height:100dvh; background:var(--bg);
+  position:relative; overflow-x:hidden;
+  background-image:radial-gradient(circle at 20% -5%, #FFFDF8 0%, transparent 45%);
+}
+button{font:inherit;border:none;background:none;cursor:pointer;color:inherit}
+input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{font-weight:800;letter-spacing:-.02em}
+.num{font-feature-settings:'tnum';letter-spacing:-.03em}
+
+/* ---------- layout ---------- */
+.screen{display:none;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+.screen.active{display:block;animation:fadein .18s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top)) 18px 4px}
+.wordmark{font-size:16px;font-weight:900;letter-spacing:-.02em;display:flex;align-items:center;gap:6px}
+.wordmark .dot{width:9px;height:9px;border-radius:50%;background:var(--p);display:inline-block;box-shadow:0 0 0 3px var(--p-soft)}
+.iconbtn{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--sub);transition:background .15s}
+.iconbtn:active{background:var(--line)}
+/* 듀오링고식 상단 스탯 필 */
+.stat-pill{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:900;padding:5px 9px;border-radius:100px;white-space:nowrap;
+  background:var(--card);border:1px solid var(--line);box-shadow:var(--sh);letter-spacing:-.02em;transition:transform .12s}
+.stat-pill:active{transform:scale(.93)}
+.stat-pill .si{font-size:14px}
+/* v3식 3열 스탯 로우 */
+.pstat-row{display:flex;border-top:1px solid var(--line);margin-top:12px;padding-top:11px}
+.pstat{flex:1;text-align:center}
+.pstat b{font-size:15px;font-weight:900;display:block;letter-spacing:-.02em}
+.pstat span{font-size:11px;color:var(--faint);font-weight:700;margin-top:2px;display:block}
+.close-btn{width:100%;padding:15px;border-radius:16px;background:var(--ink);color:#fff;font-size:15px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 8px 22px rgba(26,31,28,.22);transition:transform .12s;
+  position:relative;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.close-btn .fill{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,rgba(255,164,94,.9),rgba(240,118,31,.95));border-radius:inherit}
+.close-btn .fill.cancel{background:linear-gradient(90deg,rgba(231,76,60,.35),rgba(231,76,60,.6))}
+.close-btn.holding{transform:scale(.975)}
+.close-btn.holding .fill{width:100%;transition:width 1.2s linear}
+.close-btn .lb{position:relative;z-index:1;display:flex;align-items:center;gap:9px}
+.close-btn.done{background:var(--green-soft);color:var(--green-deep);box-shadow:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.close-btn.done.holding{transform:scale(.975)}
+.save-preview{width:100%;margin-top:9px;padding:11px 14px;border-radius:13px;background:var(--gold-soft);color:var(--amber);
+  font-size:13px;font-weight:700;text-align:center;border:1px solid #F1E3C2;transition:transform .12s}
+.save-preview b{font-weight:900;color:var(--gold)}
+.save-preview:active{transform:scale(.98)}
+.save-preview.done{background:var(--green-soft);color:var(--green-deep);border-color:#CBE6DA}
+.save-preview.done b{color:var(--green-deep)}
+.save-preview.flat{background:var(--bg);color:var(--faint);border-color:var(--line);pointer-events:none}
+.hero-edit{position:absolute;top:16px;right:16px;z-index:2;font-size:11.5px;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);border-radius:100px;padding:6px 12px}
+.hero-edit:active{background:rgba(255,255,255,.3)}
+/* 스트릭 캘린더 */
+.st-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:13px;font-weight:700;color:var(--sub);position:relative}
+.st-day.ok{background:var(--green);color:#fff;font-weight:900}
+.st-day.rep{background:var(--gold);color:#fff;font-weight:900}
+.st-day.over{background:var(--red-soft);color:var(--red)}
+.st-day.pend{background:var(--amber-soft);color:var(--amber)}
+.st-day.dim{opacity:.3}
+.st-day.today::after{content:'';position:absolute;inset:-3px;border:2px solid var(--ink);border-radius:14px}
+.mini-bar{height:8px;background:var(--line);border-radius:5px;overflow:hidden;margin-top:6px}
+.mini-bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#FFA45E,var(--p));transition:width .6s ease}
+.section-label{font-size:12px;font-weight:800;color:var(--faint);letter-spacing:.04em;padding:14px 22px 6px}
+.card{background:var(--card);border-radius:var(--r-lg);box-shadow:var(--sh);margin:0 16px 10px;padding:16px 18px;border:1px solid rgba(236,232,222,.6)}
+
+/* ---------- bottom nav ---------- */
+#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--line);display:flex;align-items:stretch;
+  padding:6px 8px calc(8px + env(safe-area-inset-bottom));z-index:60}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:7px 0;border-radius:14px;transition:transform .12s}
+.nav-item:active{transform:scale(.93)}
+.nav-item .ic{font-size:21px;filter:grayscale(1) opacity(.45);transition:filter .15s}
+.nav-item .lb{font-size:10.5px;font-weight:700;color:var(--faint)}
+.nav-item.on .ic{filter:none}
+.nav-item.on .lb{color:var(--p-deep)}
+.nav-plus{flex:1;display:flex;align-items:center;justify-content:center}
+.nav-plus .circle{width:52px;height:52px;border-radius:50%;background:linear-gradient(145deg,#FFA45E,var(--p-deep));
+  color:#fff;font-size:26px;font-weight:300;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 18px rgba(255,140,66,.45);transform:translateY(-12px);transition:transform .15s}
+.nav-plus:active .circle{transform:translateY(-12px) scale(.92)}
+
+/* ---------- home ---------- */
+.hero{margin:8px 16px 10px;padding:18px 20px 16px;border-radius:22px;
+  background:linear-gradient(155deg,#FF9C50 0%,#FF8C42 55%,#F0761F 100%);
+  color:#fff;box-shadow:0 12px 32px rgba(240,118,31,.32);position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;right:-60px;top:-70px;width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.12),transparent 65%)}
+.hero .cap{font-size:12.5px;font-weight:600;opacity:.8}
+.hero .big{font-size:30px;font-weight:900;letter-spacing:-.035em;margin:3px 0 2px}
+.hero .meta{font-size:13px;opacity:.65;font-weight:500}
+.hero .bar{height:7px;background:rgba(255,255,255,.2);border-radius:5px;margin-top:12px;overflow:hidden}
+.hero .bar i{display:block;height:100%;background:linear-gradient(90deg,#FFE3C9,#FFF6EC);border-radius:5px;transition:width .8s cubic-bezier(.3,.8,.3,1)}
+.hero .barrow{display:flex;justify-content:space-between;font-size:11.5px;opacity:.75;margin-top:6px;font-weight:600}
+
+.pace-card{position:relative}
+.pace-head{display:flex;align-items:center;justify-content:space-between}
+.pace-title{font-size:13px;font-weight:800;color:var(--sub);display:flex;align-items:center;gap:6px}
+.badge{font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:100px}
+.badge.ok{background:var(--green-soft);color:var(--green-deep)}
+.badge.warn{background:var(--amber-soft);color:var(--amber)}
+.badge.over{background:var(--red-soft);color:var(--red)}
+.pace-num{font-size:31px;font-weight:900;letter-spacing:-.03em;margin:10px 0 2px}
+.pace-num small{font-size:16px;font-weight:700;color:var(--sub)}
+.pace-sub{font-size:13px;color:var(--faint);font-weight:600}
+.gauge{margin-top:16px;height:12px;background:var(--line);border-radius:7px;overflow:hidden;position:relative}
+.gauge i{display:block;height:100%;border-radius:7px;transition:width .7s cubic-bezier(.3,.8,.3,1)}
+.gauge i.ok{background:linear-gradient(90deg,var(--green-mid),var(--green))}
+.gauge i.warn{background:linear-gradient(90deg,#E4B33C,var(--amber))}
+.gauge i.over{background:linear-gradient(90deg,#D96A5B,var(--red))}
+.gauge-row{display:flex;justify-content:space-between;gap:14px;margin-top:8px;font-size:12.5px;color:var(--faint);font-weight:600}
+.gauge-row span:first-child{white-space:nowrap}
+.gauge-row span:last-child{text-align:right}
+
+.duo{display:flex;gap:10px;margin:0 16px 10px}
+.duo .card{flex:1;margin:0;padding:14px 15px}
+.mini-cap{font-size:12px;font-weight:700;color:var(--faint)}
+.mini-num{font-size:19px;font-weight:900;margin-top:4px;letter-spacing:-.02em}
+.mini-sub{font-size:12px;color:var(--faint);font-weight:600;margin-top:3px}
+
+.banner{margin:0 16px 10px;padding:13px 16px;border-radius:var(--r-md);display:flex;align-items:center;gap:11px;
+  font-size:13px;font-weight:700;box-shadow:var(--sh);border:1px solid transparent;width:calc(100% - 32px);text-align:left}
+.banner.todo{background:var(--blue-soft);color:var(--blue);border-color:#D8E7F1}
+.banner.close{background:var(--card);color:var(--ink);border-color:var(--line)}
+.banner .arrow{margin-left:auto;color:var(--faint);font-weight:400}
+.banner .bic{font-size:20px}
+
+/* ---------- record tab ---------- */
+.q-card{background:var(--card);border-radius:var(--r-lg);box-shadow:var(--sh);margin:0 16px 12px;padding:18px 20px;border:1px solid rgba(236,232,222,.6)}
+.q-date{font-size:15px;font-weight:800}
+.q-sub{font-size:12.5px;color:var(--faint);font-weight:600;margin-top:2px}
+.q-actions{display:flex;gap:8px;margin-top:14px}
+.chip-btn{flex:1;padding:11px 4px;border-radius:12px;font-size:13.5px;font-weight:800;transition:transform .12s;text-align:center}
+.chip-btn:active{transform:scale(.96)}
+.chip-btn.ghost{background:var(--bg);color:var(--sub);border:1px solid var(--line2)}
+.chip-btn.solid{background:var(--p);color:#fff}
+.chip-btn.gold{background:var(--gold-soft);color:var(--gold);border:1px solid #F1E3C2}
+
+.cal{margin:0 16px 12px;background:var(--card);border-radius:var(--r-lg);box-shadow:var(--sh);padding:14px 12px;border:1px solid rgba(236,232,222,.6)}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px}
+.cal-title{font-size:15.5px;font-weight:800}
+.cal-nav{display:flex;gap:4px}
+.cal-nav button{width:32px;height:32px;border-radius:10px;color:var(--sub);font-size:15px}
+.cal-nav button:active{background:var(--bg)}
+.cal-dow{font-size:11px;font-weight:700;color:var(--faint);text-align:center;padding:2px 0 4px}
+.caldrow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day{min-height:52px;display:flex;flex-direction:column;align-items:stretch;gap:1px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--sub);position:relative;padding:3px 2px 2px;overflow:hidden}
+.cal-day:active{background:var(--bg)}
+.cal-day.dim{opacity:.32}
+.cal-day .dn{display:flex;align-items:center;justify-content:center;gap:3px;height:17px;flex-shrink:0}
+.cal-day.today .dn{background:var(--ink);color:#fff;font-weight:800;border-radius:6px;width:22px;height:22px;margin:0 auto}
+.cal-day .st{width:5px;height:5px;border-radius:50%}
+.st.ok{background:var(--green-mid)}
+.st.over{background:var(--red)}
+.st.pend{background:var(--amber);animation:pulse 1.6s infinite}
+.st.rep{background:var(--gold)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.cal-ev{font-size:8px;font-weight:700;line-height:1.35;padding:0 2px 0 3px;border-radius:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:2px solid transparent;text-align:left}
+.cal-ev.paid{opacity:.4;text-decoration:line-through}
+.cal-more{font-size:8px;font-weight:800;color:var(--faint);padding-left:3px}
+.legend{display:flex;gap:14px;justify-content:center;margin-top:12px;font-size:11.5px;color:var(--faint);font-weight:600}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend .st{width:7px;height:7px}
+
+.day-group{margin:0 16px 10px;background:var(--card);border-radius:var(--r-md);box-shadow:var(--sh);overflow:hidden;border:1px solid rgba(236,232,222,.6)}
+.day-head{display:flex;align-items:center;padding:13px 18px 10px;gap:8px}
+.day-head .d{font-size:13.5px;font-weight:800}
+.day-head .tag{font-size:10.5px;font-weight:800;padding:2.5px 8px;border-radius:100px}
+.tag.ok{background:var(--green-soft);color:var(--green-deep)}
+.tag.over{background:var(--red-soft);color:var(--red)}
+.tag.pend{background:var(--amber-soft);color:var(--amber)}
+.tag.rep{background:var(--gold-soft);color:var(--gold)}
+.day-head .sum{margin-left:auto;font-size:13px;font-weight:800;color:var(--sub)}
+.exp-row{display:flex;align-items:center;gap:12px;padding:11px 18px;border-top:1px solid var(--line)}
+.exp-ic{width:36px;height:36px;border-radius:11px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.exp-name{font-size:14px;font-weight:700}
+.exp-src{font-size:11px;color:var(--faint);font-weight:600;margin-top:1px}
+.exp-amt{margin-left:auto;font-size:14.5px;font-weight:800;white-space:nowrap}
+.exp-del{color:var(--faint);font-size:15px;padding:6px 2px 6px 8px}
+.empty{padding:44px 20px;text-align:center;color:var(--faint)}
+.empty .e-ic{font-size:38px;margin-bottom:10px}
+.empty .e-t{font-size:14.5px;font-weight:700;color:var(--sub)}
+.empty .e-s{font-size:13px;margin-top:5px;line-height:1.5}
+.add-row{width:100%;padding:16px;text-align:center;font-size:14.5px;font-weight:800;color:var(--p-deep);background:var(--card)}
+
+/* ---------- sheets ---------- */
+.dimmer{position:fixed;inset:0;background:rgba(20,24,21,.45);z-index:80;opacity:0;pointer-events:none;transition:opacity .22s}
+.dimmer.show{opacity:1;pointer-events:auto}
+.sheet{position:fixed;bottom:0;left:50%;transform:translate(-50%,105%);width:100%;max-width:440px;
+  background:var(--card);border-radius:26px 26px 0 0;z-index:90;transition:transform .3s cubic-bezier(.32,.9,.35,1);
+  max-height:88dvh;overflow-y:auto;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+.sheet.show{transform:translate(-50%,0)}
+.sheet-grip{width:40px;height:4.5px;border-radius:3px;background:var(--line2);margin:11px auto 4px}
+.sheet-head{padding:10px 24px 4px;display:flex;align-items:center;justify-content:space-between}
+.sheet-title{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sheet-x{font-size:20px;color:var(--faint);padding:6px}
+.sheet-body{padding:12px 24px 8px}
+
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12.5px;font-weight:800;color:var(--faint);margin-bottom:7px}
+.field input[type=text],.field input[type=number],.field input[type=date],.field input[type=time],.field select,.field textarea{
+  width:100%;padding:14px 16px;border:1.5px solid var(--line2);border-radius:14px;font-size:16px;font-weight:700;
+  background:var(--bg);outline:none;transition:border-color .15s;-webkit-appearance:none}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--p);background:#fff}
+.field textarea{min-height:110px;font-weight:500;font-size:14px;line-height:1.5;resize:none}
+.won-wrap{position:relative}
+.won-wrap input{padding-right:44px !important;text-align:right;font-size:20px !important;font-weight:800 !important}
+.won-wrap::after{content:'원';position:absolute;right:16px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--sub)}
+.cta{width:100%;padding:17px;border-radius:16px;background:var(--p);color:#fff;font-size:16.5px;font-weight:800;transition:transform .12s,opacity .15s;margin-top:6px}
+.cta:active{transform:scale(.98)}
+.cta:disabled{opacity:.35}
+.cta.dark{background:var(--ink)}
+.cta.ghost{background:var(--bg);color:var(--sub);border:1.5px solid var(--line2)}
+
+.seg{display:flex;background:var(--bg);border-radius:14px;padding:4px;gap:4px;margin-bottom:18px}
+.seg button{flex:1;padding:10px 2px;border-radius:11px;font-size:13.5px;font-weight:800;color:var(--faint);transition:all .15s}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 2px 8px rgba(26,31,28,.09)}
+
+.ocr-drop{border:2px dashed var(--line2);border-radius:18px;padding:34px 20px;text-align:center;background:var(--bg);transition:border-color .15s;width:100%}
+.ocr-drop:active{border-color:var(--p)}
+.ocr-drop .oi{font-size:36px}
+.ocr-drop .ot{font-size:14.5px;font-weight:800;margin-top:10px}
+.ocr-drop .os{font-size:12.5px;color:var(--faint);font-weight:600;margin-top:4px;line-height:1.5}
+.ocr-status{text-align:center;padding:26px 10px}
+.spinner{width:34px;height:34px;border:3.5px solid var(--line);border-top-color:var(--p);border-radius:50%;margin:0 auto 14px;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cand-box{background:var(--green-soft);border:1.5px solid #CBE6DA;border-radius:16px;padding:14px 16px;margin-bottom:16px}
+.cand-box .ct{font-size:12px;font-weight:800;color:var(--green-deep);margin-bottom:6px}
+.cand-box .cv{font-size:13.5px;font-weight:600;color:var(--sub);line-height:1.6;word-break:break-all;max-height:76px;overflow-y:auto}
+
+.calc-preview{background:var(--card);border-radius:18px;padding:20px;margin-top:22px;box-shadow:var(--sh)}
+.calc-row{display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:var(--sub);padding:7px 0}
+.calc-row.total{border-top:1.5px solid var(--line);margin-top:6px;padding-top:13px;font-size:16px;color:var(--ink);font-weight:800}
+.calc-row .neg{color:var(--red)}
+.calc-row .pos{color:var(--green)}
+
+/* ---------- celebration ---------- */
+#celebrate{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;background:rgba(16,22,18,.72);backdrop-filter:blur(6px)}
+#celebrate.show{display:flex;animation:fadein .2s ease}
+.cel-card{background:var(--card);border-radius:28px;padding:38px 30px 28px;text-align:center;width:min(320px,86vw);position:relative;overflow:visible;animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.cel-emoji{font-size:56px;animation:bounce .7s cubic-bezier(.3,1.6,.4,1)}
+@keyframes bounce{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.25) rotate(6deg)}100%{transform:scale(1)}}
+.cel-title{font-size:20px;font-weight:900;margin-top:14px;letter-spacing:-.02em}
+.cel-amt{font-size:32px;font-weight:900;color:var(--green-deep);margin-top:6px;letter-spacing:-.03em}
+.cel-sub{font-size:13.5px;color:var(--sub);font-weight:600;margin-top:8px;line-height:1.6}
+.cel-streak{display:inline-flex;align-items:center;gap:6px;background:var(--flame-soft);color:var(--flame);font-weight:800;font-size:14px;border-radius:100px;padding:7px 16px;margin-top:14px}
+.cel-btn{margin-top:20px;width:100%;padding:15px;border-radius:15px;background:var(--ink);color:#fff;font-size:15px;font-weight:800}
+.confetti{position:absolute;width:9px;height:14px;top:-10px;opacity:0;pointer-events:none}
+@keyframes confall{0%{opacity:1;transform:translateY(-10px) rotate(0)}100%{opacity:0;transform:translateY(340px) rotate(540deg)}}
+.coin{position:absolute;font-size:22px;pointer-events:none;animation:coindrop 1s ease-in forwards}
+@keyframes coindrop{0%{opacity:0;transform:translateY(-60px) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translateY(120px) scale(1)}}
+
+.toast{position:fixed;bottom:calc(110px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,20px);background:var(--ink);color:#fff;
+  padding:13px 22px;border-radius:100px;font-size:14px;font-weight:700;z-index:300;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;box-shadow:var(--sh-lift)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:16px 2px;border-bottom:1px solid var(--line);font-size:15px;font-weight:700;width:100%;text-align:left}
+.settings-row .sv{color:var(--faint);font-weight:600;font-size:14px}
+.settings-row.danger{color:var(--red)}
+.hint{font-size:12px;color:var(--faint);font-weight:600;line-height:1.6;margin-top:14px}
+.st-hero{text-align:center;padding:6px 0 16px}
+.st-hero .fl{font-size:44px}
+.st-hero .n{font-size:26px;font-weight:900;letter-spacing:-.02em;margin-top:4px}
+.st-hero .b{font-size:13px;color:var(--faint);font-weight:700;margin-top:4px}
+
+/* ---------- home: 날짜 스트립 ---------- */
+.datestrip{display:flex;align-items:center;gap:10px;margin:2px 16px 10px}
+.datestrip .nav{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;
+  color:var(--sub);background:var(--card);border:1px solid var(--line);box-shadow:var(--sh);flex-shrink:0;transition:transform .12s}
+.datestrip .nav:active{transform:scale(.9)}
+.datestrip .nav:disabled{opacity:.3;pointer-events:none}
+.datestrip .mid{flex:1;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:15px;box-shadow:var(--sh);padding:9px 6px}
+.datestrip .dt{font-size:15px;font-weight:900;letter-spacing:-.02em}
+.datestrip .sub{font-size:11.5px;font-weight:800;margin-top:2px}
+.datestrip .sub.ok{color:var(--green-deep)}
+.datestrip .sub.pend{color:var(--amber)}
+.datestrip .sub.live{color:var(--p-deep)}
+.datestrip .sub.soon{color:var(--faint)}
+
+/* ---------- home: 큰 스트릭 카드 ---------- */
+.streak-card{display:flex;align-items:center;gap:16px;margin:0 16px 10px;padding:18px 20px;border-radius:var(--r-lg);
+  background:linear-gradient(150deg,#FFF3EC,#FDE6DA);border:1px solid #F6D7C6;box-shadow:var(--sh)}
+.streak-card:active{transform:scale(.99)}
+.flame-big{font-size:46px;line-height:1;filter:drop-shadow(0 3px 8px rgba(232,87,31,.35));animation:flamebob 2.4s ease-in-out infinite}
+@keyframes flamebob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.06)}}
+.streak-n{font-size:30px;font-weight:900;letter-spacing:-.03em;color:var(--flame);line-height:1.05}
+.streak-sub{font-size:12.5px;font-weight:800;color:var(--amber);margin-top:3px}
+.streak-dots{display:flex;gap:7px;margin-left:auto;flex-shrink:0}
+.sdot{width:16px;height:16px;border-radius:50%;background:var(--line2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff}
+.sdot.ok{background:var(--green)}
+.sdot.over{background:var(--red)}
+.sdot.pend{background:var(--amber)}
+.sdot.today{box-shadow:0 0 0 3px var(--flame-soft),0 0 0 4px var(--flame)}
+
+/* ---------- onboarding ---------- */
+#onb{position:fixed;inset:0;z-index:150;display:none;justify-content:center;background:#EDE8E0}
+#onb.show{display:flex}
+.onb-inner{width:100%;max-width:440px;background:var(--bg);display:flex;flex-direction:column;min-height:100dvh;
+  padding:calc(34px + env(safe-area-inset-top)) 28px calc(28px + env(safe-area-inset-bottom));position:relative;overflow-y:auto}
+.onb-progress{display:flex;gap:6px;margin-bottom:8px}
+.onb-progress i{height:4px;border-radius:3px;flex:1;background:var(--line2);transition:background .2s}
+.onb-progress i.on{background:var(--p)}
+.onb-back{position:absolute;top:calc(30px + env(safe-area-inset-top));left:18px;width:34px;height:34px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--sub)}
+.onb-back:active{background:var(--line)}
+.onb-mid{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center}
+.onb-hero-emoji{font-size:66px;line-height:1;animation:bob 2.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.onb-title{font-size:27px;font-weight:900;letter-spacing:-.03em;margin-top:20px;line-height:1.3}
+.onb-title em{font-style:normal;color:var(--p-deep)}
+.onb-body{font-size:15px;color:var(--sub);font-weight:600;line-height:1.7;margin-top:14px}
+.onb-body b{color:var(--ink);font-weight:800}
+.onb-tag{display:inline-block;font-size:12.5px;font-weight:800;color:var(--p-deep);background:var(--p-soft);border-radius:100px;padding:6px 14px;margin-bottom:6px}
+.onb-foot{margin-top:24px}
+.onb-mock{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh);padding:16px 18px;margin:22px auto 0;max-width:320px;text-align:left}
+.onb-mock .mrow{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:700;color:var(--sub);padding:7px 0}
+.onb-mock .mrow b{color:var(--ink);font-weight:800;margin-left:auto}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ HOME ============ -->
+  <section class="screen active" id="scr-home">
+    <div class="topbar">
+      <div class="wordmark"><span class="dot"></span>5일 챌린지</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div id="top-stats" style="display:flex;gap:6px"></div>
+        <button class="iconbtn" onclick="openSettings()">⚙︎</button>
+      </div>
+    </div>
+    <div id="home-body"></div>
+  </section>
+
+  <!-- ============ RECORD ============ -->
+  <section class="screen" id="scr-record">
+    <div class="topbar">
+      <div class="wordmark"><span class="dot"></span>기록</div>
+      <div style="display:flex;gap:6px" id="record-actions"></div>
+    </div>
+    <div id="record-body"></div>
+  </section>
+
+  <!-- ============ NAV ============ -->
+  <nav id="nav">
+    <button class="nav-item on" data-scr="home"><span class="ic">🏠</span><span class="lb">홈</span></button>
+    <button class="nav-plus" onclick="openInput()"><span class="circle">＋</span></button>
+    <button class="nav-item" data-scr="record"><span class="ic">📅</span><span class="lb">기록</span></button>
+  </nav>
+
+  <!-- ============ SHEETS ============ -->
+  <div class="dimmer" id="dimmer" onclick="closeSheets()"></div>
+
+  <!-- input sheet -->
+  <div class="sheet" id="sheet-input">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head"><div class="sheet-title">지출·수입 입력</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-body">
+      <div class="seg" id="input-seg">
+        <button data-m="manual" class="on">✏️ 직접</button>
+        <button data-m="capture">📷 캡처</button>
+        <button data-m="paste">📋 붙여넣기</button>
+      </div>
+      <div id="input-panel"></div>
+    </div>
+  </div>
+
+  <!-- settings sheet -->
+  <div class="sheet" id="sheet-settings">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head"><div class="sheet-title">설정</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-body" id="settings-body"></div>
+  </div>
+
+  <!-- budget sheet -->
+  <div class="sheet" id="sheet-budget">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head"><div class="sheet-title">5일치 예산 설정</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-body" id="budget-body"></div>
+  </div>
+
+  <!-- streak sheet -->
+  <div class="sheet" id="sheet-streak">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head"><div class="sheet-title">🔥 기록 스트릭</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-body" id="streak-body"></div>
+  </div>
+
+  <!-- queue sheet (확인 안 한 날) -->
+  <div class="sheet" id="sheet-queue">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head"><div class="sheet-title">📥 확인 안 한 날</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-body" id="queue-body"></div>
+  </div>
+
+  <!-- day detail sheet -->
+  <div class="sheet" id="sheet-day">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head"><div class="sheet-title" id="day-sheet-title">날짜</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-body" id="day-sheet-body"></div>
+  </div>
+
+  <!-- celebration -->
+  <div id="celebrate"></div>
+  <div class="toast" id="toast"></div>
+
+  <!-- ============ ONBOARDING ============ -->
+  <div id="onb"><div class="onb-inner" id="onb-inner"></div></div>
+</div>
+
+<script>
+'use strict';
+/* ================================================================
+   세이브 포인트 v6 — 5일 챌린지 프로토타입 (단일 파일)
+   가설 검증용: 입력할 때마다 즉시 반응하는 보상
+   (스트릭 · 오늘 남은 돈 즉시 차감 · 마감 시 칭찬/훈계 문구)
+   데이터: localStorage (기기 저장) / 내보내기·가져오기 지원
+================================================================ */
+
+// ---------- state ----------
+const KEY='savepoint_v6';
+const CHALLENGE_DAYS=5;
+const DEFAULT_BUDGET=150000; // 5일치 기본 예산
+const DEFAULT={v:1,onboarded:false,startDate:null,budget5:DEFAULT_BUDGET,exp:[],conf:{},seenMilestones:[]};
+let S=load();
+function load(){
+  try{
+    const s=JSON.parse(localStorage.getItem(KEY));
+    if(s&&s.v===1){
+      const o=Object.assign(JSON.parse(JSON.stringify(DEFAULT)),s);
+      if(!Array.isArray(o.exp))o.exp=[];
+      if(!o.conf)o.conf={};
+      if(!Array.isArray(o.seenMilestones))o.seenMilestones=[];
+      if(!o.budget5||o.budget5<=0)o.budget5=DEFAULT_BUDGET;
+      return o;
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT));
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+
+// ---------- date helpers ----------
+function ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+// 하루의 경계는 자정이 아니라 새벽 5시. 5시 전이면 아직 '어제'로 친다.
+const DAY_START_HOUR=5;
+function today(){
+  const d=new Date();
+  if(d.getHours()<DAY_START_HOUR)d.setDate(d.getDate()-1);
+  return ds(d);
+}
+function pd(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
+function dim(y,m){return new Date(y,m,0).getDate();} // m: 1-12
+const DOW=['일','월','화','수','목','금','토'];
+function fmtDate(s,withDow){const d=pd(s);const t=today();
+  let base=(d.getMonth()+1)+'월 '+d.getDate()+'일';
+  if(withDow)base+=' ('+DOW[d.getDay()]+')';
+  if(s===t)return '오늘 · '+base;
+  const yd=new Date();yd.setDate(yd.getDate()-1);
+  if(s===ds(yd))return '어제 · '+base;
+  return base;}
+function addDays(s,n){const d=pd(s);d.setDate(d.getDate()+n);return ds(d);}
+function dayNo(date){ // 챌린지 몇 일차인지 (1-based). 범위 밖이면 0
+  if(!S.startDate)return 0;
+  const diff=Math.round((pd(date)-pd(S.startDate))/86400000);
+  return diff>=0&&diff<CHALLENGE_DAYS?diff+1:0;
+}
+
+// ---------- money ----------
+function won(n){return Math.round(n).toLocaleString('ko-KR')+'원';}
+function manwon(n){
+  n=Math.round(n);
+  if(Math.abs(n)>=10000){const m=n/10000;const r=Math.abs(m%1)<0.05?Math.round(m):Math.round(m*10)/10;return r.toLocaleString('ko-KR')+'만원';}
+  return n.toLocaleString('ko-KR')+'원';}
+function num(s){return parseInt(String(s).replace(/[^\d]/g,''),10)||0;}
+function fmtInput(el){const n=num(el.value);el.value=n?n.toLocaleString('ko-KR'):'';}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// ---------- 칭찬 / 훈계 문구 ----------
+// 시간대별로 칭찬 문구 풀을 다르게 두고, 그 안에서 랜덤으로 하나 뽑는다.
+const PRAISE_BY_TIME={
+  morning:[ // 새벽~아침 (05-11)
+    '상쾌한 아침, 벌써 하루를 정리했네요 ☀️ 잘했어요!',
+    '이른 시간부터 부지런하게 마감! 오늘도 페이스 안이에요',
+    '아침을 기록으로 여는 사람, 멋져요 🌱',
+    '하루의 시작을 깔끔하게 — 좋은 습관이에요',
+  ],
+  lunch:[ // 점심 (11-14)
+    '점심 즈음에 벌써 마감이라니, 야무져요 🍚',
+    '한낮에도 페이스 안쪽! 흐트러지지 않았어요',
+    '든든하게 채우고, 예산도 지켰네요 👏',
+    '정오의 절제 — 오늘의 페이스가 살아있어요',
+  ],
+  afternoon:[ // 오후 (14-18)
+    '나른한 오후에도 페이스를 지켰어요 ☕ 대단!',
+    '오후의 유혹을 잘 넘겼네요 — 안전선 안쪽이에요',
+    '하루 절반을 잘 버텼어요, 이 기세 그대로!',
+    '오후에 마감 완료 — 계획대로 흘러가고 있어요',
+  ],
+  evening:[ // 저녁 (18-22)
+    '수고한 하루, 페이스 안에서 마무리했어요 🌆',
+    '저녁까지 잘 지켜냈네요 — 오늘도 성공!',
+    '하루를 잘 눌러 담았어요. 내일 페이스가 넉넉해져요',
+    '저녁의 마감, 든든하게 스트릭 이어갑니다 🔥',
+  ],
+  night:[ // 밤~자정 (22-05)
+    '늦은 밤까지 잊지 않고 마감했어요 🌙 최고예요',
+    '하루 끝, 조용히 잘 지켜냈어요. 푹 쉬어요',
+    '밤에도 챙기는 성실함 — 스트릭이 빛나요 ✨',
+    '오늘도 안전하게 착지. 좋은 꿈 꾸세요 🌟',
+  ],
+};
+const SCOLD=[
+  '오늘은 페이스를 넘었어요. 그래도 나타나 기록한 건 칭찬! 내일은 조금만 더 아껴봐요',
+  '조금 과했어요 😅 스트릭은 지켰으니, 딱 오늘까지만 눈감아줄게요 👀',
+  '예산을 넘겼어요. 내일 페이스가 빡빡해질 수 있어요 — 마음 다잡기!',
+  '오버! 기록은 이어졌지만, 지갑은 오늘을 기억할 거예요 💸',
+];
+function pick(arr,seed){ // seed로 안정적으로 하나 고른다 (재렌더 시 깜빡임 방지)
+  let h=0;for(const ch of String(seed))h=(h*31+ch.charCodeAt(0))>>>0;
+  return arr[h%arr.length];
+}
+function timeBand(){
+  const h=new Date().getHours();
+  if(h<5)return 'night';
+  if(h<11)return 'morning';
+  if(h<14)return 'lunch';
+  if(h<18)return 'afternoon';
+  if(h<22)return 'evening';
+  return 'night';
+}
+function praisePool(){return PRAISE_BY_TIME[timeBand()];}
+function praiseRandom(){const p=praisePool();return p[Math.floor(Math.random()*p.length)];} // 마감 순간 랜덤
+function praiseStable(seed){return pick(praisePool(),seed);} // 인라인 프리뷰 (깜빡임 방지)
+
+/* ================================================================
+   CALC ENGINE — 5일 예산을 남은 날 수로 나눠 '오늘의 안전 페이스' 결정
+================================================================ */
+function calc(){
+  const t=today();
+  const res={days:[],byDate:{},streak:0,successTotal:0,queue:[],
+    todayPace:0,todaySpent:0,todayInc:0,todayNet:0,
+    budget:S.budget5,remaining:S.budget5,windowSpent:0,dayIndex:0,daysLeft:CHALLENGE_DAYS,done:false,started:false};
+  if(!S.startDate)return res;
+  res.started=true;
+  const expByDate={};
+  S.exp.forEach(e=>{(expByDate[e.d]=expByDate[e.d]||[]).push(e);});
+  const windowEnd=addDays(S.startDate,CHALLENGE_DAYS-1);
+  res.windowEnd=windowEnd;
+  res.done=t>windowEnd;
+  let remaining=S.budget5;
+  for(let i=0;i<CHALLENGE_DAYS;i++){
+    const date=addDays(S.startDate,i);
+    if(date>t)break; // 아직 오지 않은 날
+    const daysLeft=CHALLENGE_DAYS-i;
+    const pace=remaining>0?remaining/daysLeft:0;
+    const exps=expByDate[date]||[];
+    const spent=exps.filter(e=>e.kind!=='inc').reduce((a,e)=>a+e.amt,0);
+    const inc=exps.filter(e=>e.kind==='inc').reduce((a,e)=>a+e.amt,0);
+    const net=spent-inc;
+    const settled=!!S.conf[date];
+    let success=null,saved=0;
+    if(settled){
+      if(net<=pace+0.5){success=true;saved=Math.max(0,Math.round(pace-net));}
+      else success=false;
+    }
+    const rec={date,day:i+1,pace,spent,inc,net,exps,settled,success,saved,isToday:date===t};
+    res.days.push(rec);res.byDate[date]=rec;
+    res.windowSpent+=spent;
+    remaining-=net;
+    if(date===t){res.todayPace=pace;res.todaySpent=spent;res.todayInc=inc;res.todayNet=net;res.dayIndex=i;res.daysLeft=daysLeft;}
+  }
+  res.remaining=remaining;
+  // 스트릭 = 시작일부터 '연속 마감'. 지난 날을 마감 안 하면 그 지점에서 끊긴다(닫으면 다시 이어짐).
+  let streak=0;
+  res.days.forEach(r=>{
+    if(r.settled){streak++;if(r.success===true)res.successTotal++;}
+    else if(r.date<t)streak=0;
+  });
+  res.streak=streak;
+  // 확인 안 한 날 = 지난 날인데 아직 마감 안 함
+  res.days.forEach(r=>{if(!r.settled&&r.date<t)res.queue.push(r);});
+  return res;
+}
+
+/* ================================================================
+   NAV & RENDER
+================================================================ */
+let CUR='home';
+let C=calc();
+let calMonth=null;
+
+document.querySelectorAll('.nav-item').forEach(b=>{
+  b.addEventListener('click',()=>{go(b.dataset.scr);});
+});
+function go(scr){
+  CUR=scr;
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('on',b.dataset.scr===scr));
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='scr-'+scr));
+  render();
+  window.scrollTo(0,0);
+}
+function render(){
+  if(typeof _lastDay!=='undefined'&&_lastDay&&today()!==_lastDay){_lastDay=today();calMonth=null;}
+  C=calc();
+  if(CUR==='home')renderHome();
+  if(CUR==='record')renderRecord();
+}
+
+// ---------- HOME ----------
+let homeDate=null;   // 홈에서 보고 있는 날짜 (좌우 화살표로 이동)
+let holdTarget=null; // 마감/취소 롱프레스 대상 날짜
+function navDay(n){
+  if(!homeDate)homeDate=today();
+  let nd=addDays(homeDate,n);
+  if(nd<S.startDate)nd=S.startDate;
+  if(C.windowEnd&&nd>C.windowEnd)nd=C.windowEnd;
+  homeDate=nd;renderHome();
+}
+function renderHome(){
+  const el=document.getElementById('home-body');
+  const t=today(),d=pd(t);
+
+  // 상단 스탯 필: 스트릭
+  const ts=document.getElementById('top-stats');
+  if(ts)ts.innerHTML=`
+    <button class="stat-pill" onclick="openStreak()"><span class="si">🔥</span><span style="color:var(--flame)">${C.streak}</span></button>`;
+
+  // 챌린지 완료(5일 지남)
+  if(C.done){
+    el.innerHTML=`
+    <div class="hero">
+      <div class="cap">5일 챌린지 완료 🎉</div>
+      <div class="big num">${C.successTotal} / ${CHALLENGE_DAYS}일 성공</div>
+      <div class="meta">${S.startDate.slice(5).replace('-','/')} 시작 · 스트릭 ${C.streak}일</div>
+    </div>
+    <div class="streak-card">
+      <div class="flame-big">${C.successTotal>=3?'🏆':'🔥'}</div>
+      <div><div class="streak-n">${C.streak}일 연속</div><div class="streak-sub">최종 스트릭</div></div>
+      <div class="streak-dots">${dotRow(t)}</div>
+    </div>
+    <div class="card" style="text-align:center;padding:22px 20px">
+      <div style="font-size:16px;font-weight:900">5일을 끝까지 왔어요</div>
+      <div class="hint" style="margin-top:6px">마감한 날 ${C.days.filter(r=>r.settled).length}일 · 페이스 지킨 날 ${C.successTotal}일</div>
+    </div>
+    <div style="margin:6px 16px 0">
+      <button class="cta" onclick="restartChallenge()">🚀 새 5일 챌린지 시작하기</button>
+    </div>`;
+    return;
+  }
+
+  // 보고 있는 날짜 (기본: 오늘) — 챌린지 범위 안으로 클램프
+  if(!homeDate)homeDate=t;
+  if(homeDate<S.startDate)homeDate=S.startDate;
+  if(C.windowEnd&&homeDate>C.windowEnd)homeDate=C.windowEnd;
+  const vd=homeDate;
+  const vdD=pd(vd);
+  const isToday=vd===t;
+  const isFuture=vd>t;
+  const vr=C.byDate[vd];           // 미래 날은 undefined
+  const dnum=dayNo(vd);
+  holdTarget=vd;
+
+  const budgetPct=S.budget5>0?Math.max(0,Math.min(100,C.remaining/S.budget5*100)):0;
+
+  // 날짜 스트립 상태
+  let stCls='soon',stTxt='아직 오지 않은 날';
+  if(vr){
+    if(vr.settled)stTxt=vr.success===true?'✓ 마감함 · 성공':'✓ 마감함 · 초과',stCls='ok';
+    else if(isToday)stTxt='진행 중',stCls='live';
+    else stTxt='확인 대기',stCls='pend';
+  }else if(isToday){stTxt='진행 중';stCls='live';}
+  else if(isFuture){stTxt='예정';stCls='soon';}
+
+  // 보고 있는 날의 페이스 / 남은 돈
+  let paceCardHtml,closeHtml='';
+  if(isFuture||!vr){
+    paceCardHtml=`
+    <div class="card pace-card">
+      <div class="pace-head"><div class="pace-title">${isToday?'오늘 남은 돈':'그날 남은 돈'}</div><span class="badge ok" style="background:var(--line);color:var(--faint)">예정</span></div>
+      <div class="pace-num num" style="font-size:24px;margin:10px 0 3px;color:var(--faint)">아직 오지 않았어요</div>
+      <div class="pace-sub">Day ${dnum||'-'}은(는) 도착하면 페이스가 계산돼요</div>
+    </div>`;
+  }else{
+    const pace=vr.pace,spent=vr.spent,net=vr.net,inc=vr.inc;
+    const ratio=pace>0?Math.max(0,net)/pace:(net>0?2:0);
+    const status=ratio>1?'over':ratio>0.8?'warn':'ok';
+    const stLabel={ok:'안전 페이스',warn:'페이스 주의',over:'페이스 초과'}[status];
+    const paceDisp=Math.floor(pace/100)*100;
+    const paceLeft=paceDisp-net;
+    paceCardHtml=`
+    <div class="card pace-card">
+      <div class="pace-head">
+        <div class="pace-title">${isToday?'오늘 남은 돈':'그날 남은 돈'}</div>
+        <span class="badge ${status}">${stLabel}</span>
+      </div>
+      <div class="pace-num num" style="font-size:30px;margin:8px 0 3px;${paceLeft<0?'color:var(--red)':''}">${won(paceLeft)}</div>
+      <div class="pace-sub num">안전 페이스 ${won(paceDisp)}/일${inc>0?` · <span style="color:var(--green);font-weight:800">수입 +${won(inc)}</span>`:''}</div>
+      <div class="pstat-row">
+        <div class="pstat"><b class="num">${won(spent)}</b><span>${isToday?'오늘 쓴 돈':'그날 쓴 돈'}</span></div>
+        <div class="pstat"><b class="num">${won(C.windowSpent)}</b><span>5일 누적</span></div>
+        <div class="pstat"><b class="num">${dnum}/${CHALLENGE_DAYS}</b><span>진행</span></div>
+      </div>
+    </div>`;
+    // 마감 / 취소 영역
+    if(!vr.settled){
+      closeHtml=`
+      <button class="close-btn" id="close-hold"><span class="fill"></span><span class="lb">🌙 꾹 눌러서 ${isToday?'하루':'이 날'} 마감</span></button>
+      ${paceLeft>=0?`<div class="save-preview done" style="pointer-events:none">🔥 지금 마감하면 <b>스트릭 ${C.streak+1}일째</b> · 페이스 안이에요</div>`
+        :`<div class="save-preview flat">페이스를 넘었어요 · 그래도 마감하면 스트릭은 이어져요</div>`}`;
+    }else{
+      closeHtml=`
+      <button class="close-btn done" id="close-cancel" ${canCancel(vd)?'':'style="pointer-events:none"'}><span class="fill cancel"></span><span class="lb">✅ 마감 완료${canCancel(vd)?' · 꾹 눌러 취소':''}</span></button>
+      ${vr.success===true?`<div class="save-preview done" style="pointer-events:none">${praiseStable(vd)}</div>`:`<div class="save-preview flat">${pick(SCOLD,vd)}</div>`}`;
+    }
+  }
+
+  const prevDisabled=vd<=S.startDate?'disabled':'';
+  const nextDisabled=(C.windowEnd&&vd>=C.windowEnd)?'disabled':'';
+
+  el.innerHTML=`
+  <div class="hero">
+    <button class="hero-edit" onclick="openBudgetSheet()">✎ 예산</button>
+    <div class="cap">5일치 가용 예산 · 남은 돈</div>
+    <div class="big num">${won(C.remaining)}</div>
+    <div class="bar"><i style="width:${budgetPct}%"></i></div>
+    <div class="barrow"><span>Day ${C.dayIndex+1} / ${CHALLENGE_DAYS}</span><span>${Math.round(budgetPct)}% 남음</span></div>
+  </div>
+
+  <div class="datestrip">
+    <button class="nav" ${prevDisabled} onclick="navDay(-1)">‹</button>
+    <div class="mid">
+      <div class="dt">${(vdD.getMonth()+1)}월 ${vdD.getDate()}일 (${DOW[vdD.getDay()]})${isToday?' · 오늘':''}</div>
+      <div class="sub ${stCls}">Day ${dnum||'-'} · ${stTxt}</div>
+    </div>
+    <button class="nav" ${nextDisabled} onclick="navDay(1)">›</button>
+  </div>
+
+  ${paceCardHtml}
+
+  ${closeHtml?`<div style="margin:0 16px 12px">${closeHtml}</div>`:''}
+
+  ${C.queue.length?`
+  <button class="banner todo" onclick="openQueue()">
+    <span class="bic">📥</span>
+    <span>확인 안 한 날 ${C.queue.length}일</span>
+    <span class="arrow">›</span>
+  </button>`:''}
+
+  <button class="streak-card" onclick="openStreak()" style="width:calc(100% - 32px)">
+    <div class="flame-big">🔥</div>
+    <div style="text-align:left"><div class="streak-n">${C.streak}일 연속</div><div class="streak-sub">기록 스트릭 유지 중 · 눌러서 자세히</div></div>
+    <div class="streak-dots">${dotRow(t)}</div>
+  </button>
+
+  <div class="card" style="padding:14px 18px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:26px">🎯</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:900">5일 챌린지 진행 상황</div>
+        <div class="hint" style="margin-top:3px">마감 ${C.days.filter(r=>r.settled).length}일 · 페이스 지킨 날 ${C.successTotal}일 · 남은 날 ${Math.max(0,CHALLENGE_DAYS-(C.dayIndex+1))}일</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint" style="padding:0 24px">매일 지출을 적고 하루를 마감하면 스트릭이 이어져요. 리마인드 없이 5일 동안 스스로 이어가 보세요 💪</div>
+  <div style="height:8px"></div>`;
+  bindHold();
+}
+// 5일 진행 점 (day1..day5)
+function dotRow(t){
+  let h='';
+  for(let i=0;i<CHALLENGE_DAYS;i++){
+    const dt=addDays(S.startDate,i);
+    const rr=C.byDate[dt];
+    let cls='';
+    if(rr&&rr.settled)cls=rr.success===true?'ok':'over';
+    else if(dt<t)cls='pend';
+    if(dt===t)cls+=' today';
+    h+=`<div class="sdot ${cls}">${rr&&rr.settled?(rr.success===true?'✓':'!'):''}</div>`;
+  }
+  return h;
+}
+
+// 마감/취소 버튼 롱프레스 (1.5초 꾹 눌러야 실행 — 오터치 방지)
+const HOLD_MS=1200;
+function longPress(btn,action){
+  if(!btn)return;
+  let timer=null;
+  const start=e=>{
+    e.preventDefault();
+    btn.classList.add('holding');
+    timer=setTimeout(()=>{timer=null;btn.classList.remove('holding');action();},HOLD_MS);
+  };
+  const cancel=()=>{if(timer){clearTimeout(timer);timer=null;}btn.classList.remove('holding');};
+  btn.addEventListener('pointerdown',start);
+  btn.addEventListener('pointerup',cancel);
+  btn.addEventListener('pointercancel',cancel);
+  btn.addEventListener('pointerleave',cancel);
+  btn.addEventListener('contextmenu',e=>e.preventDefault());
+}
+function bindHold(){
+  const tgt=holdTarget||today();
+  longPress(document.getElementById('close-hold'),()=>confirmDay(tgt));
+  longPress(document.getElementById('close-cancel'),()=>{if(canCancel(tgt))cancelClose(tgt);});
+}
+function canCancel(date){return date===today();}
+function cancelClose(date){
+  delete S.conf[date];
+  save();render();
+  toast('마감을 취소했어요');
+}
+
+// ---------- RECORD ----------
+function renderRecord(){
+  const el=document.getElementById('record-body');
+  const t=today();
+  if(!calMonth)calMonth=t.slice(0,7);
+  const[cy,cm]=calMonth.split('-').map(Number);
+  const total=dim(cy,cm),first=new Date(cy,cm-1,1).getDay();
+
+  const ra=document.getElementById('record-actions');
+  if(ra)ra.innerHTML=`
+    ${C.queue.length?`<button class="chip-btn solid" style="flex:none;padding:8px 14px;font-size:13px" onclick="openQueue()">📥 확인 ${C.queue.length}</button>`:''}`;
+
+  function dayCell(dn){
+    const date=cy+'-'+String(cm).padStart(2,'0')+'-'+String(dn).padStart(2,'0');
+    const r=C.byDate[date];
+    const inWindow=dayNo(date)>0;
+    let st='none',dimmed='';
+    if(date>t||!inWindow)dimmed='dim';
+    if(r){
+      if(r.settled)st=r.success===true?'ok':'over';
+      else if(date<t)st='pend';
+    }
+    return `<button class="cal-day ${dimmed} ${date===t?'today':''}" onclick="openDay('${date}')">
+      <span class="dn">${dn}${st!=='none'?`<i class="st ${st}"></i>`:''}</span></button>`;
+  }
+  const weeks=[];let wk=Array(first).fill(0);
+  for(let dn=1;dn<=total;dn++){wk.push(dn);if(wk.length===7){weeks.push(wk);wk=[];}}
+  if(wk.length){while(wk.length<7)wk.push(0);weeks.push(wk);}
+  let grid='<div class="caldrow">'+DOW.map(w=>`<div class="cal-dow">${w}</div>`).join('')+'</div>';
+  weeks.forEach(w=>{
+    grid+='<div class="caldrow">'+w.map(dn=>dn?dayCell(dn):'<div></div>').join('')+'</div>';
+  });
+
+  // 이 달의 기록 (변동 지출/수입만)
+  const monthDays=C.days.filter(r=>r.date.slice(0,7)===calMonth&&(r.exps.length||r.settled)).reverse();
+  const listHtml=monthDays.length?monthDays.map(r=>{
+    const tag=r.settled?(r.success===true?'<span class="tag ok">성공 ✓</span>':'<span class="tag over">초과·기록됨</span>')
+      :(r.date<t?'<span class="tag pend">확인 대기</span>':'');
+    return `<div class="day-group">
+      <div class="day-head"><span class="d">${fmtDate(r.date,true)}</span>${tag}
+        <span class="sum num">${r.inc?`<b style="color:var(--green)">+${won(r.inc)}</b> · `:''}${r.spent?won(r.spent):'지출 없음'}</span></div>
+      ${r.exps.map(e=>`
+        <div class="exp-row">
+          <div class="exp-ic">${e.kind==='inc'?'💰':'💸'}</div>
+          <div><div class="exp-name">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}</div>
+          <div class="exp-src">${e.time?e.time+' · ':''}${e.kind==='inc'?'수입':'지출'}${e.src==='ocr'?' · 📷 캡처':e.src==='paste'?' · 📋 붙여넣기':''}</div></div>
+          <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
+          <button class="exp-del" onclick="delExp('${e.id}')">✕</button>
+        </div>`).join('')}
+    </div>`;
+  }).join(''):`<div class="empty"><div class="e-ic">🧾</div><div class="e-t">이 달의 기록이 아직 없어요</div>
+    <div class="e-s">＋ 버튼으로 기록해 보세요</div></div>`;
+
+  let mSpent=0,mInc=0;
+  S.exp.forEach(e=>{if(e.d.slice(0,7)===calMonth){if(e.kind==='inc')mInc+=e.amt;else mSpent+=e.amt;}});
+
+  el.innerHTML=`
+  <div class="duo" style="margin-top:8px">
+    <div class="card" style="margin:0">
+      <div class="mini-cap">${cm}월 지출</div>
+      <div class="mini-num num">${won(mSpent)}</div>
+    </div>
+    <div class="card" style="margin:0">
+      <div class="mini-cap">${cm}월 수입</div>
+      <div class="mini-num num" style="color:var(--green)">+${won(mInc)}</div>
+    </div>
+  </div>
+  <div class="cal">
+    <div class="cal-head">
+      <div class="cal-title">${cy}년 ${cm}월</div>
+      <div class="cal-nav">
+        <button onclick="moveCal(-1)">‹</button><button onclick="moveCal(1)">›</button>
+      </div>
+    </div>
+    ${grid}
+    <div class="legend">
+      <span><i class="st ok"></i>페이스 성공</span><span><i class="st over"></i>초과·마감</span>
+      <span><i class="st pend"></i>확인 대기</span>
+    </div>
+  </div>
+  <div class="section-label">지출 내역</div>
+  ${listHtml}<div style="height:8px"></div>`;
+}
+function moveCal(n){
+  let[y,m]=calMonth.split('-').map(Number);m+=n;
+  if(m<1){m=12;y--;}if(m>12){m=1;y++;}
+  calMonth=y+'-'+String(m).padStart(2,'0');renderRecord();
+}
+
+// ---------- day detail ----------
+function openDay(date){
+  const r=C.byDate[date];
+  document.getElementById('day-sheet-title').textContent=fmtDate(date,true);
+  const body=document.getElementById('day-sheet-body');
+  const t=today();
+  if(!r){
+    body.innerHTML=`<div class="empty" style="padding:30px"><div class="e-ic">📭</div><div class="e-t">기록이 없어요</div>
+      <div class="e-s">${dayNo(date)>0?'＋ 지출 추가로 이 날을 채워보세요':'챌린지 기간(5일) 밖의 날이에요'}</div></div>
+      ${date<=t&&dayNo(date)>0?`<button class="cta ghost" style="margin-top:6px" onclick="closeSheets();openInput('${date}')">＋ 지출 추가</button>`:''}`;
+  }else{
+    const tag=r.settled?(r.success===true?`<span class="tag ok">성공 · ${won(r.saved)} 절약 ✓</span>`:`<span class="tag over">초과·기록됨</span>`)
+      :(r.date<t?'<span class="tag pend">확인 대기</span>':r.isToday?'<span class="tag pend">진행 중</span>':'');
+    body.innerHTML=`
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">${tag}</div>
+      <div class="calc-preview" style="margin:0 0 16px">
+        <div class="calc-row"><span>이날의 안전 페이스</span><b class="num">${won(Math.floor(r.pace))}</b></div>
+        <div class="calc-row"><span>지출 합계</span><b class="num">${won(r.spent)}</b></div>
+        ${r.inc?`<div class="calc-row"><span>수입</span><b class="num pos">+${won(r.inc)}</b></div>
+        <div class="calc-row"><span>순 지출</span><b class="num ${r.net>r.pace?'neg':''}">${won(r.net)}</b></div>`:''}
+      </div>
+      ${r.exps.length?r.exps.map(e=>`
+        <div class="exp-row" style="padding:11px 2px">
+          <div class="exp-ic">${e.kind==='inc'?'💰':'💸'}</div>
+          <div><div class="exp-name">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}${e.time?`<span style="color:var(--faint);font-weight:600;font-size:12px"> · ${e.time}</span>`:''}</div></div>
+          <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
+          <button class="exp-del" onclick="delExp('${e.id}');openDay('${date}')">✕</button>
+        </div>`).join(''):'<div class="hint" style="text-align:center;margin:4px 0 14px">기록된 지출이 없어요</div>'}
+      <div style="display:flex;gap:8px;margin-top:14px">
+        ${date<=t?`<button class="chip-btn ghost" style="padding:13px" onclick="closeSheets();openInput('${date}')">＋ 지출 추가</button>`:''}
+        ${!r.settled&&date<=t?`<button class="chip-btn solid" style="padding:13px" onclick="confirmDay('${date}')">${r.exps.length?'이대로 마감':'지출 없었어요'}</button>`:''}
+        ${r.settled&&canCancel(date)?`<button class="chip-btn ghost" style="padding:13px;color:var(--red)" onclick="if(confirm('${date===today()?'오늘':'어제'} 마감을 취소할까요? 다시 열어 수정할 수 있어요.')){cancelClose('${date}');openDay('${date}')}">↩︎ 마감 취소</button>`:''}
+      </div>`;
+  }
+  showSheet('sheet-day');
+}
+
+// ---------- confirm ----------
+function confirmDay(date){
+  S.conf[date]=1;save();
+  C=calc();
+  const r=C.byDate[date];
+  closeSheets();
+  if(r&&r.success===true){
+    celebrate(r,C);
+  }else if(r&&r.success===false){
+    celebrateOver(date,r);
+  }
+  render();
+}
+
+// ---------- celebration ----------
+function celebrate(r,c){
+  const el=document.getElementById('celebrate');
+  const milestones=[3,5,7,10];
+  const hitMilestone=milestones.includes(c.streak)&&!S.seenMilestones.includes(c.streak);
+  if(hitMilestone){S.seenMilestones.push(c.streak);save();}
+  el.innerHTML=`<div class="cel-card">
+    ${confettiHtml(hitMilestone?46:18)}
+    <div class="cel-emoji">${hitMilestone?'🏆':'🎉'}</div>
+    <div class="cel-title">${hitMilestone?c.streak+'일 연속 달성!':'하루 마감 성공!'}</div>
+    ${r.saved>0?`<div class="cel-amt num" id="cel-count">+0원</div>
+    <div class="cel-sub">오늘 안전 페이스보다<br>이만큼 덜 썼어요</div>`:`<div class="cel-sub">${praiseRandom()}</div>`}
+    <div class="cel-streak">🔥 기록 스트릭 ${c.streak}일째</div>
+    <button class="cel-btn" onclick="closeCelebrate()">좋았어</button>
+  </div>`;
+  el.classList.add('show');
+  if(r.saved>0)countUp('cel-count',r.saved);
+  const card=el.querySelector('.cel-card');
+  for(let i=0;i<6;i++){
+    const coin=document.createElement('div');coin.className='coin';coin.textContent='🪙';
+    coin.style.left=(10+Math.random()*80)+'%';coin.style.top='-10px';
+    coin.style.animationDelay=(i*0.12)+'s';card.appendChild(coin);
+  }
+}
+// 초과일 마감: 스트릭은 이어짐. 훈계 문구를 준다.
+function celebrateOver(date,r){
+  const el=document.getElementById('celebrate');
+  const c=calc();
+  const over=Math.max(0,Math.round(r.net-r.pace));
+  el.innerHTML=`<div class="cel-card">
+    <div class="cel-emoji">🔥</div>
+    <div class="cel-title">기록 완료 · 스트릭 이어짐</div>
+    <div class="cel-sub">${pick(SCOLD,date)}<br>페이스보다 <b class="num">${won(over)}</b> 더 썼어요.</div>
+    <div class="cel-streak">🔥 기록 스트릭 ${c.streak}일째</div>
+    <button class="cel-btn" style="margin-top:16px" onclick="closeCelebrate()">알겠어요</button>
+  </div>`;
+  el.classList.add('show');
+}
+function confettiHtml(n){
+  const colors=['#0E7B54','#D99A22','#E8571F','#2C6E9E','#8FE3BF','#FFD98A'];
+  let h='';
+  for(let i=0;i<n;i++){
+    h+=`<div class="confetti" style="left:${Math.random()*100}%;background:${colors[i%colors.length]};
+      animation:confall ${1.4+Math.random()}s ${Math.random()*.5}s ease-in forwards;border-radius:${Math.random()>.5?'50%':'2px'}"></div>`;
+  }
+  return h;
+}
+function closeCelebrate(){document.getElementById('celebrate').classList.remove('show');render();}
+function countUp(id,target){
+  const el=document.getElementById(id);if(!el)return;
+  const dur=900,t0=performance.now();
+  function tick(t){
+    const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
+    el.textContent='+'+won(target*e);
+    if(p<1)requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2400);
+}
+
+/* ================================================================
+   INPUT — 캡처(OCR) / 붙여넣기 / 직접 → 공통 "후보 확인" UX
+================================================================ */
+let inputMode='manual';
+let inputDate=null;
+document.querySelectorAll('#input-seg button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    inputMode=b.dataset.m;
+    document.querySelectorAll('#input-seg button').forEach(x=>x.classList.toggle('on',x===b));
+    renderInputPanel();
+  });
+});
+function openInput(date){
+  inputDate=date||today();
+  inputMode='manual';
+  candQueue=[];candIdx=0;
+  returnToQueue=false;
+  document.querySelectorAll('#input-seg button').forEach(x=>x.classList.toggle('on',x.dataset.m==='manual'));
+  renderInputPanel();
+  showSheet('sheet-input');
+}
+function renderInputPanel(){
+  const p=document.getElementById('input-panel');
+  if(inputMode==='capture'){
+    p.innerHTML=`
+      <input type="file" id="ocr-file" accept="image/*" style="display:none" onchange="runOCR(this.files[0])">
+      <button class="ocr-drop" onclick="document.getElementById('ocr-file').click()">
+        <div class="oi">📷</div>
+        <div class="ot">결제내역 캡처 올리기</div>
+        <div class="os">결제 알림·카드앱 화면을 캡처하면<br>금액과 가게명을 후보로 뽑아드려요</div>
+      </button>
+      <div class="hint">읽은 내용은 확인 화면에서 고칠 수 있어요.</div>`;
+  }else if(inputMode==='paste'){
+    p.innerHTML=`
+      <div class="field"><label>결제 문자 · 알림 내용 붙여넣기</label>
+      <textarea id="paste-text" placeholder="예)\nKB국민카드 3,500원 일시불\n스타벅스 강남점\n07/16 12:30 승인"></textarea></div>
+      <button class="cta" onclick="runPaste()">후보 뽑기</button>`;
+  }else{
+    candQueue=[];candIdx=0;
+    renderConfirmForm({amt:'',name:'',src:'manual'});
+  }
+}
+
+// --- 후보 확인 공통 폼 (여러 건이면 순차 입력) ---
+let candQueue=[],candIdx=0;
+function showCand(){
+  if(candIdx>=candQueue.length){candQueue=[];closeSheets();render();return;}
+  renderConfirmForm(candQueue[candIdx],candIdx,candQueue.length);
+}
+function skipCand(){
+  candIdx++;
+  if(candIdx>=candQueue.length){candQueue=[];closeSheets();render();toast('입력을 마쳤어요');}
+  else showCand();
+}
+function renderConfirmForm(cand,idx,total){
+  const p=document.getElementById('input-panel');
+  const multi=(total||1)>1;
+  p.innerHTML=`
+    ${cand.raw?`<div class="cand-box"><div class="ct">📄 읽어낸 내용${multi?` — 후보 ${idx+1} / ${total}`:''} (확인·수정해 주세요)</div>
+    <div class="cv">${esc(cand.raw).slice(0,300)}</div></div>`:''}
+    <div class="seg" id="in-kind" style="margin-bottom:16px">
+      <button class="${cand.kind==='inc'?'':'on'}" data-k="exp" onclick="pickKind('exp',this)">💸 지출</button>
+      <button class="${cand.kind==='inc'?'on':''}" data-k="inc" onclick="pickKind('inc',this)">💰 수입</button>
+    </div>
+    <div class="field"><label>금액</label>
+      <div class="won-wrap"><input type="text" inputmode="numeric" id="in-amt" value="${cand.amt?(+cand.amt).toLocaleString('ko-KR'):''}" placeholder="0" oninput="fmtInput(this)"></div></div>
+    <div class="field"><label>내용 (선택)</label>
+      <input type="text" id="in-name" value="${esc(cand.name||'')}" placeholder="예: 스타벅스 / 당근 판매"></div>
+    <div style="display:flex;gap:10px">
+      <div class="field" style="flex:1.2"><label>날짜 (필수)</label>
+        <input type="date" id="in-date" value="${cand.date||inputDate}" max="${today()}"></div>
+      <div class="field" style="flex:1"><label>시간 (선택)</label>
+        <input type="time" id="in-time" value="${cand.time||''}"></div>
+    </div>
+    <button class="cta" onclick="saveExp('${cand.src||'manual'}')">${multi?`저장하고 다음 (${idx+1}/${total})`:'저장하기'}</button>
+    ${multi?`<button class="cta ghost" style="margin-top:8px" onclick="skipCand()">이 건은 건너뛰기</button>`:''}`;
+}
+function pickKind(k,btn){
+  btn.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===btn));
+}
+function saveExp(src){
+  const amt=num(document.getElementById('in-amt').value);
+  const name=document.getElementById('in-name').value.trim();
+  const kind=document.querySelector('#in-kind button.on')?.dataset.k||'exp';
+  let d=document.getElementById('in-date').value;
+  const time=document.getElementById('in-time')?.value||'';
+  if(!amt){toast('금액을 입력해주세요');return;}
+  if(!d){toast('날짜를 입력해주세요');return;}
+  if(d>today())d=today();
+  const rec={id:uid(),d,amt,name,src,time};
+  if(kind==='inc')rec.kind='inc';
+  S.exp.push(rec);
+  save();
+  toast(kind==='inc'?`✓ +${won(amt)} 수입 기록했어요`:`✓ ${won(amt)} 기록했어요`);
+  if(candQueue.length&&candIdx<candQueue.length-1){candIdx++;render();showCand();}
+  else{candQueue=[];render();
+    if(returnToQueue){openQueue();}
+    else closeSheets();
+  }
+}
+function delExp(id){
+  S.exp=S.exp.filter(e=>e.id!==id);
+  save();render();toast('삭제했어요');
+}
+
+// --- 붙여넣기 파서 ---
+function parsePayText(txt){
+  const cand={amt:'',name:'',date:null,raw:txt,src:'paste'};
+  const wonMatches=[...txt.matchAll(/([0-9][0-9,]*[0-9]|[0-9])\s*원/g)].map(m=>num(m[1]));
+  const numMatches=[...txt.matchAll(/(?<![\d,.])([1-9][0-9,]{2,})(?![\d%])/g)].map(m=>num(m[1]));
+  const amts=(wonMatches.length?wonMatches:numMatches).filter(n=>n>=100&&n<10000000);
+  if(amts.length)cand.amt=amts[0];
+  const dm=txt.match(/(\d{1,2})[\/.월]\s?(\d{1,2})일?/);
+  if(dm){
+    const y=new Date().getFullYear();
+    const cd=new Date(y,+dm[1]-1,+dm[2]);
+    if(cd<=new Date())cand.date=ds(cd);
+  }
+  const stop=/승인|일시불|할부|누적|잔액|체크|신용|카드|입금|출금|사용|원|KB|신한|삼성|현대|롯데|하나|우리|국민|농협|토스|카카오|페이|[0-9]{2}[:\/.][0-9]{2}|\*/;
+  const lines=txt.split(/\n/).map(s=>s.trim()).filter(Boolean);
+  const nameLine=lines.find(l=>!stop.test(l)&&/[가-힣A-Za-z]{2,}/.test(l)&&l.length<=25);
+  if(nameLine)cand.name=nameLine.replace(/[0-9,원]+$/,'').trim();
+  const tmm=txt.match(/(?:^|[^\d])([01]?\d|2[0-3]):([0-5]\d)(?!\d)/);
+  if(tmm)cand.time=String(tmm[1]).padStart(2,'0')+':'+tmm[2];
+  return cand;
+}
+function lineName(l){
+  return l.replace(/\d{1,2}[\/.월]\s?\d{1,2}일?/g,'')
+    .replace(/([01]?\d|2[0-3]):[0-5]\d/g,'')
+    .replace(/[0-9][0-9,]*\s*원?/g,'')
+    .replace(/승인|일시불|할부|누적|잔액|체크|신용|카드|입금|출금|사용|KB|신한|삼성|현대|롯데|하나|우리|국민|농협|토스|카카오|페이/g,'')
+    .replace(/[*·|()\/:\-]/g,' ').replace(/\s+/g,' ').trim();
+}
+function parsePayTexts(txt){
+  const lines=txt.split(/\n/).map(s=>s.trim()).filter(Boolean);
+  const hasAmt=l=>/([0-9][0-9,]{2,})\s*원|(?<![\d,.])[1-9][0-9,]{2,}(?![\d%])/.test(l);
+  const txLines=lines.filter(l=>hasAmt(l)&&!/누적|잔액|합계|총|한도/.test(l));
+  if(txLines.length>=2){
+    const cands=txLines.map(l=>{
+      const c=parsePayText(l);
+      if(!c.name)c.name=lineName(l);
+      c.raw=l;
+      return c;
+    }).filter(c=>c.amt);
+    if(cands.length>=2)return cands;
+  }
+  return[parsePayText(txt)];
+}
+function runPaste(){
+  const txt=document.getElementById('paste-text').value.trim();
+  if(!txt){toast('내용을 붙여넣어 주세요');return;}
+  const cands=parsePayTexts(txt);cands.forEach(c=>c.src='paste');
+  if(cands.length>1)renderCandPicker(cands);
+  else{candQueue=cands;candIdx=0;showCand();}
+}
+
+// --- 여러 건 감지 시: 어떤 게 진짜 지출인지 사용자가 선택 ---
+let pickerCands=[];
+function renderCandPicker(cands){
+  pickerCands=cands;
+  const p=document.getElementById('input-panel');
+  p.innerHTML=`
+    <div class="cand-box"><div class="ct">📄 ${cands.length}건이 감지됐어요</div>
+    <div class="cv" style="max-height:none">지출이 맞는 것만 체크하세요. 누적·잔액 같은 줄이 섞였다면 체크를 빼면 돼요.</div></div>
+    <div id="cand-list">
+      ${cands.map((c,i)=>`
+      <label style="display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer">
+        <input type="checkbox" checked data-i="${i}" onchange="updPicker()" style="width:20px;height:20px;accent-color:var(--green);flex-shrink:0">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.name||'상호 미확인')}</div>
+          <div style="font-size:12px;color:var(--faint);font-weight:600" class="num">${c.date||inputDate}${c.time?' · '+c.time:''}</div>
+        </div>
+        <b class="num" style="font-size:15px;white-space:nowrap">${won(c.amt||0)}</b>
+      </label>`).join('')}
+    </div>
+    <button class="cta" id="picker-btn" style="margin-top:14px" onclick="startPicked()">선택한 ${cands.length}건 차례로 확인하기</button>`;
+}
+function updPicker(){
+  const n=document.querySelectorAll('#cand-list input:checked').length;
+  const b=document.getElementById('picker-btn');
+  b.textContent=`선택한 ${n}건 차례로 확인하기`;
+  b.disabled=n===0;
+}
+function startPicked(){
+  const idxs=[...document.querySelectorAll('#cand-list input:checked')].map(x=>+x.dataset.i);
+  if(!idxs.length){toast('선택된 건이 없어요');return;}
+  candQueue=idxs.map(i=>pickerCands[i]);candIdx=0;
+  showCand();
+}
+
+// --- OCR (Tesseract.js lazy load) ---
+let ocrWorker=null;
+async function ensureOCR(){
+  if(ocrWorker)return ocrWorker;
+  if(!window.Tesseract){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+      s.onload=res;s.onerror=()=>rej(new Error('네트워크에서 OCR 엔진을 못 불러왔어요'));
+      document.head.appendChild(s);
+    });
+  }
+  ocrWorker=await Tesseract.createWorker(['kor','eng']);
+  return ocrWorker;
+}
+async function runOCR(file){
+  if(!file)return;
+  const p=document.getElementById('input-panel');
+  p.innerHTML=`<div class="ocr-status"><div class="spinner"></div>
+    <div style="font-size:14.5px;font-weight:800">캡처를 읽는 중…</div>
+    <div class="hint" style="text-align:center" id="ocr-prog">처음 한 번은 한국어 인식 모델을 내려받아 조금 걸려요</div></div>`;
+  try{
+    const worker=await ensureOCR();
+    const url=URL.createObjectURL(file);
+    const{data}=await worker.recognize(url);
+    URL.revokeObjectURL(url);
+    const txt=(data.text||'').trim();
+    if(!txt)throw new Error('글자를 못 읽었어요');
+    const cands=parsePayTexts(txt);cands.forEach(c=>c.src='ocr');
+    if(cands.length>1)renderCandPicker(cands);
+    else{candQueue=cands;candIdx=0;showCand();}
+  }catch(e){
+    p.innerHTML=`<div class="empty" style="padding:26px 10px"><div class="e-ic">😵</div>
+      <div class="e-t">캡처를 읽지 못했어요</div>
+      <div class="e-s">${esc(e.message||'')}<br>붙여넣기나 직접 입력으로 해주세요</div>
+      <button class="chip-btn ghost" style="margin-top:14px;padding:12px 22px;display:inline-block;flex:none" onclick="inputMode='manual';renderInputPanel()">✏️ 직접 입력</button></div>`;
+  }
+}
+
+/* ================================================================
+   SETTINGS · BUDGET
+================================================================ */
+function openSettings(){
+  const body=document.getElementById('settings-body');
+  body.innerHTML=`
+    <div class="hint" style="margin:0 0 12px">5일 동안 쓸 수 있는 총예산을 정하면, 매일 남은 날 수로 나눠 <b>오늘의 안전 페이스</b>가 계산돼요.</div>
+    <button class="settings-row" onclick="closeSheets();openBudgetSheet()"><span>💰 5일치 예산 설정</span><span class="sv">${won(S.budget5)}</span></button>
+    <button class="settings-row" onclick="closeSheets();restartChallenge()"><span>🔄 5일 챌린지 다시 시작</span><span class="sv">Day ${dayNo(today())||'-'}</span></button>
+    <button class="settings-row" onclick="exportData()"><span>📤 데이터 내보내기 (JSON)</span><span class="sv">백업</span></button>
+    <button class="settings-row" onclick="document.getElementById('import-file').click()"><span>📥 데이터 가져오기</span><span class="sv">복원</span></button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this.files[0])">
+    <button class="settings-row danger" onclick="resetAll()"><span>🗑️ 전체 초기화</span></button>
+    <div class="hint">데이터는 이 기기에만 저장돼요 · 가끔 내보내기로 백업하세요.</div>`;
+  showSheet('sheet-settings');
+}
+function openBudgetSheet(){
+  document.getElementById('budget-body').innerHTML=`
+    <div class="hint" style="margin:0 0 16px">5일 동안 쓸 수 있는 <b>총예산</b>이에요. 매일 남은 날 수로 나눠 '오늘의 안전 페이스'가 정해져요.<br>
+    예) 15만원이면 첫날 페이스는 3만원, 아낀 만큼 다음 날 페이스가 넉넉해져요.</div>
+    <div class="field"><label>5일치 가용 예산</label>
+      <div class="won-wrap"><input type="text" inputmode="numeric" id="bg5" value="${(+S.budget5).toLocaleString('ko-KR')}" placeholder="0" oninput="fmtInput(this)"></div></div>
+    <button class="cta" onclick="saveBudget()">이 예산으로 설정</button>`;
+  showSheet('sheet-budget');
+}
+function saveBudget(){
+  const v=num(document.getElementById('bg5').value);
+  if(v<=0){toast('예산을 입력해주세요');return;}
+  S.budget5=v;save();closeSheets();render();
+  toast(`5일치 예산을 ${won(v)}(으)로 설정했어요`);
+}
+function restartChallenge(){
+  if(!confirm('5일 챌린지를 다시 시작할까요?\n오늘이 Day 1이 되고, 기록·마감이 모두 초기화돼요. (예산 설정은 유지)'))return;
+  S.startDate=today();
+  S.exp=[];
+  S.conf={};
+  S.seenMilestones=[];
+  save();C=calc();calMonth=null;render();
+  toast('새 5일 챌린지를 시작했어요 🚀');
+}
+
+// --- 확인 안 한 날: 날짜별 추가 + 마감 ---
+let returnToQueue=false;
+function openQueue(){
+  renderQueue();
+  showSheet('sheet-queue');
+}
+function renderQueue(){
+  C=calc();
+  const q=C.queue;
+  const body=document.getElementById('queue-body');
+  if(!q.length){
+    body.innerHTML=`<div class="empty" style="padding:30px 10px"><div class="e-ic">✅</div>
+      <div class="e-t">확인 안 한 날이 없어요</div><div class="e-s">모두 정리했어요!</div></div>`;
+    return;
+  }
+  body.innerHTML=q.map(r=>`
+    <div class="q-card" style="margin:0 0 12px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="q-date">${fmtDate(r.date,true)}</div>
+        <div class="q-sub num">페이스 ${won(Math.floor(r.pace))}</div>
+      </div>
+      ${r.exps.length?`<div style="margin-top:10px">
+        ${r.exps.map(e=>`
+          <div class="exp-row" style="padding:8px 0">
+            <div class="exp-ic" style="width:32px;height:32px;font-size:15px">${e.kind==='inc'?'💰':'💸'}</div>
+            <div><div class="exp-name" style="font-size:13.5px">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}</div>
+            <div class="exp-src">${e.time?e.time+' · ':''}${e.kind==='inc'?'수입':'지출'}</div></div>
+            <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
+            <button class="exp-del" onclick="delExp('${e.id}');renderQueue()">✕</button>
+          </div>`).join('')}
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 2px 2px;border-top:1px solid var(--line);margin-top:4px">
+          <span style="font-size:12.5px;font-weight:800;color:var(--sub)">합계</span>
+          <b class="num" style="font-size:14.5px">${r.inc?`<span style="color:var(--green)">+${won(r.inc)}</span> · `:''}${won(r.spent)}</b>
+        </div>
+      </div>`:`<div class="q-sub" style="margin-top:8px">아직 기록이 없어요</div>`}
+      <div class="q-actions">
+        <button class="chip-btn ghost" onclick="queueAdd('${r.date}')">＋ 추가</button>
+        <button class="chip-btn solid" onclick="queueConfirm('${r.date}')">${r.exps.length?'이대로 마감':'지출 없었어요'}</button>
+      </div>
+    </div>`).join('');
+}
+function queueAdd(date){
+  openInput(date);
+  returnToQueue=true;
+}
+function queueConfirm(date){
+  S.conf[date]=1;save();
+  const c2=calc();const rr=c2.byDate[date];
+  toast(rr&&rr.success===false?'마감 · 🔥 스트릭 이어짐 (오늘은 페이스를 넘었어요)':'마감 · 🔥 스트릭 이어짐');
+  render();
+  if(c2.queue.length)renderQueue();else closeSheets();
+}
+
+// --- 스트릭 캘린더 ---
+let stMonth=null;
+function openStreak(){
+  stMonth=today().slice(0,7);
+  renderStreak();
+  showSheet('sheet-streak');
+}
+function moveStreak(n){
+  let[y,m]=stMonth.split('-').map(Number);m+=n;
+  if(m<1){m=12;y--;}if(m>12){m=1;y++;}
+  stMonth=y+'-'+String(m).padStart(2,'0');renderStreak();
+}
+function renderStreak(){
+  const[cy,cm]=stMonth.split('-').map(Number);
+  const t=today();
+  let run=0,best=0;
+  C.days.forEach(r=>{
+    if(r.settled){run++;best=Math.max(best,run);}
+    else if(r.date<t)run=0;
+  });
+  const total=dim(cy,cm),first=new Date(cy,cm-1,1).getDay();
+  let cells='';
+  for(let i=0;i<first;i++)cells+='<div></div>';
+  for(let dn=1;dn<=total;dn++){
+    const date=cy+'-'+String(cm).padStart(2,'0')+'-'+String(dn).padStart(2,'0');
+    const r=C.byDate[date];
+    let cls='';
+    if(!r||date>t||dayNo(date)===0)cls='dim';
+    else if(r.settled)cls=r.success===true?'ok':'over';
+    else if(date<t)cls='pend';
+    cells+=`<div class="st-day ${cls} ${date===t?'today':''}">${dn}</div>`;
+  }
+  document.getElementById('streak-body').innerHTML=`
+    <div class="st-hero">
+      <div class="fl">🔥</div>
+      <div class="n num">${C.streak}일 연속</div>
+      <div class="b num">최장 ${best}일 · 페이스 지킨 날 ${C.successTotal}일</div>
+    </div>
+    <div class="hint" style="text-align:center;margin:-6px 0 14px;line-height:1.6">스트릭은 <b>절약이 아니라 마감</b>에 걸려 있어요.<br>초과한 날도 <b>마감하면 이어져요</b> — 매일 나타나 기록하는 게 핵심이에요.</div>
+    <div class="cal-head" style="margin-bottom:10px">
+      <div class="cal-title">${cy}년 ${cm}월</div>
+      <div class="cal-nav"><button onclick="moveStreak(-1)">‹</button><button onclick="moveStreak(1)">›</button></div>
+    </div>
+    <div class="caldrow">${DOW.map(w=>`<div class="cal-dow">${w}</div>`).join('')}</div>
+    <div class="caldrow" style="gap:5px;margin-top:3px">${cells}</div>
+    <div class="legend" style="margin-top:14px">
+      <span><i class="st ok"></i>페이스 성공</span>
+      <span><i class="st over"></i>초과·마감</span><span><i class="st pend"></i>확인 대기</span>
+    </div>`;
+}
+
+/* ================================================================
+   DATA EXPORT / IMPORT / RESET
+================================================================ */
+function exportData(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='savepoint-v6-backup-'+today()+'.json';
+  a.click();URL.revokeObjectURL(a.href);
+  toast('백업 파일을 내려받았어요');
+}
+function importData(file){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(d.v!==1)throw new Error();
+      S=Object.assign({},DEFAULT,d);save();closeSheets();render();
+      toast('데이터를 복원했어요');
+    }catch(e){toast('올바른 백업 파일이 아니에요');}
+  };
+  r.readAsText(file);
+}
+function resetAll(){
+  if(!confirm('정말 모든 데이터를 지울까요? 되돌릴 수 없어요.'))return;
+  localStorage.removeItem(KEY);
+  S=JSON.parse(JSON.stringify(DEFAULT));
+  closeSheets();location.reload();
+}
+
+/* ================================================================
+   SHEETS
+================================================================ */
+function showSheet(id){
+  document.getElementById('dimmer').classList.add('show');
+  document.querySelectorAll('.sheet').forEach(s=>s.classList.toggle('show',s.id===id));
+}
+function closeSheets(){
+  document.getElementById('dimmer').classList.remove('show');
+  document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('show'));
+}
+
+/* ================================================================
+   ONBOARDING — 첫 진입: 감사 인사 + 5일 예산 입력 → 사용법 튜토리얼
+================================================================ */
+const ONB_TUT=[
+  {emoji:'🔥',title:'<em>스트릭</em>이 핵심이에요',
+   body:'매일 하루를 <b>마감</b>하면 불꽃이 하루씩 이어져요.<br>초과한 날이어도 <b>마감만 하면 스트릭은 유지</b>돼요.<br>리마인드 없이 5일 동안 끊기지 않게 이어가는 게 목표!',
+   mock:`<div class="mrow">🔥 기록 스트릭 <b>3일 연속</b></div><div class="mrow">🟢🟢🟢⚪⚪ <b>Day 3 / 5</b></div>`},
+  {emoji:'💰',title:'맨 위 <em>남은 돈</em>',
+   body:'5일치 예산에서 <b>쓴 만큼 줄어드는</b> 전체 지갑이에요.<br>지금 얼마가 남았는지 한눈에 보여줘요.',
+   mock:`<div class="mrow">5일치 가용 예산 · 남은 돈 <b>112,000원</b></div><div class="mrow">진행 <b>Day 2 / 5 · 75% 남음</b></div>`},
+  {emoji:'📉',title:'<em>오늘 남은 돈</em>',
+   body:'오늘 쓸 수 있는 <b>안전 페이스</b>예요.<br>지출을 적는 <b>순간 바로 줄어들어요</b> — 실시간 반응!<br>아끼면 다음 날 페이스가 넉넉해져요.',
+   mock:`<div class="mrow">오늘 남은 돈 <b>21,400원</b></div><div class="mrow">안전 페이스 <b>30,000원/일</b></div>`},
+  {emoji:'🌙',title:'하루 끝, <em>마감</em>하기',
+   body:'하루가 끝나면 <b>버튼을 꾹 눌러 마감</b>해요.<br>아꼈으면 <b>칭찬</b>, 넘었으면 <b>훈계</b>를 받고,<br>스트릭이 하루 더 이어져요.',
+   mock:`<div class="mrow">🌙 꾹 눌러서 하루 마감</div><div class="mrow">🎉 <b>하루 마감 성공!</b></div>`},
+  {emoji:'✏️',title:'<em>직접</em> 기록하는 법',
+   body:'아래 가운데 <b>＋ 버튼</b>을 누르고,<br>① 금액 입력 → ② 내용(선택) → ③ 날짜 확인 → <b>저장</b>!<br>📷 캡처·📋 붙여넣기로도 자동 입력돼요.',
+   mock:`<div class="mrow">＋ 금액 <b>3,500원</b></div><div class="mrow">내용 <b>스타벅스</b></div><div class="mrow">날짜 <b>오늘</b> · 저장 ✓</div>`},
+  {emoji:'📅',title:'<em>기록</em> 탭',
+   body:'오른쪽 <b>기록</b> 탭에서 달력과 지난 지출을 볼 수 있어요.<br>깜빡한 날은 <b>확인 안 한 날</b>에서 채워 마감하면 돼요.',
+   mock:`<div class="mrow">📅 달력 · 지출 내역</div><div class="mrow">📥 확인 안 한 날 <b>1일</b></div>`},
+];
+let onbStep=0, onbBudget=DEFAULT_BUDGET;
+const ONB_TOTAL=1+ONB_TUT.length;
+function showOnb(){
+  onbStep=0;onbBudget=S.budget5||DEFAULT_BUDGET;
+  document.getElementById('onb').classList.add('show');
+  renderOnb();
+}
+function renderOnb(){
+  const el=document.getElementById('onb-inner');
+  const dots=Array.from({length:ONB_TOTAL},(_,i)=>`<i class="${i<=onbStep?'on':''}"></i>`).join('');
+  let mid,foot;
+  if(onbStep===0){
+    mid=`
+      <div class="onb-hero-emoji">🙌</div>
+      <div class="onb-title">테스트에 참가해주셔서<br><em>정말 고마워요</em></div>
+      <div class="onb-body">딱 5일이면 돼요. 매일 지출을 적고 하루를 마감하는<br>이 작은 습관이 이어지는지 함께 확인해봐요.<br><br>먼저, <b>5일 동안 쓸 예산</b>을 정해볼까요?</div>
+      <div class="field" style="margin:24px auto 0;max-width:320px;text-align:left">
+        <label>5일치 가용 예산</label>
+        <div class="won-wrap"><input type="text" inputmode="numeric" id="onb-budget" value="${(+onbBudget).toLocaleString('ko-KR')}" placeholder="0" oninput="fmtInput(this)"></div>
+      </div>
+      <div class="hint" style="max-width:320px;margin:10px auto 0;text-align:center">예) 15만원이면 하루 페이스는 3만원부터 시작해요. 나중에 언제든 바꿀 수 있어요.</div>`;
+    foot=`<button class="cta" onclick="onbSaveBudget()">이 예산으로 시작하기</button>`;
+  }else{
+    const c=ONB_TUT[onbStep-1];
+    mid=`
+      <div class="onb-tag">사용법 ${onbStep} / ${ONB_TUT.length}</div>
+      <div class="onb-hero-emoji">${c.emoji}</div>
+      <div class="onb-title">${c.title}</div>
+      <div class="onb-body">${c.body}</div>
+      ${c.mock?`<div class="onb-mock">${c.mock}</div>`:''}`;
+    foot=`<button class="cta" onclick="onbNext()">${onbStep===ONB_TOTAL-1?'시작할게요 🚀':'다음'}</button>`;
+  }
+  el.innerHTML=`
+    ${onbStep>0?`<button class="onb-back" onclick="onbBack()">‹</button>`:''}
+    <div class="onb-progress">${dots}</div>
+    <div class="onb-mid">${mid}</div>
+    <div class="onb-foot">${foot}</div>`;
+  el.scrollTo(0,0);
+}
+function onbSaveBudget(){
+  const v=num(document.getElementById('onb-budget').value);
+  if(v<=0){toast('예산을 입력해주세요');return;}
+  onbBudget=v;onbStep=1;renderOnb();
+}
+function onbNext(){
+  if(onbStep>=ONB_TOTAL-1){onbFinish();return;}
+  onbStep++;renderOnb();
+}
+function onbBack(){if(onbStep>0){onbStep--;renderOnb();}}
+function onbFinish(){
+  S.budget5=onbBudget;
+  S.startDate=today();     // 온보딩 완료 시점 = 챌린지 Day 1
+  S.onboarded=true;
+  save();
+  document.getElementById('onb').classList.remove('show');
+  homeDate=today();
+  C=calc();go('home');
+  toast('5일 챌린지 시작! 오늘부터 Day 1이에요 🔥');
+}
+
+/* ================================================================
+   BOOT
+================================================================ */
+let _lastDay=today();
+function watchDayRollover(){
+  setInterval(()=>{
+    if(today()!==_lastDay){_lastDay=today();calMonth=null;homeDate=today();render();}
+  },30000);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible'&&today()!==_lastDay){_lastDay=today();calMonth=null;homeDate=today();render();}
+  });
+}
+function boot(){
+  if(!S.onboarded){
+    showOnb();
+  }else if(!S.startDate){
+    S.startDate=today();save();
+  }
+  go('home');
+  watchDayRollover();
+}
+boot();
+</script>
+</body>
+</html>
