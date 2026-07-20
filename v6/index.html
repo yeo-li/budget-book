@@ -586,8 +586,9 @@ function calc(){
     const daysLeft=CHALLENGE_DAYS-i;
     const pace=remaining>0?remaining/daysLeft:0;
     const exps=expByDate[date]||[];
-    const spent=exps.filter(e=>e.kind!=='inc').reduce((a,e)=>a+e.amt,0);
-    const inc=exps.filter(e=>e.kind==='inc').reduce((a,e)=>a+e.amt,0);
+    // e.nb === true → '예산에서 제외 (기록만)'. 페이스·남은 돈에 반영하지 않는다.
+    const spent=exps.filter(e=>e.kind!=='inc'&&!e.nb).reduce((a,e)=>a+e.amt,0);
+    const inc=exps.filter(e=>e.kind==='inc'&&!e.nb).reduce((a,e)=>a+e.amt,0);
     const net=spent-inc;
     const settled=!!S.conf[date];
     let success=null,saved=0;
@@ -652,10 +653,9 @@ function renderHome(){
   const el=document.getElementById('home-body');
   const t=today(),d=pd(t);
 
-  // 상단 스탯 필: 스트릭
+  // 상단 스탯 필 제거 (스트릭은 본문 큰 카드로 표시)
   const ts=document.getElementById('top-stats');
-  if(ts)ts.innerHTML=`
-    <button class="stat-pill" onclick="openStreak()"><span class="si">🔥</span><span style="color:var(--flame)">${C.streak}</span></button>`;
+  if(ts)ts.innerHTML='';
 
   // 챌린지 완료(5일 지남)
   if(C.done){
@@ -750,13 +750,11 @@ function renderHome(){
   const nextDisabled=(C.windowEnd&&vd>=C.windowEnd)?'disabled':'';
 
   el.innerHTML=`
-  <div class="hero">
-    <button class="hero-edit" onclick="openBudgetSheet()">✎ 예산</button>
-    <div class="cap">5일치 가용 예산 · 남은 돈</div>
-    <div class="big num">${won(C.remaining)}</div>
-    <div class="bar"><i style="width:${budgetPct}%"></i></div>
-    <div class="barrow"><span>Day ${C.dayIndex+1} / ${CHALLENGE_DAYS}</span><span>${Math.round(budgetPct)}% 남음</span></div>
-  </div>
+  <button class="streak-card" onclick="openStreak()" style="width:calc(100% - 32px);margin-top:8px">
+    <div class="flame-big">🔥</div>
+    <div style="text-align:left"><div class="streak-n">${C.streak}일 연속</div><div class="streak-sub">기록 스트릭 유지 중 · 눌러서 자세히</div></div>
+    <div class="streak-dots">${dotRow(t)}</div>
+  </button>
 
   <div class="datestrip">
     <button class="nav" ${prevDisabled} onclick="navDay(-1)">‹</button>
@@ -777,12 +775,6 @@ function renderHome(){
     <span>확인 안 한 날 ${C.queue.length}일</span>
     <span class="arrow">›</span>
   </button>`:''}
-
-  <button class="streak-card" onclick="openStreak()" style="width:calc(100% - 32px)">
-    <div class="flame-big">🔥</div>
-    <div style="text-align:left"><div class="streak-n">${C.streak}일 연속</div><div class="streak-sub">기록 스트릭 유지 중 · 눌러서 자세히</div></div>
-    <div class="streak-dots">${dotRow(t)}</div>
-  </button>
 
   <div class="card" style="padding:14px 18px">
     <div style="display:flex;align-items:center;gap:12px">
@@ -886,9 +878,9 @@ function renderRecord(){
       ${r.exps.map(e=>`
         <div class="exp-row">
           <div class="exp-ic">${e.kind==='inc'?'💰':'💸'}</div>
-          <div><div class="exp-name">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}</div>
-          <div class="exp-src">${e.time?e.time+' · ':''}${e.kind==='inc'?'수입':'지출'}${e.src==='ocr'?' · 📷 캡처':e.src==='paste'?' · 📋 붙여넣기':''}</div></div>
-          <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
+          <div><div class="exp-name">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}${e.nb?' <span style="font-size:10px;font-weight:800;color:var(--p-deep);background:var(--p-soft);border-radius:5px;padding:1px 5px;vertical-align:1px">기록만</span>':''}</div>
+          <div class="exp-src">${e.time?e.time+' · ':''}${e.nb?'예산 제외':(e.kind==='inc'?'수입':'지출')}${e.src==='ocr'?' · 📷 캡처':e.src==='paste'?' · 📋 붙여넣기':''}</div></div>
+          <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''} ${e.nb?'style="color:var(--faint)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
           <button class="exp-del" onclick="delExp('${e.id}')">✕</button>
         </div>`).join('')}
     </div>`;
@@ -896,10 +888,22 @@ function renderRecord(){
     <div class="e-s">＋ 버튼으로 기록해 보세요</div></div>`;
 
   let mSpent=0,mInc=0;
-  S.exp.forEach(e=>{if(e.d.slice(0,7)===calMonth){if(e.kind==='inc')mInc+=e.amt;else mSpent+=e.amt;}});
+  S.exp.forEach(e=>{if(e.d.slice(0,7)===calMonth&&!e.nb){if(e.kind==='inc')mInc+=e.amt;else mSpent+=e.amt;}});
+
+  // 남은 예산 히어로 (홈에서 이동해 옴)
+  const budgetPct=S.budget5>0?Math.max(0,Math.min(100,C.remaining/S.budget5*100)):0;
+  const heroHtml=`
+  <div class="hero" style="margin-top:8px">
+    <button class="hero-edit" onclick="openBudgetSheet()">✎ 예산</button>
+    <div class="cap">5일치 가용 예산 · 남은 돈</div>
+    <div class="big num">${won(C.started?C.remaining:S.budget5)}</div>
+    <div class="bar"><i style="width:${budgetPct}%"></i></div>
+    <div class="barrow"><span>Day ${C.dayIndex+1} / ${CHALLENGE_DAYS}</span><span>${Math.round(budgetPct)}% 남음</span></div>
+  </div>`;
 
   el.innerHTML=`
-  <div class="duo" style="margin-top:8px">
+  ${heroHtml}
+  <div class="duo" style="margin-top:0">
     <div class="card" style="margin:0">
       <div class="mini-cap">${cm}월 지출</div>
       <div class="mini-num num">${won(mSpent)}</div>
@@ -955,8 +959,8 @@ function openDay(date){
       ${r.exps.length?r.exps.map(e=>`
         <div class="exp-row" style="padding:11px 2px">
           <div class="exp-ic">${e.kind==='inc'?'💰':'💸'}</div>
-          <div><div class="exp-name">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}${e.time?`<span style="color:var(--faint);font-weight:600;font-size:12px"> · ${e.time}</span>`:''}</div></div>
-          <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
+          <div><div class="exp-name">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}${e.nb?' <span style="font-size:10px;font-weight:800;color:var(--p-deep);background:var(--p-soft);border-radius:5px;padding:1px 5px;vertical-align:1px">기록만</span>':''}${e.time?`<span style="color:var(--faint);font-weight:600;font-size:12px"> · ${e.time}</span>`:''}</div></div>
+          <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''} ${e.nb?'style="color:var(--faint)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
           <button class="exp-del" onclick="delExp('${e.id}');openDay('${date}')">✕</button>
         </div>`).join(''):'<div class="hint" style="text-align:center;margin:4px 0 14px">기록된 지출이 없어요</div>'}
       <div style="display:flex;gap:8px;margin-top:14px">
@@ -1120,6 +1124,10 @@ function renderConfirmForm(cand,idx,total){
       <div class="field" style="flex:1"><label>시간 (선택)</label>
         <input type="time" id="in-time" value="${cand.time||''}"></div>
     </div>
+    <label style="display:flex;align-items:flex-start;gap:11px;padding:2px 2px 16px;cursor:pointer">
+      <input type="checkbox" id="in-nb" ${cand.nb?'checked':''} style="width:20px;height:20px;accent-color:var(--p);flex-shrink:0;margin-top:1px">
+      <span style="font-size:13px;font-weight:700;color:var(--sub);line-height:1.5">🚫 예산에서 제외 — 기록만 하고 <b>남은 예산은 그대로</b> 둘게요<br><span style="font-size:11.5px;color:var(--faint);font-weight:600">체크 안 하면 예산에서 차감돼요 (기본)</span></span>
+    </label>
     <button class="cta" onclick="saveExp('${cand.src||'manual'}')">${multi?`저장하고 다음 (${idx+1}/${total})`:'저장하기'}</button>
     ${multi?`<button class="cta ghost" style="margin-top:8px" onclick="skipCand()">이 건은 건너뛰기</button>`:''}`;
 }
@@ -1132,14 +1140,16 @@ function saveExp(src){
   const kind=document.querySelector('#in-kind button.on')?.dataset.k||'exp';
   let d=document.getElementById('in-date').value;
   const time=document.getElementById('in-time')?.value||'';
+  const nb=!!document.getElementById('in-nb')?.checked; // 예산에서 제외 (기록만)
   if(!amt){toast('금액을 입력해주세요');return;}
   if(!d){toast('날짜를 입력해주세요');return;}
   if(d>today())d=today();
   const rec={id:uid(),d,amt,name,src,time};
   if(kind==='inc')rec.kind='inc';
+  if(nb)rec.nb=true;
   S.exp.push(rec);
   save();
-  toast(kind==='inc'?`✓ +${won(amt)} 수입 기록했어요`:`✓ ${won(amt)} 기록했어요`);
+  toast(nb?`✓ ${won(amt)} 기록만 했어요 (예산 유지)`:kind==='inc'?`✓ +${won(amt)} 수입 기록했어요`:`✓ ${won(amt)} 기록했어요`);
   if(candQueue.length&&candIdx<candQueue.length-1){candIdx++;render();showCand();}
   else{candQueue=[];render();
     if(returnToQueue){openQueue();}
@@ -1341,9 +1351,9 @@ function renderQueue(){
         ${r.exps.map(e=>`
           <div class="exp-row" style="padding:8px 0">
             <div class="exp-ic" style="width:32px;height:32px;font-size:15px">${e.kind==='inc'?'💰':'💸'}</div>
-            <div><div class="exp-name" style="font-size:13.5px">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}</div>
-            <div class="exp-src">${e.time?e.time+' · ':''}${e.kind==='inc'?'수입':'지출'}</div></div>
-            <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
+            <div><div class="exp-name" style="font-size:13.5px">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}${e.nb?' <span style="font-size:9.5px;font-weight:800;color:var(--p-deep);background:var(--p-soft);border-radius:5px;padding:1px 5px">기록만</span>':''}</div>
+            <div class="exp-src">${e.time?e.time+' · ':''}${e.nb?'예산 제외':(e.kind==='inc'?'수입':'지출')}</div></div>
+            <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''} ${e.nb?'style="color:var(--faint)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
             <button class="exp-del" onclick="delExp('${e.id}');renderQueue()">✕</button>
           </div>`).join('')}
         <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 2px 2px;border-top:1px solid var(--line);margin-top:4px">
