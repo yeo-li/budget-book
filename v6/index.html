@@ -1619,60 +1619,93 @@ function onbStartTutorial(){
   S.budget5=v; S.startDate=today(); S.exp=[]; S.conf={}; S.seenMilestones=[]; save();
   document.getElementById('onb').classList.remove('show');
   homeDate=today(); C=calc(); go('home');
-  tutActive=true; tutStep='tapPlus';
-  setTimeout(tutRender,220); // 화면 전환 후 위치 잡기
+  tutActive=true; tutStep='homeIntro';
+  setTimeout(tutRender,260); // 화면 전환 후 위치 잡기
 }
 // ---- 코치마크 ----
 function tutRender(){
   if(!tutActive)return;
-  if(tutStep==='tapPlus'){
-    placeCoach('.nav-plus',{round:32,placement:'above',skip:true,
+  const paceDisp=Math.floor((C.todayPace||0)/100)*100;   // 오늘 남은 돈(시작값)
+  const paceLeft=paceDisp-(C.todaySpent||0);              // 지출 후 남은 값
+  if(tutStep==='homeIntro'){
+    placeCoach('#home-body .pace-card',{pad:8,round:20,placement:'below',next:'지출 적어보기 →',skip:true,
+      title:'여기가 홈이에요 👋',
+      body:`위에는 <b>오늘 날짜</b>와 <b>스트릭 🔥</b>이 있어요.<br>그리고 오늘 쓸 수 있는 <b>오늘 남은 돈</b>은 <b>${won(paceDisp)}</b>이에요.<br>(5일 예산 ${won(S.budget5)}을 5일로 나눈 페이스)<br>지출을 적으면 <b>이 금액이 바로 줄어들어요</b> — 한번 해볼까요?`});
+  }else if(tutStep==='tapPlus'){
+    placeCoach('.nav-plus .circle',{pad:6,round:'50%',placement:'above',skip:true,
       title:'① 지출을 하나 추가해봐요',
       body:'아래 <b>＋ 버튼</b>을 눌러 방금 쓴 돈을 기록해볼게요. 직접 눌러보세요!'});
   }else if(tutStep==='input'){
     const amt=document.getElementById('in-amt'); if(amt&&!num(amt.value))amt.value='10,000';
-    placeCoach('#input-panel .cta',{round:14,placement:'above',skip:true,
+    placeCoach('#input-panel .cta',{pad:5,round:14,placement:'above',dark:false,skip:true,
       title:'② 금액을 넣고 저장!',
       body:'금액을 <b>10,000원</b>으로 채워뒀어요. 그대로 <b>저장하기</b>를 눌러보세요. (직접 고쳐도 돼요)'});
   }else if(tutStep==='seeRemaining'){
-    placeCoach('#home-body .pace-card',{round:20,placement:'below',next:'그다음은?',skip:true,
+    placeCoach('#home-body .pace-card',{pad:8,round:20,placement:'below',next:'그다음은? →',skip:true,
       title:'③ 바로 줄었죠? 👀',
-      body:'방금 쓴 만큼 <b>오늘 남은 돈</b>이 즉시 줄었어요. 실시간 반응이에요!<br>5일 전체 <b>남은 예산</b>은 <b>기록 탭</b> 맨 위에서 볼 수 있어요.'});
+      body:`방금 10,000원을 적으니 <b>오늘 남은 돈</b>이 <b>${won(paceDisp)} → ${won(paceLeft)}</b>으로 바로 줄었어요. 실시간 반응이죠!<br>5일 전체 <b>남은 예산</b>은 <b>기록 탭</b> 맨 위에 있어요.`});
   }else if(tutStep==='close'){
-    placeCoach('#close-hold',{round:16,placement:'above',skip:true,
+    placeCoach('#close-hold',{pad:5,round:16,placement:'above',skip:true,
       title:'④ 하루를 마감해봐요',
       body:'이 버튼을 <b>1.2초 꾹</b> 누르면 하루가 마감돼요. 불꽃이 스트릭으로 날아가고 칭찬이 떠요 — 직접 눌러보세요!'});
   }
 }
-function tutNext(){ if(tutStep==='seeRemaining'){tutStep='close';tutRender();} }
-function tutHideCoach(){ document.getElementById('coach').classList.remove('show'); }
+function tutNext(){
+  if(tutStep==='homeIntro'){tutStep='tapPlus';tutRender();}
+  else if(tutStep==='seeRemaining'){tutStep='close';tutRender();}
+}
+function tutHideCoach(){ document.getElementById('coach').classList.remove('show'); _coachSel=null; }
+// 현재 코치마크 대상/설정을 기억해 리사이즈·스크롤 시 다시 배치
+let _coachSel=null,_coachCfg=null;
 function placeCoach(sel,cfg){
+  _coachSel=sel;_coachCfg=cfg;
   const coach=document.getElementById('coach');
   const hole=document.getElementById('coach-hole');
   const tip=document.getElementById('coach-tip');
   coach.classList.add('show');
-  const tgt=sel?document.querySelector(sel):null;
+  tip.innerHTML=`<div class="ct-title">${cfg.title}</div><div class="ct-body">${cfg.body}</div>
+    <div class="ct-actions">${cfg.skip?`<button class="ct-skip" onclick="skipTutorial()">건너뛰기</button>`:''}${cfg.next?`<button class="ct-btn" onclick="tutNext()">${cfg.next}</button>`:''}</div>`;
+  positionCoach();
+}
+function positionCoach(){
+  if(!_coachCfg)return;
+  const cfg=_coachCfg;
+  const hole=document.getElementById('coach-hole');
+  const tip=document.getElementById('coach-tip');
+  const tgt=_coachSel?document.querySelector(_coachSel):null;
+  const vw=window.innerWidth, vh=window.innerHeight, M=12;
+  // 스포트라이트 구멍: 대상에 딱 맞게
   if(tgt){
-    const r=tgt.getBoundingClientRect(), pad=cfg.pad??8;
+    const r=tgt.getBoundingClientRect(), pad=cfg.pad??6;
     hole.style.display='block';
     hole.style.left=(r.left-pad)+'px';hole.style.top=(r.top-pad)+'px';
     hole.style.width=(r.width+pad*2)+'px';hole.style.height=(r.height+pad*2)+'px';
-    hole.style.borderRadius=(cfg.round??16)+'px';
+    hole.style.borderRadius=(typeof cfg.round==='string'?cfg.round:(cfg.round??16)+'px');
+    hole.style.boxShadow=(cfg.dark===false)?'none':'0 0 0 9999px rgba(16,22,18,.72)';
   }else hole.style.display='none';
-  tip.innerHTML=`<div class="ct-title">${cfg.title}</div><div class="ct-body">${cfg.body}</div>
-    <div class="ct-actions">${cfg.skip?`<button class="ct-skip" onclick="skipTutorial()">건너뛰기</button>`:''}${cfg.next?`<button class="ct-btn" onclick="tutNext()">${cfg.next}</button>`:''}</div>`;
+  // 툴팁: 화면 안에서 대상 근처에 동적으로 배치
   requestAnimationFrame(()=>{
-    const th=tip.offsetHeight, tw=tip.offsetWidth, vw=window.innerWidth, vh=window.innerHeight;
+    const th=tip.offsetHeight, tw=tip.offsetWidth;
     let top,left;
     if(tgt){
       const r=tgt.getBoundingClientRect();
-      top=(cfg.placement==='above')?(r.top-th-16):(r.bottom+16);
-      if(top<12)top=r.bottom+16; if(top+th>vh-12)top=r.top-th-16;
-      left=Math.min(Math.max(12,r.left+r.width/2-tw/2),vw-tw-12);
-    }else{ top=90; left=vw/2-tw/2; }
-    tip.style.top=Math.max(12,top)+'px'; tip.style.left=Math.max(12,left)+'px';
+      const cy=r.top+r.height/2;
+      let above=(cfg.placement==='above')||(cfg.placement==null&&cy>vh/2);
+      top=above?(r.top-th-14):(r.bottom+14);
+      if(above&&top<M)top=r.bottom+14;                 // 위 공간 부족 → 아래로
+      if(!above&&top+th>vh-M)top=r.top-th-14;           // 아래 공간 부족 → 위로
+      top=Math.min(Math.max(M,top),vh-th-M);
+      left=r.left+r.width/2-tw/2;
+    }else{
+      const app=document.getElementById('app').getBoundingClientRect();
+      top=app.top+90; left=app.left+app.width/2-tw/2;
+    }
+    left=Math.min(Math.max(M,left),vw-tw-M);
+    tip.style.top=top+'px'; tip.style.left=left+'px';
   });
 }
+window.addEventListener('resize',()=>{ if(tutActive)positionCoach(); });
+window.addEventListener('scroll',()=>{ if(tutActive)positionCoach(); },true);
 function skipTutorial(){
   if(!confirm('튜토리얼을 건너뛸까요?\n바로 5일 챌린지가 시작돼요.'))return;
   endTutorial();
