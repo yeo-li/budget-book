@@ -385,7 +385,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
   <!-- input sheet -->
   <div class="sheet" id="sheet-input">
     <div class="sheet-grip"></div>
-    <div class="sheet-head"><div class="sheet-title">지출·수입 입력</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-head"><div class="sheet-title" id="input-title">지출·수입 입력</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
     <div class="sheet-body">
       <div class="seg" id="input-seg">
         <button data-m="manual" class="on">✏️ 직접</button>
@@ -750,13 +750,7 @@ function renderHome(){
   const nextDisabled=(C.windowEnd&&vd>=C.windowEnd)?'disabled':'';
 
   el.innerHTML=`
-  <button class="streak-card" onclick="openStreak()" style="width:calc(100% - 32px);margin-top:8px">
-    <div class="flame-big">🔥</div>
-    <div style="text-align:left"><div class="streak-n">${C.streak}일 연속</div><div class="streak-sub">기록 스트릭 유지 중 · 눌러서 자세히</div></div>
-    <div class="streak-dots">${dotRow(t)}</div>
-  </button>
-
-  <div class="datestrip">
+  <div class="datestrip" style="margin-top:8px">
     <button class="nav" ${prevDisabled} onclick="navDay(-1)">‹</button>
     <div class="mid">
       <div class="dt">${(vdD.getMonth()+1)}월 ${vdD.getDate()}일 (${DOW[vdD.getDay()]})${isToday?' · 오늘':''}</div>
@@ -764,6 +758,12 @@ function renderHome(){
     </div>
     <button class="nav" ${nextDisabled} onclick="navDay(1)">›</button>
   </div>
+
+  <button class="streak-card" id="home-streak" onclick="openStreak()" style="width:calc(100% - 32px);margin-top:2px">
+    <div class="flame-big">🔥</div>
+    <div style="text-align:left"><div class="streak-n">${C.streak}일 연속</div><div class="streak-sub">기록 스트릭 유지 중 · 눌러서 자세히</div></div>
+    <div class="streak-dots">${dotRow(t)}</div>
+  </button>
 
   ${paceCardHtml}
 
@@ -775,16 +775,6 @@ function renderHome(){
     <span>확인 안 한 날 ${C.queue.length}일</span>
     <span class="arrow">›</span>
   </button>`:''}
-
-  <div class="card" style="padding:14px 18px">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="font-size:26px">🎯</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:900">5일 챌린지 진행 상황</div>
-        <div class="hint" style="margin-top:3px">마감 ${C.days.filter(r=>r.settled).length}일 · 페이스 지킨 날 ${C.successTotal}일 · 남은 날 ${Math.max(0,CHALLENGE_DAYS-(C.dayIndex+1))}일</div>
-      </div>
-    </div>
-  </div>
 
   <div class="hint" style="padding:0 24px">매일 지출을 적고 하루를 마감하면 스트릭이 이어져요. 리마인드 없이 5일 동안 스스로 이어가 보세요 💪</div>
   <div style="height:8px"></div>`;
@@ -881,7 +871,7 @@ function renderRecord(){
           <div><div class="exp-name">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}${e.nb?' <span style="font-size:10px;font-weight:800;color:var(--p-deep);background:var(--p-soft);border-radius:5px;padding:1px 5px;vertical-align:1px">기록만</span>':''}</div>
           <div class="exp-src">${e.time?e.time+' · ':''}${e.nb?'예산 제외':(e.kind==='inc'?'수입':'지출')}${e.src==='ocr'?' · 📷 캡처':e.src==='paste'?' · 📋 붙여넣기':''}</div></div>
           <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''} ${e.nb?'style="color:var(--faint)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
-          <button class="exp-del" onclick="delExp('${e.id}')">✕</button>
+          <button class="exp-del" onclick="openEditExp('${e.id}')">✎</button>
         </div>`).join('')}
     </div>`;
   }).join(''):`<div class="empty"><div class="e-ic">🧾</div><div class="e-t">이 달의 기록이 아직 없어요</div>
@@ -961,7 +951,7 @@ function openDay(date){
           <div class="exp-ic">${e.kind==='inc'?'💰':'💸'}</div>
           <div><div class="exp-name">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}${e.nb?' <span style="font-size:10px;font-weight:800;color:var(--p-deep);background:var(--p-soft);border-radius:5px;padding:1px 5px;vertical-align:1px">기록만</span>':''}${e.time?`<span style="color:var(--faint);font-weight:600;font-size:12px"> · ${e.time}</span>`:''}</div></div>
           <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''} ${e.nb?'style="color:var(--faint)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
-          <button class="exp-del" onclick="delExp('${e.id}');openDay('${date}')">✕</button>
+          <button class="exp-del" onclick="openEditExp('${e.id}')">✎</button>
         </div>`).join(''):'<div class="hint" style="text-align:center;margin:4px 0 14px">기록된 지출이 없어요</div>'}
       <div style="display:flex;gap:8px;margin-top:14px">
         ${date<=t?`<button class="chip-btn ghost" style="padding:13px" onclick="closeSheets();openInput('${date}')">＋ 지출 추가</button>`:''}
@@ -977,13 +967,37 @@ function confirmDay(date){
   S.conf[date]=1;save();
   C=calc();
   const r=C.byDate[date];
-  closeSheets();
-  if(r&&r.success===true){
-    celebrate(r,C);
-  }else if(r&&r.success===false){
-    celebrateOver(date,r);
-  }
-  render();
+  closeSheets(); // 시트 닫아 홈(마감 버튼·스트릭)이 보이게
+  // 시각적 보상: 마감 버튼에서 스트릭 카드로 불꽃이 날아가는 모션 → 끝나면 축하 모달
+  flyFlameToStreak(()=>{
+    if(r&&r.success===true){celebrate(r,C);}
+    else if(r&&r.success===false){celebrateOver(date,r);}
+    render();
+  });
+}
+// 마감 버튼 → 스트릭 카드로 🔥가 이동하는 모션 (시각적 보상)
+function flyFlameToStreak(cb){
+  const src=document.getElementById('close-hold')||document.getElementById('close-cancel');
+  const tgt=document.querySelector('#home-streak .flame-big');
+  if(CUR!=='home'||!src||!tgt){cb();return;}
+  const s=src.getBoundingClientRect(), e=tgt.getBoundingClientRect();
+  const sx=s.left+s.width/2, sy=s.top+s.height/2;
+  const ex=e.left+e.width/2, ey=e.top+e.height/2;
+  const fly=document.createElement('div');
+  fly.textContent='🔥';
+  fly.style.cssText=`position:fixed;left:${sx-18}px;top:${sy-18}px;font-size:36px;line-height:1;z-index:250;pointer-events:none;
+    filter:drop-shadow(0 4px 10px rgba(232,87,31,.5));transition:transform .68s cubic-bezier(.5,-0.3,.25,1),opacity .68s ease-in;will-change:transform,opacity`;
+  document.body.appendChild(fly);
+  // 살짝 튀어오른 뒤 스트릭으로 빨려들어감
+  requestAnimationFrame(()=>{
+    fly.style.transform=`translate(${ex-sx}px,${ey-sy}px) scale(.5) rotate(20deg)`;
+    fly.style.opacity='0.2';
+  });
+  setTimeout(()=>{
+    if(tgt.animate)tgt.animate([{transform:'scale(1)'},{transform:'scale(1.55)'},{transform:'scale(1)'}],{duration:420,easing:'cubic-bezier(.3,1.6,.4,1)'});
+    fly.remove();
+    cb();
+  },700);
 }
 
 // ---------- celebration ----------
@@ -1055,6 +1069,7 @@ function toast(msg){
 ================================================================ */
 let inputMode='manual';
 let inputDate=null;
+let editId=null; // 기록 수정 중인 지출 id (null이면 새 입력)
 document.querySelectorAll('#input-seg button').forEach(b=>{
   b.addEventListener('click',()=>{
     inputMode=b.dataset.m;
@@ -1063,12 +1078,27 @@ document.querySelectorAll('#input-seg button').forEach(b=>{
   });
 });
 function openInput(date){
+  editId=null;
   inputDate=date||today();
   inputMode='manual';
   candQueue=[];candIdx=0;
   returnToQueue=false;
+  document.getElementById('input-seg').style.display='';
+  document.getElementById('input-title').textContent='지출·수입 입력';
   document.querySelectorAll('#input-seg button').forEach(x=>x.classList.toggle('on',x.dataset.m==='manual'));
   renderInputPanel();
+  showSheet('sheet-input');
+}
+// 기록 수정: 기존 지출을 폼에 채워 열고, 폼 안에서 삭제도 가능
+function openEditExp(id){
+  const e=S.exp.find(x=>x.id===id);
+  if(!e){toast('기록을 찾지 못했어요');return;}
+  editId=id;
+  inputDate=e.d;
+  candQueue=[];candIdx=0;returnToQueue=false;
+  document.getElementById('input-seg').style.display='none';
+  document.getElementById('input-title').textContent='기록 수정';
+  renderConfirmForm({amt:e.amt,name:e.name,kind:e.kind,date:e.d,time:e.time,nb:e.nb,src:e.src},0,1,true);
   showSheet('sheet-input');
 }
 function renderInputPanel(){
@@ -1104,7 +1134,7 @@ function skipCand(){
   if(candIdx>=candQueue.length){candQueue=[];closeSheets();render();toast('입력을 마쳤어요');}
   else showCand();
 }
-function renderConfirmForm(cand,idx,total){
+function renderConfirmForm(cand,idx,total,editing){
   const p=document.getElementById('input-panel');
   const multi=(total||1)>1;
   p.innerHTML=`
@@ -1128,7 +1158,8 @@ function renderConfirmForm(cand,idx,total){
       <input type="checkbox" id="in-nb" ${cand.nb?'checked':''} style="width:20px;height:20px;accent-color:var(--p);flex-shrink:0;margin-top:1px">
       <span style="font-size:13px;font-weight:700;color:var(--sub);line-height:1.5">🚫 예산에서 제외 — 기록만 하고 <b>남은 예산은 그대로</b> 둘게요<br><span style="font-size:11.5px;color:var(--faint);font-weight:600">체크 안 하면 예산에서 차감돼요 (기본)</span></span>
     </label>
-    <button class="cta" onclick="saveExp('${cand.src||'manual'}')">${multi?`저장하고 다음 (${idx+1}/${total})`:'저장하기'}</button>
+    <button class="cta" onclick="saveExp('${cand.src||'manual'}')">${editing?'수정 저장':multi?`저장하고 다음 (${idx+1}/${total})`:'저장하기'}</button>
+    ${editing?`<button class="cta ghost" style="margin-top:8px;color:var(--red)" onclick="askDelExp('${editId}')">🗑️ 이 기록 삭제</button>`:''}
     ${multi?`<button class="cta ghost" style="margin-top:8px" onclick="skipCand()">이 건은 건너뛰기</button>`:''}`;
 }
 function pickKind(k,btn){
@@ -1144,6 +1175,18 @@ function saveExp(src){
   if(!amt){toast('금액을 입력해주세요');return;}
   if(!d){toast('날짜를 입력해주세요');return;}
   if(d>today())d=today();
+  // 수정 모드: 기존 기록을 갱신
+  if(editId){
+    const e=S.exp.find(x=>x.id===editId);
+    if(e){
+      e.d=d;e.amt=amt;e.name=name;e.time=time;
+      if(kind==='inc')e.kind='inc';else delete e.kind;
+      if(nb)e.nb=true;else delete e.nb;
+    }
+    editId=null;save();closeSheets();render();
+    toast('기록을 수정했어요');
+    return;
+  }
   const rec={id:uid(),d,amt,name,src,time};
   if(kind==='inc')rec.kind='inc';
   if(nb)rec.nb=true;
@@ -1154,6 +1197,17 @@ function saveExp(src){
   else{candQueue=[];render();
     if(returnToQueue){openQueue();}
     else closeSheets();
+  }
+}
+// 삭제 확인 모달 → 실제 삭제
+function askDelExp(id){
+  const e=S.exp.find(x=>x.id===id);
+  const label=e?(esc(e.name)||won(e.amt)):'이 기록';
+  if(confirm(`'${e?(e.name||won(e.amt)):'이 기록'}'을(를) 삭제할까요?\n되돌릴 수 없어요.`)){
+    editId=null;
+    S.exp=S.exp.filter(x=>x.id!==id);
+    save();closeSheets();render();
+    toast('삭제했어요');
   }
 }
 function delExp(id){
@@ -1290,7 +1344,20 @@ async function runOCR(file){
 ================================================================ */
 function openSettings(){
   const body=document.getElementById('settings-body');
+  const settledN=C.days.filter(r=>r.settled).length;
+  const leftN=Math.max(0,CHALLENGE_DAYS-(C.dayIndex+1));
   body.innerHTML=`
+    <div class="card" style="margin:0 0 16px;padding:16px 18px;background:linear-gradient(150deg,#FFF3EC,#FDE6DA);border:1px solid #F6D7C6">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:26px">🎯</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:900">5일 챌린지 진행 상황</div>
+          <div class="hint" style="margin-top:3px">마감 ${settledN}일 · 페이스 지킨 날 ${C.successTotal}일 · 남은 날 ${leftN}일</div>
+        </div>
+        <div style="font-size:15px;font-weight:900;color:var(--flame)">🔥 ${C.streak}</div>
+      </div>
+      <div class="streak-dots" style="margin:12px 0 0;justify-content:center">${S.startDate?dotRow(today()):''}</div>
+    </div>
     <div class="hint" style="margin:0 0 12px">5일 동안 쓸 수 있는 총예산을 정하면, 매일 남은 날 수로 나눠 <b>오늘의 안전 페이스</b>가 계산돼요.</div>
     <button class="settings-row" onclick="closeSheets();openBudgetSheet()"><span>💰 5일치 예산 설정</span><span class="sv">${won(S.budget5)}</span></button>
     <button class="settings-row" onclick="closeSheets();restartChallenge()"><span>🔄 5일 챌린지 다시 시작</span><span class="sv">Day ${dayNo(today())||'-'}</span></button>
@@ -1354,7 +1421,7 @@ function renderQueue(){
             <div><div class="exp-name" style="font-size:13.5px">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}${e.nb?' <span style="font-size:9.5px;font-weight:800;color:var(--p-deep);background:var(--p-soft);border-radius:5px;padding:1px 5px">기록만</span>':''}</div>
             <div class="exp-src">${e.time?e.time+' · ':''}${e.nb?'예산 제외':(e.kind==='inc'?'수입':'지출')}</div></div>
             <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''} ${e.nb?'style="color:var(--faint)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
-            <button class="exp-del" onclick="delExp('${e.id}');renderQueue()">✕</button>
+            <button class="exp-del" onclick="openEditExp('${e.id}')">✎</button>
           </div>`).join('')}
         <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 2px 2px;border-top:1px solid var(--line);margin-top:4px">
           <span style="font-size:12.5px;font-weight:800;color:var(--sub)">합계</span>
