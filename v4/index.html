@@ -408,6 +408,17 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .settings-row{display:flex;align-items:center;justify-content:space-between;padding:16px 2px;border-bottom:1px solid var(--line);font-size:15px;font-weight:700;width:100%;text-align:left}
 .settings-row .sv{color:var(--faint);font-weight:600;font-size:14px}
 .settings-row.danger{color:var(--red)}
+/* 토글 스위치 */
+.switch{position:relative;width:48px;height:28px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch .track{position:absolute;inset:0;border-radius:100px;background:var(--line2);transition:background .2s}
+.switch .track::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
+.switch input:checked+.track{background:var(--green)}
+.switch input:checked+.track::after{transform:translateX(20px)}
+.opt-card{background:var(--bg);border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:10px;transition:border-color .15s}
+.opt-card.on{border-color:var(--green);background:var(--green-soft)}
+.opt-card .ot{font-size:14.5px;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.opt-card .os{font-size:12.5px;color:var(--sub);font-weight:600;line-height:1.55;margin-top:7px}
 .hint{font-size:12px;color:var(--faint);font-weight:600;line-height:1.6;margin-top:14px}
 </style>
 </head>
@@ -504,7 +515,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
   <!-- streak sheet -->
   <div class="sheet" id="sheet-streak">
     <div class="sheet-grip"></div>
-    <div class="sheet-head"><div class="sheet-title">🔥 예산 안에서 산 날</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-head"><div class="sheet-title">🔥 기록 스트릭</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
     <div class="sheet-body" id="streak-body"></div>
   </div>
 
@@ -616,7 +627,10 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 
 // ---------- state ----------
 const KEY='savepoint_v4';
-const DEFAULT={v:1,onboarded:false,income:0,startDate:null,fixed:[],exp:[],conf:{},rep:{},goals:[],seenMilestones:[],fxPaid:{},catBudget:{},fxOv:{},cats:[],catsOff:[]};
+const DEFAULT={v:1,onboarded:false,income:0,startDate:null,fixed:[],exp:[],conf:{},rep:{},goals:[],seenMilestones:[],fxPaid:{},catBudget:{},fxOv:{},cats:[],catsOff:[],
+  budgetIncludeFixed:false, // 고정지출을 예산 안에 포함해 그날그날 차감할지 여부 (기본: 미포함 = 예산은 income−고정지출)
+  fill:{},                  // 초과일 마감 시 '저금통에서 메움'을 선택한 날 {date:1}
+  buys:[]};                 // 목표 달성 후 구매(모은 돈 사용) 기록 [{id,date,amt,name}]
 let S=load();
 function load(){
   try{
@@ -642,6 +656,10 @@ function load(){
       if(!Array.isArray(o.cats))o.cats=[];
       if(!Array.isArray(o.catsOff))o.catsOff=[];
       if(!o.fxPaid)o.fxPaid={};
+      if(typeof o.budgetIncludeFixed!=='boolean')o.budgetIncludeFixed=false;
+      if(!o.fill)o.fill={};
+      if(!Array.isArray(o.buys))o.buys=[];
+      delete o.transfers; // 구버전 '옮긴 저금' 제거
       return o;
     }
   }catch(e){}
@@ -787,15 +805,28 @@ const PRESETS=[
 /* ================================================================
    CALC ENGINE — 모든 수치는 원본 데이터에서 결정적으로 재계산
 ================================================================ */
-function autoBudget(y,m){ // 자동 계산 예산: 고정 수입 − 고정 지출 (시작 달은 일할 계산)
+function autoBudget(y,m){ // 자동 계산 예산
+  // 미포함(기본): 고정 수입 − 고정 지출 = 순수 '쓸 수 있는 변동 돈'
+  // 포함: 고정 수입 기준(고정 지출은 빼지 않음) — 고정 지출은 발생일마다 예산에서 차감됨
   const expT=S.fixed.filter(f=>f.kind!=='inc').reduce((a,f)=>a+fxMonthAmt(f,y,m),0);
   const incT=S.fixed.filter(f=>f.kind==='inc').reduce((a,f)=>a+fxMonthAmt(f,y,m),0);
-  let b=Math.max(0,S.income+incT-expT);
+  let b=Math.max(0,S.income+incT-(S.budgetIncludeFixed?0:expT));
   if(S.startDate){
     const st=pd(S.startDate);
     if(y===st.getFullYear()&&m===st.getMonth()+1){const t=dim(y,m);b=Math.round(b*(t-st.getDate()+1)/t);}
   }
   return b;
+}
+function fxExpenseOnDate(date){ // 이 날 발생하는 고정 '지출' 합계 (포함 모드에서 그날 예산에서 차감)
+  const[y,m,d]=date.split('-').map(Number);
+  let sum=0;
+  S.fixed.forEach(f=>{
+    if(f.kind==='inc')return;
+    if(!occursInMonth(f,y,m))return;
+    const amt=fxEff(f,y,m).amt;
+    fxBarsInMonth(f,y,m).forEach(b=>{if(b.s===d)sum+=amt;}); // 구간 항목은 시작일에 한 번 잡음
+  });
+  return sum;
 }
 function calc(){
   const t=today();
@@ -835,7 +866,8 @@ function calc(){
       const exps=expByDate[date]||[];
       const spent=exps.filter(e=>e.kind!=='inc').reduce((a,e)=>a+e.amt,0);
       const inc=exps.filter(e=>e.kind==='inc').reduce((a,e)=>a+e.amt,0);
-      const net=spent-inc; // 하루 순 지출 (변동 수입 반영)
+      const fxSpent=S.budgetIncludeFixed?fxExpenseOnDate(date):0; // 포함 모드: 이 날 고정지출도 예산에서 차감
+      const net=spent+fxSpent-inc; // 하루 순 지출 (변동 수입·고정지출 반영)
       const settled=!!S.conf[date];
       const repaired=!!S.rep[date];
       let success=null,saved=0;
@@ -844,7 +876,7 @@ function calc(){
         else if(net<=pace+0.5){success=true;saved=Math.max(0,Math.round(pace-net));}
         else success=false;
       }
-      const rec={date,pace,spent,inc,net,exps,settled,success,saved,repaired,isToday:date===t};
+      const rec={date,pace,spent,inc,fxSpent,net,exps,settled,success,saved,repaired,isToday:date===t};
       res.days.push(rec);res.byDate[date]=rec;
       remaining-=net;
       if(isCurMonth&&date===t){res.todayPace=pace;res.todaySpent=spent;res.todayInc=inc;res.todayNet=net;}
@@ -855,33 +887,43 @@ function calc(){
     cm++;if(cm>12){cm=1;cy++;}
   }
 
-  // vault / streak / queue — 저금통은 시간순으로 쌓이고, 초과한 날 마감 시 부족분을 꺼내 메꿈
-  let streak=0,vault=0;
+  const qFrom=addDays(t,-14);
+
+  // ── 축 1) 스트릭 = '마감 행위'. 초과여도 마감하면 이어짐. 끊기는 건 '나타나지 않은 날'뿐. ──
+  //    (지난 날인데 14일 만회 기간마저 지나도록 마감 안 하면 = 진짜 놓친 날 → 리셋)
+  let streak=0;
   res.days.forEach(r=>{
-    if(r.settled){
-      if(r.success===true){streak++;res.successTotal++;vault+=r.saved;}
-      else if(r.success===false){
-        streak=0;
-        const over=Math.max(0,Math.round(r.net-r.pace));
-        r.withdraw=Math.min(vault,over); // 저금통 보전 (있는 만큼만)
-        vault-=r.withdraw;
-      }
-      /* repaired: 유지 */
-    }
-    // 미마감 지난 날: 스트릭을 깨지도, 잇지도 않음 (밀림 ≠ 실패)
+    if(r.settled){streak++; if(r.success===true)res.successTotal++;}
+    else if(r.date<t&&r.date<qFrom&&r.date>=S.startDate){streak=0;} // 만회 불가한 결석
+    // 만회 기간 안의 미마감(대기)일: 스트릭을 잇지도 끊지도 않고 보류
   });
-  res.vault=vault;
   res.streak=streak;
 
-  const qFrom=addDays(t,-14);
+  // ── 축 2) 저금통 = '절약 성과'. 시간순으로 적립하고, 초과일은 '선택'했을 때만 메꿈. ──
+  //    · 아낀 날      → 저금통에 적립
+  //    · 초과+메움선택 → 저금통에서 인출 (있는 만큼만)
+  //    · 목표 구매     → 모은 돈 사용 → 저금통에서 차감
+  const events=[];
+  res.days.forEach(r=>{
+    if(!r.settled)return;
+    if(r.success===true&&r.saved>0)events.push({date:r.date,rank:0,type:'save',amt:r.saved,r});
+    else if(r.success===false){
+      r.over=Math.max(0,Math.round(r.net-r.pace));
+      if(S.fill[r.date]&&r.over>0)events.push({date:r.date,rank:1,type:'fill',amt:r.over,r});
+    }
+  });
+  events.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.rank-b.rank);
+  let vault=0;
+  events.forEach(ev=>{
+    if(ev.type==='save'){vault+=ev.amt;}
+    else if(ev.type==='fill'){const w=Math.min(vault,ev.amt);vault-=w;ev.r.withdraw=w;}
+  });
+  vault-=(S.buys||[]).reduce((a,b)=>a+b.amt,0); // 목표 구매로 쓴 돈은 저금통에서 빠짐
+  res.vault=Math.max(0,Math.round(vault));
+
   res.days.forEach(r=>{
     if(!r.settled&&r.date<t&&r.date>=qFrom&&r.date>=S.startDate)res.queue.push(r);
   });
-
-  // repair tokens: 시작 1개 + 성공 7일마다 1개, 보유 최대 2개
-  const earned=1+Math.floor(res.successTotal/7);
-  const used=Object.keys(S.rep).length;
-  res.repairAvail=Math.max(0,Math.min(earned-used,2));
   return res;
 }
 
@@ -924,13 +966,19 @@ function renderHome(){
   const status=ratio>1?'over':ratio>0.8?'warn':'ok';
   const stMsg={ok:spent===0?'아직 지출이 없어요. 이 페이스면 아주 안전해요':'이 페이스면 월말까지 안전하게 착지해요',
     warn:'페이스에 가까워졌어요. 오늘은 여기까지가 안전선이에요',
-    over:C.vault>0?'페이스를 넘었어요. 마감하면 부족분은 저금통에서 꺼내 메꿔요':'오늘 페이스를 넘었어요. 괜찮아요 — 내일 페이스가 자동으로 조정돼요'}[status];
+    over:'오늘 페이스를 넘었어요. 마감해도 스트릭은 이어져요 — 내일 페이스가 자동으로 조정돼요'}[status];
   const stLabel={ok:'안전 페이스',warn:'페이스 주의',over:'페이스 초과'}[status];
 
   const todayRec=C.byDate[t];
   const todayConfirmed=todayRec&&todayRec.settled;
   const paceDisp=Math.floor(pace/100)*100;
   const paceLeft=paceDisp-net; // 변동 수입까지 반영한 오늘 잔여
+
+  // 전날(어제) 접근 — 새벽 경계로 하루가 넘어가도 어제를 열어 확인·마감취소할 수 있게
+  const yst=addDays(t,-1);
+  const ystInRange=S.startDate&&yst>=S.startDate;
+  const ystRec=C.byDate[yst];
+  const ystSettled=ystRec&&ystRec.settled;
 
   // 7일 내 예정(또는 진행 중인) 고정 수입·지출 + 이번 달 체크 상태
   const dd=d.getDate();
@@ -962,7 +1010,6 @@ function renderHome(){
   const ts=document.getElementById('top-stats');
   if(ts)ts.innerHTML=`
     <button class="stat-pill" onclick="openStreak()"><span class="si">🔥</span><span style="color:var(--flame)">${C.streak}</span></button>
-    ${C.repairAvail>0?`<button class="stat-pill" onclick="openStreak()"><span class="si">🩹</span><span style="color:var(--sub)">${C.repairAvail}</span></button>`:''}
     <button class="stat-pill" onclick="go('vault')"><span class="si">💰</span><span style="color:var(--gold)">${manwon(C.vault)}</span></button>`;
 
   // 카테고리별 예산 직접 설정 상태 + 이번 달 카테고리별 지출
@@ -994,10 +1041,14 @@ function renderHome(){
   </div>
 
   <div style="margin:0 16px 12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+      ${ystInRange?`<button onclick="openDay('${yst}')" style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:var(--sub);background:var(--card);border:1px solid var(--line);border-radius:100px;padding:7px 14px 7px 11px;box-shadow:var(--sh)">‹ 어제${ystSettled?' <span style="color:var(--green-deep)">✓ 마감함</span>':ystRec?' <span style="color:var(--amber)">· 확인 대기</span>':''}</button>`:'<span></span>'}
+      <span style="font-size:12.5px;font-weight:800;color:var(--faint)">${(d.getMonth()+1)}월 ${d.getDate()}일 (${DOW[d.getDay()]})</span>
+    </div>
     ${!todayConfirmed?`
     <button class="close-btn" id="close-hold"><span class="fill"></span><span class="lb">🌙 꾹 눌러서 하루 마감</span></button>
     ${paceLeft>0?`<button class="save-preview" onclick="go('vault')">🐷 지금 마감하면 <b>+${won(paceLeft)}</b> 저금통에 쌓여요</button>`
-      :`<div class="save-preview flat">오늘은 페이스를 넘었어요 · 마감하면 저금통에서 메꿔요</div>`}`:`
+      :`<div class="save-preview flat">오늘은 페이스를 넘었어요 · 마감할 때 저금통에서 메울지 선택할 수 있어요</div>`}`:`
     <button class="close-btn done" id="close-cancel"><span class="fill cancel"></span><span class="lb">✅ 마감 완료 · 꾹 눌러 취소</span></button>
     ${todayRec&&todayRec.saved>0?`<button class="save-preview done" onclick="go('vault')">🐷 오늘 아껴서 <b>+${won(todayRec.saved)}</b> 저금통에 쌓았어요</button>`:''}`}
   </div>
@@ -1061,9 +1112,14 @@ function bindHold(){
   longPress(document.getElementById('close-hold'),()=>confirmDay(today()));
   longPress(document.getElementById('close-cancel'),()=>cancelClose(today()));
 }
+// 마감 취소 허용 구간: '현재 논리적 하루'(today)일 때만.
+// 하루 경계가 새벽 5시라, 마감한 날은 다음날 새벽 5시까지 today로 남는다 → 즉 "5시 전까지만 취소 가능".
+// 5시가 지나 다음 하루로 넘어가면 그 날은 잠기고 더는 취소할 수 없다.
+function canCancel(date){return date===today();}
 function cancelClose(date){
   delete S.conf[date];
-  delete S.rep[date]; // 리페어로 지킨 것도 함께 해제
+  delete S.rep[date];  // 리페어(레거시)로 지킨 것도 함께 해제
+  delete S.fill[date]; // 저금통 메움 선택도 함께 해제
   save();render();
   toast('마감을 취소했어요');
 }
@@ -1115,12 +1171,11 @@ function renderRecord(){
   // expense list of shown month (desc)
   const monthDays=C.days.filter(r=>r.date.slice(0,7)===calMonth&&(r.exps.length||r.settled)).reverse();
   const listHtml=monthDays.length?monthDays.map(r=>{
-    const tag=r.settled?(r.success===true?'<span class="tag ok">성공 ✓</span>':r.success==='rep'?'<span class="tag rep">리페어 🩹</span>':'<span class="tag over">초과</span>')
+    const tag=r.settled?(r.success===true?'<span class="tag ok">성공 ✓</span>':r.success==='rep'?'<span class="tag rep">지킴 🛟</span>':'<span class="tag over">초과·기록됨</span>')
       :(r.date<t?'<span class="tag pend">확인 대기</span>':'');
-    const repairBtn=(r.settled&&r.success===false&&C.repairAvail>0)?`<button class="chip-btn gold" style="flex:none;padding:6px 12px;font-size:12px" onclick="repairDay('${r.date}')">🩹 리페어</button>`:'';
     return `<div class="day-group">
-      <div class="day-head"><span class="d">${fmtDate(r.date,true)}</span>${tag}${repairBtn}
-        <span class="sum num">${r.inc?`<b style="color:var(--green)">+${won(r.inc)}</b> · `:''}${r.spent?won(r.spent):'지출 없음'}</span></div>
+      <div class="day-head"><span class="d">${fmtDate(r.date,true)}</span>${tag}
+        <span class="sum num">${r.inc?`<b style="color:var(--green)">+${won(r.inc)}</b> · `:''}${r.spent?won(r.spent):'지출 없음'}${r.fxSpent?` <small style="color:var(--faint);font-weight:600">+고정 ${won(r.fxSpent)}</small>`:''}</span></div>
       ${r.exps.map(e=>`
         <div class="exp-row">
           <div class="exp-ic">${e.kind==='inc'?'💰':cat(e.cat).ic}</div>
@@ -1165,8 +1220,8 @@ function renderRecord(){
     </div>
     ${grid}
     <div class="legend">
-      <span><i class="st ok"></i>성공</span><span><i class="st over"></i>초과</span>
-      <span><i class="st rep"></i>리페어</span><span><i class="st pend"></i>대기</span>
+      <span><i class="st ok"></i>아껴서 마감</span><span><i class="st over"></i>초과·마감</span>
+      <span><i class="st pend"></i>확인 대기</span>
     </div>
   </div>
   <div class="section-label">지출 내역</div>
@@ -1201,14 +1256,15 @@ function openDay(date){
       :`<div class="empty" style="padding:30px"><div class="e-ic">📭</div><div class="e-t">예정된 내역이 없어요</div></div>`;
   }
   else{
-    const tag=r.settled?(r.success===true?`<span class="tag ok">성공 · ${won(r.saved)} 적립 ✓</span>`:r.success==='rep'?'<span class="tag rep">리페어로 지킴 🩹</span>':'<span class="tag over">페이스 초과</span>')
+    const tag=r.settled?(r.success===true?`<span class="tag ok">성공 · ${won(r.saved)} 적립 ✓</span>`:r.success==='rep'?'<span class="tag rep">지킴 🛟</span>':`<span class="tag over">초과·기록됨${r.withdraw?' · 저금통 −'+won(r.withdraw):''}</span>`)
       :(r.date<t?'<span class="tag pend">확인 대기</span>':r.isToday?'<span class="tag pend">진행 중</span>':'');
     body.innerHTML=`
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">${tag}</div>
       <div class="calc-preview" style="margin:0 0 16px">
         <div class="calc-row"><span>이날의 안전 페이스</span><b class="num">${won(Math.floor(r.pace))}</b></div>
         <div class="calc-row"><span>지출 합계</span><b class="num">${won(r.spent)}</b></div>
-        ${r.inc?`<div class="calc-row"><span>수입</span><b class="num pos">+${won(r.inc)}</b></div>
+        ${r.fxSpent?`<div class="calc-row"><span>이날 고정지출</span><b class="num neg">− ${won(r.fxSpent)}</b></div>`:''}
+        ${(r.inc||r.fxSpent)?`${r.inc?`<div class="calc-row"><span>수입</span><b class="num pos">+${won(r.inc)}</b></div>`:''}
         <div class="calc-row"><span>순 지출</span><b class="num ${r.net>r.pace?'neg':''}">${won(r.net)}</b></div>`:''}
       </div>
       ${r.exps.length?r.exps.map(e=>`
@@ -1219,37 +1275,34 @@ function openDay(date){
           <button class="exp-del" onclick="delExp('${e.id}');openDay('${date}')">✕</button>
         </div>`).join(''):'<div class="hint" style="text-align:center;margin:4px 0 14px">기록된 지출이 없어요</div>'}
       ${dueHtml}
+      ${r.settled&&r.success===false?`
+      <div style="margin-top:14px;background:var(--bg);border-radius:14px;padding:12px 14px">
+        <div style="font-size:12.5px;font-weight:700;color:var(--sub)">페이스보다 <b class="num">${won(r.over||Math.max(0,Math.round(r.net-r.pace)))}</b> 초과 — 저금통에서 메울까요?</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="chip-btn ${S.fill[date]?'gold':'ghost'}" style="padding:11px" onclick="toggleFill('${date}',true)">🐷 저금통에서 메움${S.fill[date]?` ✓ (−${won(r.withdraw||0)})`:''}</button>
+          <button class="chip-btn ${S.fill[date]?'ghost':'solid'}" style="padding:11px" onclick="toggleFill('${date}',false)">그냥 두기</button>
+        </div>
+      </div>`:''}
       <div style="display:flex;gap:8px;margin-top:14px">
         ${date<=t?`<button class="chip-btn ghost" style="padding:13px" onclick="closeSheets();openInput('${date}')">＋ 지출 추가</button>`:''}
         ${!r.settled&&date<=t?`<button class="chip-btn solid" style="padding:13px" onclick="confirmDay('${date}')">${r.exps.length?'이대로 마감':'지출 없었어요'}</button>`:''}
-        ${r.settled&&r.success===false&&C.repairAvail>0?`<button class="chip-btn gold" style="padding:13px" onclick="repairDay('${date}')">🩹 리페어 쓰기</button>`:''}
+        ${r.settled&&canCancel(date)?`<button class="chip-btn ghost" style="padding:13px;color:var(--red)" onclick="if(confirm('${date===today()?'오늘':'어제'} 마감을 취소할까요? 다시 열어 수정할 수 있어요.')){cancelClose('${date}');openDay('${date}')}">↩︎ 마감 취소</button>`:''}
       </div>`;
   }
   showSheet('sheet-day');
 }
 
-// ---------- confirm / repair ----------
+// ---------- confirm ----------
 function confirmDay(date){
   S.conf[date]=1;save();
-  const before=C;
   C=calc();
   const r=C.byDate[date];
   closeSheets();
   if(r&&r.success===true){
     celebrate(r,C);
   }else if(r&&r.success===false){
-    if(C.repairAvail>0){
-      celebrateOver(date);
-    }else{
-      toast('괜찮아요. 내일 페이스가 자동으로 조정돼요');
-    }
+    celebrateOver(date,r); // 초과여도 스트릭은 이어짐 — '그래도 기록했다' 인정 + 메움 선택
   }
-  render();
-}
-function repairDay(date){
-  if(calc().repairAvail<=0){toast('리페어가 없어요. 7일 성공마다 1개 생겨요');return;}
-  S.rep[date]=1;save();closeSheets();
-  toast('🩹 리페어! 스트릭이 이어져요');
   render();
 }
 
@@ -1265,7 +1318,7 @@ function celebrate(r,c){
     <div class="cel-title">${hitMilestone?c.streak+'일 달성!':'하루 마감 성공!'}</div>
     ${r.saved>0?`<div class="cel-amt num" id="cel-count">+0원</div>
     <div class="cel-sub">페이스보다 아낀 만큼<br>저금통에 쌓였어요</div>`:`<div class="cel-sub">페이스 안에서 하루를 끝냈어요</div>`}
-    <div class="cel-streak">🔥 예산 안에서 산 날 ${c.streak}일째</div>
+    <div class="cel-streak">🔥 기록 스트릭 ${c.streak}일째</div>
     <button class="cel-btn" onclick="closeCelebrate()">좋았어</button>
   </div>`;
   el.classList.add('show');
@@ -1278,16 +1331,35 @@ function celebrate(r,c){
     coin.style.animationDelay=(i*0.12)+'s';card.appendChild(coin);
   }
 }
-function celebrateOver(date){
+// 초과일 마감: 스트릭은 이미 이어짐(마감=나타남). 인정을 먼저 주고, 저금통 메움은 '선택'으로.
+function celebrateOver(date,r){
   const el=document.getElementById('celebrate');
+  const c=calc();
+  const over=r.over||Math.max(0,Math.round(r.net-r.pace));
+  const canFill=c.vault>0;               // 저금통에 여유가 있을 때만 메움 제안
+  const fillAmt=Math.min(c.vault,over);
   el.innerHTML=`<div class="cel-card">
-    <div class="cel-emoji">🌧️</div>
-    <div class="cel-title">페이스를 넘은 날이에요</div>
-    <div class="cel-sub">실패가 아니에요. 내일 페이스가 자동으로 조정돼요.<br>스트릭을 지키고 싶다면 리페어를 쓸 수 있어요.</div>
-    <button class="cel-btn" style="background:var(--gold)" onclick="repairDay('${date}');closeCelebrate()">🩹 리페어 쓰기 (${calc().repairAvail}개 보유)</button>
-    <button class="cel-btn" style="background:var(--bg);color:var(--sub);margin-top:8px" onclick="closeCelebrate()">그냥 넘어가기</button>
+    <div class="cel-emoji">🔥</div>
+    <div class="cel-title">기록 완료 · 스트릭 이어짐</div>
+    <div class="cel-sub">페이스는 넘었지만, 오늘도 <b>나타나 기록</b>했어요.<br>스트릭은 그대로 <b>${c.streak}일째</b>예요.</div>
+    <div class="cel-streak">🔥 기록 스트릭 ${c.streak}일째</div>
+    ${canFill?`<div class="cel-sub" style="margin-top:16px">페이스보다 <b class="num">${won(over)}</b> 넘었어요. 저금통(${won(c.vault)})에서 <b class="num">${won(fillAmt)}</b>만큼 메워둘까요?</div>
+      <button class="cel-btn" style="background:var(--gold)" onclick="chooseFill('${date}',true)">🐷 저금통에서 ${won(fillAmt)} 메우기</button>
+      <button class="cel-btn" style="background:var(--bg);color:var(--sub);margin-top:8px" onclick="chooseFill('${date}',false)">그냥 두기 (저금통 유지)</button>`
+    :`<button class="cel-btn" style="margin-top:16px" onclick="closeCelebrate()">좋았어</button>`}
   </div>`;
   el.classList.add('show');
+}
+function chooseFill(date,fill){
+  if(fill)S.fill[date]=1; else delete S.fill[date];
+  save();
+  toast(fill?'🐷 저금통에서 메웠어요':'저금통을 그대로 뒀어요');
+  closeCelebrate();
+}
+function toggleFill(date,fill){ // 날짜 상세에서 메움 선택 토글
+  if(fill)S.fill[date]=1; else delete S.fill[date];
+  save();C=calc();render();openDay(date);
+  toast(fill?'🐷 저금통에서 메웠어요':'메움을 취소했어요');
 }
 function confettiHtml(n){
   const colors=['#0E7B54','#D99A22','#E8571F','#2C6E9E','#8FE3BF','#FFD98A'];
@@ -1595,17 +1667,35 @@ function delFixed(id){
 // ---------- VAULT ----------
 function renderVault(){
   const el=document.getElementById('vault-body');
-  const deposits=C.days.filter(r=>r.saved>0).reverse();
   const goals=S.goals||[];
-  const totalGoal=goals.reduce((a,g)=>a+g.amt,0);
-  // 병 채움: 목표 합계 대비, 목표 없으면 돈이 있기만 해도 조금 차오르게
-  const fillPct=totalGoal>0?Math.min(100,C.vault/totalGoal*100):(C.vault>0?18:0);
-  // 목표는 순서대로 채워짐 (저금통 배분)
+  // 목표는 저금통에서 위에서부터 순서대로 채워짐
   let rem=C.vault;
   const galloc=goals.map(g=>{
     const fill=Math.max(0,Math.min(rem,g.amt));rem-=fill;
     return{...g,fill,pct:g.amt>0?Math.min(100,fill/g.amt*100):0,done:g.amt>0&&fill>=g.amt};
   });
+  const totalGoal=goals.reduce((a,g)=>a+g.amt,0);
+  const fillPct=totalGoal>0?Math.min(100,C.vault/totalGoal*100):(C.vault>0?18:0);
+
+  // 통합 내역: 적립(+) / 메움(−) / 구매(−)
+  const hist=[];
+  C.days.forEach(r=>{
+    if(r.saved>0)hist.push({date:r.date,type:'save',amt:r.saved});
+    if(r.withdraw>0)hist.push({date:r.date,type:'fill',amt:r.withdraw});
+  });
+  (S.buys||[]).forEach(b=>hist.push({date:b.date,type:'buy',amt:b.amt,name:b.name}));
+  hist.sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:0);
+  const histIco={save:'🐷',fill:'🩹',buy:'🎉'};
+  const histTxt=h=>h.type==='save'?`안전 페이스보다 ${won(h.amt)} 덜 썼어요`
+    :h.type==='fill'?`초과분을 저금통에서 메웠어요`
+    :`${esc(h.name||'목표')} 구매 · 모은 돈 사용`;
+  const histColor=h=>h.type==='save'?'color:var(--gold)':'color:var(--sub)';
+
+  // 이번 달 절약 요약
+  const cur=today().slice(0,7);
+  const md=C.days.filter(r=>r.date.slice(0,7)===cur&&r.saved>0);
+  const ms=md.reduce((a,r)=>a+r.saved,0);
+
   el.innerHTML=`
   <div class="vault-hero">
     <div class="jar">
@@ -1616,16 +1706,14 @@ function renderVault(){
       </div>
       <div class="jar-amt num">${manwon(C.vault)}</div>
     </div>
-    <div class="cap">하루를 페이스보다 아끼면, 차액이 자동으로 쌓여요</div>
+    <div class="cap">하루를 페이스보다 아끼면, 차액이 여기 쌓여요</div>
     <div class="meta num">지금까지 ${won(C.vault)}${totalGoal>0?` · 목표 합계의 ${Math.round(fillPct)}%`:''}</div>
   </div>
 
-  ${(()=>{const cur=today().slice(0,7);const md=C.days.filter(r=>r.date.slice(0,7)===cur&&r.saved>0);
-    const ms=md.reduce((a,r)=>a+r.saved,0);
-    return ms>0?`<div class="duo" style="margin-top:2px">
-      <div class="card" style="margin:0"><div class="mini-cap">이번 달 절약</div><div class="mini-num num" style="color:var(--gold)">+${won(ms)}</div></div>
-      <div class="card" style="margin:0"><div class="mini-cap">아낀 날</div><div class="mini-num num">${md.length}일</div></div>
-    </div>`:''})()}
+  ${ms>0?`<div class="duo" style="margin-top:2px">
+    <div class="card" style="margin:0"><div class="mini-cap">이번 달 절약</div><div class="mini-num num" style="color:var(--gold)">+${won(ms)}</div></div>
+    <div class="card" style="margin:0"><div class="mini-cap">아낀 날</div><div class="mini-num num">${md.length}일</div></div>
+  </div>`:''}
 
   <div class="section-label">목표 — 위에서부터 순서대로 채워져요</div>
   <div class="card" style="padding:6px 20px">
@@ -1636,7 +1724,8 @@ function renderVault(){
           <button class="badge ok" onclick="openGoal('${g.id}')">수정</button>
         </div>
         <div class="goal-bar" style="margin-top:10px"><i style="width:${g.pct}%"></i></div>
-        <div class="gauge-row" style="margin-top:6px"><span class="num">${won(g.fill)} / ${won(g.amt)}</span><span class="num">${g.done?'다음 목표로 넘쳐 흘러요':won(g.amt-g.fill)+' 남음'}</span></div>
+        <div class="gauge-row" style="margin-top:6px"><span class="num">${won(g.fill)} / ${won(g.amt)}</span><span class="num">${g.done?'구매할 준비가 됐어요':won(g.amt-g.fill)+' 남음'}</span></div>
+        ${g.done?`<button class="cta" style="background:var(--ink);margin-top:10px;padding:12px;font-size:14px" onclick="buyGoal('${g.id}')">🎉 ${esc(g.name)} 구매 완료 (모은 돈 쓰기)</button>`:''}
       </div>`).join(''):`
       <div style="text-align:center;padding:16px 0 10px">
         <div style="font-size:30px">🎁</div>
@@ -1646,20 +1735,28 @@ function renderVault(){
     <button class="add-row" onclick="openGoal()">＋ 목표 추가</button>
   </div>
 
-  <div class="section-label">적립 내역</div>
+  <div class="section-label">저금통 내역</div>
   <div class="card" style="padding:8px 20px">
-    ${deposits.length?deposits.map(r=>`
+    ${hist.length?hist.slice(0,40).map(h=>`
       <div class="dep-row">
-        <div>🐷</div>
-        <div><div class="dep-date">${fmtDate(r.date,true)}</div>
-        <div class="dep-note num">안전 페이스보다 ${won(r.saved)} 덜 썼어요</div></div>
-        <div class="dep-amt num">+${won(r.saved)}</div>
+        <div>${histIco[h.type]}</div>
+        <div><div class="dep-date">${fmtDate(h.date,true)}</div>
+        <div class="dep-note num">${histTxt(h)}</div></div>
+        <div class="dep-amt num" style="${histColor(h)}">${h.type==='save'?'+':'−'}${won(h.amt)}</div>
       </div>`).join(''):`
       <div class="empty" style="padding:30px 10px"><div class="e-ic">🫙</div>
       <div class="e-t">아직 비어 있어요</div>
-      <div class="e-s">하루를 페이스 안에서 마감하면<br>차액이 자동으로 쌓여요</div></div>`}
+      <div class="e-s">하루를 페이스 안에서 마감하면<br>차액이 저금통에 쌓여요</div></div>`}
   </div>
-  <div class="hint" style="padding:0 24px">아끼면 쌓이고, 초과한 날 마감하면 부족분만큼 꺼내 메꿔요.</div>`;
+  <div class="hint" style="padding:0 24px">아끼면 저금통에 쌓여요. 초과한 날은 마감할 때 <b>메울지 선택</b>할 수 있어요.</div>`;
+}
+function buyGoal(id){
+  const g=S.goals.find(x=>x.id===id);if(!g)return;
+  if(!confirm(`'${g.name}'을(를) 구매 완료로 처리할까요?\n모은 저금 ${won(g.amt)}이 저금통에서 사용 처리되고 목표에서 사라져요. (이번 달 지출·페이스에는 영향 없어요)`))return;
+  S.buys.push({id:uid(),date:today(),amt:g.amt,name:g.name});
+  S.goals=S.goals.filter(x=>x.id!==id);
+  save();C=calc();render();
+  toast(`🎉 ${g.name} 구매 완료! 모은 돈으로 샀어요`);
 }
 function openGoal(id){
   const g=id?S.goals.find(x=>x.id===id):null;
@@ -1945,8 +2042,21 @@ async function runOCR(file){
 ================================================================ */
 function openSettings(){
   const body=document.getElementById('settings-body');
+  const inc=S.budgetIncludeFixed;
   body.innerHTML=`
-    <div class="hint" style="margin:2px 0 14px">💼 소득은 <b>고정 탭 → 고정 수입</b>에서 항목으로 관리해요.<br>월급·부수입을 추가하면 예산(고정 수입 − 고정 지출)에 바로 반영돼요.</div>
+    <div class="section-label" style="padding:2px 2px 8px">예산 방식</div>
+    <div class="opt-card ${inc?'on':''}">
+      <div class="ot"><span>🧾 고정지출을 예산에 포함</span>
+        <label class="switch"><input type="checkbox" ${inc?'checked':''} onchange="setBudgetIncludeFixed(this.checked)"><span class="track"></span></label>
+      </div>
+      <div class="os">
+        <b>켜짐(포함):</b> 예산 = 고정 수입 전체. 월세·구독 같은 고정지출도 <b>발생일마다 예산에서 차감</b>돼요. "지갑 전체를 관리" 방식 — 고정지출 나가는 날은 지출이 크게 잡혀요.<br>
+        <b>꺼짐(미포함, 기본):</b> 예산 = 고정 수입 − 고정지출. 고정비를 미리 빼둔 <b>순수 '쓸 수 있는 돈'</b>만 페이스로 관리해요.
+      </div>
+    </div>
+    <div class="hint" style="margin:0 0 16px">지금은 <b>${inc?'포함':'미포함'}</b>이에요. 바꾸면 이번 달 예산·페이스가 즉시 다시 계산돼요.</div>
+    <div class="section-label" style="padding:2px 2px 8px">수입 · 예산</div>
+    <div class="hint" style="margin:0 0 12px">💼 소득은 <b>고정 탭 → 고정 수입</b>에서 항목으로 관리해요.<br>월급·부수입을 추가하면 예산에 바로 반영돼요.</div>
     <button class="cta" onclick="closeSheets();go('fixed')">고정 수입 관리하러 가기</button>
     <div style="height:14px"></div>
     <button class="settings-row" onclick="closeSheets();openBudgetSheet()"><span>📊 이번 달 예산 직접 설정</span><span class="sv">카테고리별</span></button>
@@ -1958,6 +2068,13 @@ function openSettings(){
     <div class="hint">데이터는 이 기기에만 저장돼요 · 가끔 내보내기로 백업하세요.</div>`;
   showSheet('sheet-settings');
 }
+function setBudgetIncludeFixed(on){
+  S.budgetIncludeFixed=!!on;
+  save();C=calc();
+  openSettings(); // 토글 카드 상태 갱신
+  render();       // 홈 예산·페이스 즉시 반영
+  toast(on?'고정지출을 예산에 포함해요 — 발생일마다 차감돼요':'고정지출은 예산에서 미리 빼둬요');
+}
 // --- 이번 달 예산 카테고리별 직접 설정 ---
 function openBudgetSheet(){
   const ym=today().slice(0,7);
@@ -1966,7 +2083,7 @@ function openBudgetSheet(){
   const auto=autoBudget(y,m);
   const hasOv=Object.keys(ov).length>0;
   document.getElementById('budget-body').innerHTML=`
-    <div class="hint" style="margin:0 0 16px">자동 계산 예산은 <b class="num">${won(auto)}</b>(고정 수입 − 고정 지출${S.startDate&&ym===S.startDate.slice(0,7)?', 남은 날 일할':''})이에요.<br>
+    <div class="hint" style="margin:0 0 16px">자동 계산 예산은 <b class="num">${won(auto)}</b>(${S.budgetIncludeFixed?'고정 수입 기준 · 고정지출은 발생일마다 차감':'고정 수입 − 고정 지출'}${S.startDate&&ym===S.startDate.slice(0,7)?', 남은 날 일할':''})이에요.<br>
     월 중간에 시작해 예산이 애매하면, 아래에 카테고리별로 직접 적으세요. <b>합계가 이번 달 예산</b>이 돼요.</div>
     ${cats().map(c=>`
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
@@ -2052,8 +2169,9 @@ function queueAdd(date){
 function queueConfirm(date){
   S.conf[date]=1;save();
   const c2=calc();const rr=c2.byDate[date];
-  // 대기열에서는 축하 모달 없이 조용히 정리 (몰아서 처리하기 좋게) — 스트릭·저금통은 그대로 적립
-  toast(rr&&rr.success===false?'마감 · 부족분은 저금통에서 메꿨어요':rr&&rr.saved>0?`마감 · 🪙 ${won(rr.saved)} 저금통에 쌓였어요`:'마감했어요');
+  // 대기열에서는 축하 모달 없이 조용히 정리 (몰아서 처리하기 좋게) — 마감했으니 스트릭은 이어짐.
+  // 초과일은 저금통에서 자동으로 메우지 않는다 (메움은 선택 · 상세에서 결정)
+  toast(rr&&rr.success===false?'마감 · 🔥 스트릭 이어짐 (초과분은 상세에서 저금통으로 메울 수 있어요)':rr&&rr.saved>0?`마감 · 🐷 ${won(rr.saved)} 저금통에 쌓였어요`:'마감했어요');
   render();
   if(c2.queue.length)renderQueue();else closeSheets();
 }
@@ -2073,9 +2191,13 @@ function moveStreak(n){
 function renderStreak(){
   const[cy,cm]=stMonth.split('-').map(Number);
   const t=today();
-  // 최장 스트릭 (리페어는 유지, 미확인은 건너뜀)
+  // 최장 스트릭 = 최장 '연속 마감'. 초과여도 이어지고, 만회 못 한 결석에서만 끊긴다.
+  const qFrom=addDays(t,-14);
   let run=0,best=0;
-  C.days.forEach(r=>{if(r.settled){if(r.success===true){run++;best=Math.max(best,run);}else if(r.success===false)run=0;}});
+  C.days.forEach(r=>{
+    if(r.settled){run++;best=Math.max(best,run);}
+    else if(r.date<t&&r.date<qFrom&&r.date>=S.startDate)run=0;
+  });
   const total=dim(cy,cm),first=new Date(cy,cm-1,1).getDay();
   let cells='';
   for(let i=0;i<first;i++)cells+='<div></div>';
@@ -2092,8 +2214,9 @@ function renderStreak(){
     <div class="st-hero">
       <div class="fl">🔥</div>
       <div class="n num">${C.streak}일 연속</div>
-      <div class="b num">최장 ${best}일 · 성공한 날 ${C.successTotal}일 · 🩹 리페어 ${C.repairAvail}개</div>
+      <div class="b num">최장 ${best}일 · 마감한 날 중 아낀 날 ${C.successTotal}일</div>
     </div>
+    <div class="hint" style="text-align:center;margin:-6px 0 14px;line-height:1.6">스트릭은 <b>절약이 아니라 마감</b>에 걸려 있어요.<br>초과한 날도 <b>마감하면 이어져요</b> — 아낀 성과는 저금통에서 확인해요.</div>
     <div class="cal-head" style="margin-bottom:10px">
       <div class="cal-title">${cy}년 ${cm}월</div>
       <div class="cal-nav"><button onclick="moveStreak(-1)">‹</button><button onclick="moveStreak(1)">›</button></div>
@@ -2101,10 +2224,10 @@ function renderStreak(){
     <div class="caldrow">${DOW.map(w=>`<div class="cal-dow">${w}</div>`).join('')}</div>
     <div class="caldrow" style="gap:5px;margin-top:3px">${cells}</div>
     <div class="legend" style="margin-top:14px">
-      <span><i class="st ok"></i>성공</span><span><i class="st rep"></i>리페어</span>
-      <span><i class="st over"></i>초과</span><span><i class="st pend"></i>확인 대기</span>
+      <span><i class="st ok"></i>아껴서 마감</span>
+      <span><i class="st over"></i>초과·마감</span><span><i class="st pend"></i>확인 대기</span>
     </div>
-    <div class="hint" style="text-align:center;margin-top:10px">돈 안 쓴 날은 자동 성공 · 밀린 날은 깨지지 않아요</div>`;
+    <div class="hint" style="text-align:center;margin-top:10px">14일 안에 만회하면 안 깨져요 · 그 안에 마감 안 한 날만 스트릭이 끊겨요</div>`;
 }
 
 // --- 카테고리 관리 ---
