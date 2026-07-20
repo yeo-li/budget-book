@@ -346,6 +346,22 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .onb-mock{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh);padding:16px 18px;margin:22px auto 0;max-width:320px;text-align:left}
 .onb-mock .mrow{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:700;color:var(--sub);padding:7px 0}
 .onb-mock .mrow b{color:var(--ink);font-weight:800;margin-left:auto}
+
+/* ---------- coach-mark 튜토리얼 ---------- */
+#coach{position:fixed;inset:0;z-index:170;pointer-events:none;display:none}
+#coach.show{display:block}
+.coach-hole{position:absolute;box-shadow:0 0 0 9999px rgba(16,22,18,.72);pointer-events:none;
+  transition:left .3s cubic-bezier(.3,.8,.3,1),top .3s cubic-bezier(.3,.8,.3,1),width .3s,height .3s;
+  outline:3px solid rgba(255,255,255,.9);outline-offset:-1px;animation:coachpulse 1.6s ease-in-out infinite}
+@keyframes coachpulse{0%,100%{outline-color:rgba(255,255,255,.85)}50%{outline-color:rgba(255,140,66,.95)}}
+.coach-tip{position:absolute;max-width:300px;background:var(--card);border-radius:16px;box-shadow:var(--sh-lift);
+  padding:15px 17px;pointer-events:auto;z-index:172;animation:fadein .25s ease}
+.coach-tip .ct-title{font-size:15px;font-weight:900;letter-spacing:-.01em}
+.coach-tip .ct-body{font-size:13px;color:var(--sub);font-weight:600;line-height:1.65;margin-top:6px}
+.coach-tip .ct-body b{color:var(--ink);font-weight:800}
+.coach-tip .ct-actions{display:flex;gap:8px;margin-top:13px;justify-content:flex-end;align-items:center}
+.coach-tip .ct-btn{font-size:13px;font-weight:800;padding:9px 16px;border-radius:11px;background:var(--p);color:#fff}
+.coach-tip .ct-skip{font-size:12px;font-weight:700;color:var(--faint);padding:9px 6px}
 </style>
 </head>
 <body>
@@ -437,6 +453,9 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 
   <!-- ============ ONBOARDING ============ -->
   <div id="onb"><div class="onb-inner" id="onb-inner"></div></div>
+
+  <!-- ============ COACH-MARK (인터랙티브 튜토리얼) ============ -->
+  <div id="coach"><div class="coach-hole" id="coach-hole"></div><div class="coach-tip" id="coach-tip"></div></div>
 </div>
 
 <script>
@@ -964,6 +983,7 @@ function openDay(date){
 
 // ---------- confirm ----------
 function confirmDay(date){
+  if(tutActive&&tutStep==='close'){tutStep='celebrating';tutHideCoach();}
   S.conf[date]=1;save();
   C=calc();
   const r=C.byDate[date];
@@ -1047,7 +1067,15 @@ function confettiHtml(n){
   }
   return h;
 }
-function closeCelebrate(){document.getElementById('celebrate').classList.remove('show');render();}
+function closeCelebrate(){
+  document.getElementById('celebrate').classList.remove('show');render();
+  if(tutActive&&tutStep==='celebrating'){ // 마감 체험 끝 → 튜토리얼 완료 화면
+    tutStep='done';
+    onbScreen='finish';
+    document.getElementById('onb').classList.add('show');
+    renderOnb();
+  }
+}
 function countUp(id,target){
   const el=document.getElementById(id);if(!el)return;
   const dur=900,t0=performance.now();
@@ -1088,6 +1116,7 @@ function openInput(date){
   document.querySelectorAll('#input-seg button').forEach(x=>x.classList.toggle('on',x.dataset.m==='manual'));
   renderInputPanel();
   showSheet('sheet-input');
+  if(tutActive&&tutStep==='tapPlus'){tutStep='input';setTimeout(tutRender,60);}
 }
 // 기록 수정: 기존 지출을 폼에 채워 열고, 폼 안에서 삭제도 가능
 function openEditExp(id){
@@ -1198,6 +1227,7 @@ function saveExp(src){
     if(returnToQueue){openQueue();}
     else closeSheets();
   }
+  if(tutActive&&tutStep==='input'){tutStep='seeRemaining';setTimeout(tutRender,80);}
 }
 // 삭제 확인 모달 → 실제 삭제
 function askDelExp(id){
@@ -1541,86 +1571,120 @@ function closeSheets(){
 }
 
 /* ================================================================
-   ONBOARDING — 첫 진입: 감사 인사 + 5일 예산 입력 → 사용법 튜토리얼
+   ONBOARDING — 환영 + 예산 입력 → '직접 해보는' 인터랙티브 튜토리얼
+   (지출 추가 → 오늘 남은 돈 즉시 감소 확인 → 마감 버튼 눌러 결과 체험)
+   * 튜토리얼 중 조작은 '연습'이며, 끝나면 실제 5일 챌린지가 새로 시작됨
 ================================================================ */
-const ONB_TUT=[
-  {emoji:'🔥',title:'<em>스트릭</em>이 핵심이에요',
-   body:'매일 하루를 <b>마감</b>하면 불꽃이 하루씩 이어져요.<br>초과한 날이어도 <b>마감만 하면 스트릭은 유지</b>돼요.<br>리마인드 없이 5일 동안 끊기지 않게 이어가는 게 목표!',
-   mock:`<div class="mrow">🔥 기록 스트릭 <b>3일 연속</b></div><div class="mrow">🟢🟢🟢⚪⚪ <b>Day 3 / 5</b></div>`},
-  {emoji:'💰',title:'맨 위 <em>남은 돈</em>',
-   body:'5일치 예산에서 <b>쓴 만큼 줄어드는</b> 전체 지갑이에요.<br>지금 얼마가 남았는지 한눈에 보여줘요.',
-   mock:`<div class="mrow">5일치 가용 예산 · 남은 돈 <b>112,000원</b></div><div class="mrow">진행 <b>Day 2 / 5 · 75% 남음</b></div>`},
-  {emoji:'📉',title:'<em>오늘 남은 돈</em>',
-   body:'오늘 쓸 수 있는 <b>안전 페이스</b>예요.<br>지출을 적는 <b>순간 바로 줄어들어요</b> — 실시간 반응!<br>아끼면 다음 날 페이스가 넉넉해져요.',
-   mock:`<div class="mrow">오늘 남은 돈 <b>21,400원</b></div><div class="mrow">안전 페이스 <b>30,000원/일</b></div>`},
-  {emoji:'🌙',title:'하루 끝, <em>마감</em>하기',
-   body:'하루가 끝나면 <b>버튼을 꾹 눌러 마감</b>해요.<br>아꼈으면 <b>칭찬</b>, 넘었으면 <b>훈계</b>를 받고,<br>스트릭이 하루 더 이어져요.',
-   mock:`<div class="mrow">🌙 꾹 눌러서 하루 마감</div><div class="mrow">🎉 <b>하루 마감 성공!</b></div>`},
-  {emoji:'✏️',title:'<em>직접</em> 기록하는 법',
-   body:'아래 가운데 <b>＋ 버튼</b>을 누르고,<br>① 금액 입력 → ② 내용(선택) → ③ 날짜 확인 → <b>저장</b>!<br>📷 캡처·📋 붙여넣기로도 자동 입력돼요.',
-   mock:`<div class="mrow">＋ 금액 <b>3,500원</b></div><div class="mrow">내용 <b>스타벅스</b></div><div class="mrow">날짜 <b>오늘</b> · 저장 ✓</div>`},
-  {emoji:'📅',title:'<em>기록</em> 탭',
-   body:'오른쪽 <b>기록</b> 탭에서 달력과 지난 지출을 볼 수 있어요.<br>깜빡한 날은 <b>확인 안 한 날</b>에서 채워 마감하면 돼요.',
-   mock:`<div class="mrow">📅 달력 · 지출 내역</div><div class="mrow">📥 확인 안 한 날 <b>1일</b></div>`},
-];
-let onbStep=0, onbBudget=DEFAULT_BUDGET;
-const ONB_TOTAL=1+ONB_TUT.length;
+let onbScreen='budget';                 // 'budget' | 'finish'
+let onbBudget=DEFAULT_BUDGET;
+let tutActive=false, tutStep='';         // 코치마크 튜토리얼 진행 상태
 function showOnb(){
-  onbStep=0;onbBudget=S.budget5||DEFAULT_BUDGET;
+  onbScreen='budget';onbBudget=S.budget5||DEFAULT_BUDGET;
   document.getElementById('onb').classList.add('show');
   renderOnb();
 }
 function renderOnb(){
   const el=document.getElementById('onb-inner');
-  const dots=Array.from({length:ONB_TOTAL},(_,i)=>`<i class="${i<=onbStep?'on':''}"></i>`).join('');
   let mid,foot;
-  if(onbStep===0){
+  if(onbScreen==='budget'){
     mid=`
       <div class="onb-hero-emoji">🙌</div>
       <div class="onb-title">테스트에 참가해주셔서<br><em>정말 고마워요</em></div>
-      <div class="onb-body">딱 5일이면 돼요. 매일 지출을 적고 하루를 마감하는<br>이 작은 습관이 이어지는지 함께 확인해봐요.<br><br>먼저, <b>5일 동안 쓸 예산</b>을 정해볼까요?</div>
+      <div class="onb-body">딱 5일이면 돼요. 매일 지출을 적고 하루를 마감하는<br>이 작은 습관이 이어지는지 함께 확인해봐요.<br><br>먼저, <b>5일 동안 쓸 예산</b>을 정하고<br><b>직접 한 바퀴 연습</b>해볼게요.</div>
       <div class="field" style="margin:24px auto 0;max-width:320px;text-align:left">
         <label>5일치 가용 예산</label>
         <div class="won-wrap"><input type="text" inputmode="numeric" id="onb-budget" value="${(+onbBudget).toLocaleString('ko-KR')}" placeholder="0" oninput="fmtInput(this)"></div>
       </div>
       <div class="hint" style="max-width:320px;margin:10px auto 0;text-align:center">예) 15만원이면 하루 페이스는 3만원부터 시작해요. 나중에 언제든 바꿀 수 있어요.</div>`;
-    foot=`<button class="cta" onclick="onbSaveBudget()">이 예산으로 시작하기</button>`;
-  }else{
-    const c=ONB_TUT[onbStep-1];
+    foot=`<button class="cta" onclick="onbStartTutorial()">이 예산으로 연습 시작 →</button>`;
+  }else{ // finish
     mid=`
-      <div class="onb-tag">사용법 ${onbStep} / ${ONB_TUT.length}</div>
-      <div class="onb-hero-emoji">${c.emoji}</div>
-      <div class="onb-title">${c.title}</div>
-      <div class="onb-body">${c.body}</div>
-      ${c.mock?`<div class="onb-mock">${c.mock}</div>`:''}`;
-    foot=`<button class="cta" onclick="onbNext()">${onbStep===ONB_TOTAL-1?'시작할게요 🚀':'다음'}</button>`;
+      <div class="onb-hero-emoji">🎊</div>
+      <div class="onb-title">이게 <em>전부</em>예요!</div>
+      <div class="onb-body">방금 <b>지출을 적고 → 오늘 남은 돈이 줄고 → 하루를 마감</b>하는<br>한 바퀴를 직접 해봤어요. 스트릭도 하나 쌓였죠?<br><br>이제 <b>진짜 5일 챌린지</b>를 시작할게요.<br>(연습으로 넣은 기록은 초기화돼요)</div>
+      <div class="onb-mock" style="text-align:center">
+        <div class="mrow" style="justify-content:center">＋ 지출 추가 → 📉 오늘 남은 돈 감소 → 🌙 마감 → 🔥 스트릭</div>
+      </div>`;
+    foot=`<button class="cta" onclick="endTutorial()">🚀 5일 챌린지 시작하기</button>`;
   }
   el.innerHTML=`
-    ${onbStep>0?`<button class="onb-back" onclick="onbBack()">‹</button>`:''}
-    <div class="onb-progress">${dots}</div>
     <div class="onb-mid">${mid}</div>
     <div class="onb-foot">${foot}</div>`;
   el.scrollTo(0,0);
 }
-function onbSaveBudget(){
+// 예산 저장 후 홈으로 나가 실제 UI 위에서 코치마크 튜토리얼 시작
+function onbStartTutorial(){
   const v=num(document.getElementById('onb-budget').value);
   if(v<=0){toast('예산을 입력해주세요');return;}
-  onbBudget=v;onbStep=1;renderOnb();
-}
-function onbNext(){
-  if(onbStep>=ONB_TOTAL-1){onbFinish();return;}
-  onbStep++;renderOnb();
-}
-function onbBack(){if(onbStep>0){onbStep--;renderOnb();}}
-function onbFinish(){
-  S.budget5=onbBudget;
-  S.startDate=today();     // 온보딩 완료 시점 = 챌린지 Day 1
-  S.onboarded=true;
-  save();
+  S.budget5=v; S.startDate=today(); S.exp=[]; S.conf={}; S.seenMilestones=[]; save();
   document.getElementById('onb').classList.remove('show');
-  homeDate=today();
-  C=calc();go('home');
-  toast('5일 챌린지 시작! 오늘부터 Day 1이에요 🔥');
+  homeDate=today(); C=calc(); go('home');
+  tutActive=true; tutStep='tapPlus';
+  setTimeout(tutRender,220); // 화면 전환 후 위치 잡기
+}
+// ---- 코치마크 ----
+function tutRender(){
+  if(!tutActive)return;
+  if(tutStep==='tapPlus'){
+    placeCoach('.nav-plus',{round:32,placement:'above',skip:true,
+      title:'① 지출을 하나 추가해봐요',
+      body:'아래 <b>＋ 버튼</b>을 눌러 방금 쓴 돈을 기록해볼게요. 직접 눌러보세요!'});
+  }else if(tutStep==='input'){
+    const amt=document.getElementById('in-amt'); if(amt&&!num(amt.value))amt.value='10,000';
+    placeCoach('#input-panel .cta',{round:14,placement:'above',skip:true,
+      title:'② 금액을 넣고 저장!',
+      body:'금액을 <b>10,000원</b>으로 채워뒀어요. 그대로 <b>저장하기</b>를 눌러보세요. (직접 고쳐도 돼요)'});
+  }else if(tutStep==='seeRemaining'){
+    placeCoach('#home-body .pace-card',{round:20,placement:'below',next:'그다음은?',skip:true,
+      title:'③ 바로 줄었죠? 👀',
+      body:'방금 쓴 만큼 <b>오늘 남은 돈</b>이 즉시 줄었어요. 실시간 반응이에요!<br>5일 전체 <b>남은 예산</b>은 <b>기록 탭</b> 맨 위에서 볼 수 있어요.'});
+  }else if(tutStep==='close'){
+    placeCoach('#close-hold',{round:16,placement:'above',skip:true,
+      title:'④ 하루를 마감해봐요',
+      body:'이 버튼을 <b>1.2초 꾹</b> 누르면 하루가 마감돼요. 불꽃이 스트릭으로 날아가고 칭찬이 떠요 — 직접 눌러보세요!'});
+  }
+}
+function tutNext(){ if(tutStep==='seeRemaining'){tutStep='close';tutRender();} }
+function tutHideCoach(){ document.getElementById('coach').classList.remove('show'); }
+function placeCoach(sel,cfg){
+  const coach=document.getElementById('coach');
+  const hole=document.getElementById('coach-hole');
+  const tip=document.getElementById('coach-tip');
+  coach.classList.add('show');
+  const tgt=sel?document.querySelector(sel):null;
+  if(tgt){
+    const r=tgt.getBoundingClientRect(), pad=cfg.pad??8;
+    hole.style.display='block';
+    hole.style.left=(r.left-pad)+'px';hole.style.top=(r.top-pad)+'px';
+    hole.style.width=(r.width+pad*2)+'px';hole.style.height=(r.height+pad*2)+'px';
+    hole.style.borderRadius=(cfg.round??16)+'px';
+  }else hole.style.display='none';
+  tip.innerHTML=`<div class="ct-title">${cfg.title}</div><div class="ct-body">${cfg.body}</div>
+    <div class="ct-actions">${cfg.skip?`<button class="ct-skip" onclick="skipTutorial()">건너뛰기</button>`:''}${cfg.next?`<button class="ct-btn" onclick="tutNext()">${cfg.next}</button>`:''}</div>`;
+  requestAnimationFrame(()=>{
+    const th=tip.offsetHeight, tw=tip.offsetWidth, vw=window.innerWidth, vh=window.innerHeight;
+    let top,left;
+    if(tgt){
+      const r=tgt.getBoundingClientRect();
+      top=(cfg.placement==='above')?(r.top-th-16):(r.bottom+16);
+      if(top<12)top=r.bottom+16; if(top+th>vh-12)top=r.top-th-16;
+      left=Math.min(Math.max(12,r.left+r.width/2-tw/2),vw-tw-12);
+    }else{ top=90; left=vw/2-tw/2; }
+    tip.style.top=Math.max(12,top)+'px'; tip.style.left=Math.max(12,left)+'px';
+  });
+}
+function skipTutorial(){
+  if(!confirm('튜토리얼을 건너뛸까요?\n바로 5일 챌린지가 시작돼요.'))return;
+  endTutorial();
+}
+// 튜토리얼 종료 → 연습 기록 초기화하고 진짜 챌린지 시작
+function endTutorial(){
+  tutActive=false;tutStep='';
+  tutHideCoach();
+  document.getElementById('onb').classList.remove('show');
+  S.exp=[]; S.conf={}; S.seenMilestones=[]; S.startDate=today(); S.onboarded=true; save();
+  homeDate=today(); C=calc(); go('home');
+  toast('튜토리얼 완료! 이제 진짜 Day 1이에요 🔥');
 }
 
 /* ================================================================
