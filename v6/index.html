@@ -339,9 +339,20 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .onb-title{font-size:27px;font-weight:900;letter-spacing:-.03em;margin-top:20px;line-height:1.3}
 .onb-title em{font-style:normal;color:var(--p-deep)}
-.onb-body{font-size:15px;color:var(--sub);font-weight:600;line-height:1.7;margin-top:14px}
+.onb-body{font-size:15px;color:var(--sub);font-weight:600;line-height:1.7;margin-top:14px;word-break:keep-all}
 .onb-body b{color:var(--ink);font-weight:800}
 .onb-tag{display:inline-block;font-size:12.5px;font-weight:800;color:var(--p-deep);background:var(--p-soft);border-radius:100px;padding:6px 14px;margin-bottom:6px}
+.onb-form{width:100%;max-width:320px;margin:28px auto 0;display:grid;gap:24px;text-align:left}
+.onb-field{margin:0}
+.onb-field label{display:block;margin-bottom:9px;font-size:13.5px;font-weight:800;color:var(--sub)}
+.onb-field input[type=text]{width:100%;height:58px;padding:0 18px;border:1.5px solid var(--line2);border-radius:16px;
+  background:var(--card);outline:none;font-size:18px;font-weight:800;transition:border-color .15s,box-shadow .15s,background .15s;-webkit-appearance:none}
+.onb-field input[type=text]:focus{border-color:var(--p);box-shadow:0 0 0 3px var(--p-soft)}
+.onb-field input[type=text][readonly]{background:#F8F3EB;color:var(--ink)}
+.onb-field .won-wrap input{height:58px;padding-left:18px !important;padding-right:50px !important;font-size:22px !important}
+.onb-field .won-wrap::after{right:18px}
+.onb-help{margin-top:8px;font-size:12.5px;color:#817D76;font-weight:600;line-height:1.5;word-break:keep-all}
+.onb-help strong{color:var(--p-deep);font-weight:800}
 .onb-foot{margin-top:24px}
 .onb-mock{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh);padding:16px 18px;margin:22px auto 0;max-width:320px;text-align:left}
 .onb-mock .mrow{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:700;color:var(--sub);padding:7px 0}
@@ -469,9 +480,20 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 
 // ---------- state ----------
 const KEY='savepoint_v6';
+const PARTICIPANT_KEY='budget-book-participant';
+const SESSION_KEY='budget-book-session-id';
+const EVENT_OUTBOX_KEY='budget-book-event-outbox';
+const APP_VERSION='v6';
+const LOG_SCHEMA_VERSION=1;
+const LOG_ENDPOINT='https://script.google.com/macros/s/AKfycbzXq2PDdvtG9MJe4X6RLRxxJj0T_7EPKdSOoNrgMzajmj9qB-2DBbjwl9TQ4pydOwQ/exec';
+const SESSION_TIMEOUT_MS=30*60*1000;
+const EVENT_OUTBOX_MAX=500;
+const EVENT_MAX_AGE_MS=14*24*60*60*1000;
 const CHALLENGE_DAYS=5;
 const DEFAULT_BUDGET=150000; // 5일치 기본 예산
-const DEFAULT={v:1,onboarded:false,nickname:'',startDate:null,budget5:DEFAULT_BUDGET,exp:[],conf:{},seenMilestones:[]};
+const DEFAULT={v:1,onboarded:false,nickname:'',startDate:null,challengeId:null,
+  challengeCompletedLogged:false,challengePeriodEndedLogged:false,
+  budget5:DEFAULT_BUDGET,exp:[],conf:{},seenMilestones:[]};
 let S=load();
 function load(){
   try{
@@ -489,6 +511,10 @@ function load(){
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(S));}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function randomId(){
+  if(window.crypto&&typeof window.crypto.randomUUID==='function')return window.crypto.randomUUID();
+  return uid()+'-'+uid();
+}
 
 // ---------- date helpers ----------
 function ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -516,6 +542,149 @@ function dayNo(date){ // 챌린지 몇 일차인지 (1-based). 범위 밖이면 
   return diff>=0&&diff<CHALLENGE_DAYS?diff+1:0;
 }
 
+/* ================================================================
+   USER TEST LOGGING — identity / session / durable outbox
+================================================================ */
+function loadParticipant(){
+  try{
+    const p=JSON.parse(localStorage.getItem(PARTICIPANT_KEY));
+    if(p&&p.anonymousId)return Object.assign({schemaVersion:1,participantId:null,nickname:'',registeredAt:null,budgetCreatedAt:null},p);
+  }catch(e){}
+  return{schemaVersion:1,participantId:null,anonymousId:randomId(),nickname:'',registeredAt:null,budgetCreatedAt:null};
+}
+let PARTICIPANT=loadParticipant();
+function saveParticipant(){
+  try{localStorage.setItem(PARTICIPANT_KEY,JSON.stringify(PARTICIPANT));}catch(e){}
+}
+saveParticipant();
+
+function loadEventOutbox(){
+  try{
+    const q=JSON.parse(localStorage.getItem(EVENT_OUTBOX_KEY));
+    if(Array.isArray(q))return q.filter(e=>e&&e.eventId&&Date.now()-Date.parse(e.occurredAt)<EVENT_MAX_AGE_MS).slice(-EVENT_OUTBOX_MAX);
+  }catch(e){}
+  return[];
+}
+let EVENT_OUTBOX=loadEventOutbox();
+let eventFlushRunning=false;
+function saveEventOutbox(){
+  try{localStorage.setItem(EVENT_OUTBOX_KEY,JSON.stringify(EVENT_OUTBOX));}catch(e){}
+}
+saveEventOutbox();
+
+let SESSION=null;
+function loadSession(){
+  try{
+    const s=JSON.parse(sessionStorage.getItem(SESSION_KEY));
+    if(s&&s.id)return s;
+  }catch(e){}
+  return null;
+}
+function saveSession(){
+  try{sessionStorage.setItem(SESSION_KEY,JSON.stringify(SESSION));}catch(e){}
+}
+function referrerType(){
+  if(!document.referrer)return'direct';
+  try{return new URL(document.referrer).origin===location.origin?'same_origin':'external';}
+  catch(e){return'unknown';}
+}
+function currentLogPage(){
+  const onb=document.getElementById('onb');
+  if(onb&&onb.classList.contains('show'))return'onboarding';
+  const shown=document.querySelector('.sheet.show');
+  if(shown){
+    return({
+      'sheet-input':'input','sheet-day':'day_detail','sheet-queue':'pending_days',
+      'sheet-budget':'budget','sheet-settings':'settings','sheet-streak':'streak'
+    })[shown.id]||'home';
+  }
+  return CUR==='record'?'record':'home';
+}
+function startOrResumeSession(trigger){
+  const now=Date.now(),logicalDay=today();
+  let s=SESSION||loadSession();
+  const isNew=!s||!s.lastActiveAt||now-s.lastActiveAt>=SESSION_TIMEOUT_MS||s.logicalDay!==logicalDay;
+  if(isNew)s={id:randomId(),lastActiveAt:now,logicalDay,pageViewed:false};
+  else s.lastActiveAt=now;
+  SESSION=s;saveSession();
+  if(!SESSION.pageViewed){
+    SESSION.pageViewed=true;saveSession();
+    trackEvent('page_viewed',{trigger,referrerType:referrerType()});
+  }
+  return isNew;
+}
+let lastSessionTouch=0;
+function noteSessionActivity(trigger){
+  const now=Date.now();
+  startOrResumeSession(trigger);
+  if(now-lastSessionTouch>10000){SESSION.lastActiveAt=now;saveSession();lastSessionTouch=now;}
+}
+
+function trackEvent(eventName,properties={},options={}){
+  try{
+    const session=SESSION||loadSession();
+    const event={
+      schemaVersion:LOG_SCHEMA_VERSION,
+      eventId:randomId(),
+      eventName,
+      occurredAt:new Date().toISOString(),
+      participantId:PARTICIPANT.participantId||null,
+      anonymousId:PARTICIPANT.anonymousId,
+      sessionId:session?session.id:null,
+      challengeId:Object.prototype.hasOwnProperty.call(options,'challengeId')?options.challengeId:(S.challengeId||null),
+      page:options.page||currentLogPage(),
+      appVersion:APP_VERSION,
+      properties
+    };
+    EVENT_OUTBOX.push(event);
+    if(EVENT_OUTBOX.length>EVENT_OUTBOX_MAX)EVENT_OUTBOX=EVENT_OUTBOX.slice(-EVENT_OUTBOX_MAX);
+    saveEventOutbox();
+    flushEventOutbox();
+    return event.eventId;
+  }catch(e){return null;}
+}
+async function flushEventOutbox(){
+  if(eventFlushRunning||!LOG_ENDPOINT||!EVENT_OUTBOX.length||navigator.onLine===false)return;
+  eventFlushRunning=true;
+  try{
+    while(EVENT_OUTBOX.length){
+      const event=EVENT_OUTBOX[0];
+      await postLogEvent(event);
+      if(EVENT_OUTBOX[0]&&EVENT_OUTBOX[0].eventId===event.eventId)EVENT_OUTBOX.shift();
+      else EVENT_OUTBOX=EVENT_OUTBOX.filter(e=>e.eventId!==event.eventId);
+      saveEventOutbox();
+    }
+  }catch(e){}finally{eventFlushRunning=false;}
+}
+async function postLogEvent(event){
+  const init={method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(event),keepalive:true};
+  try{
+    const res=await fetch(LOG_ENDPOINT,init);
+    if(!res.ok)throw new Error('log_http_'+res.status);
+    let body=null;
+    try{body=await res.json();}catch(e){}
+    if(body&&body.ok===false)return false;
+    return true;
+  }catch(error){
+    const code=String(error&&error.message||'');
+    const isAppsScript=/^https:\/\/script\.google\.com\//.test(LOG_ENDPOINT);
+    if(!isAppsScript||code.startsWith('log_'))throw error;
+    await fetch(LOG_ENDPOINT,Object.assign({},init,{mode:'no-cors'}));
+  }
+}
+function bindLoggingLifecycle(){
+  window.addEventListener('online',()=>{noteSessionActivity('online');flushEventOutbox();});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible'){noteSessionActivity('resume');flushEventOutbox();}
+    else if(SESSION){SESSION.lastActiveAt=Date.now();saveSession();}
+  });
+  document.addEventListener('pointerdown',()=>noteSessionActivity('activity'),true);
+  document.addEventListener('keydown',()=>noteSessionActivity('activity'),true);
+  window.addEventListener('error',e=>trackEvent('app_error_occurred',{errorType:e.error&&e.error.name||'Error',context:'window'}));
+  window.addEventListener('unhandledrejection',e=>trackEvent('app_error_occurred',{errorType:e.reason&&e.reason.name||'UnhandledRejection',context:'promise'}));
+  setInterval(flushEventOutbox,60000);
+}
+
 // ---------- money ----------
 function won(n){return Math.round(n).toLocaleString('ko-KR')+'원';}
 function manwon(n){
@@ -525,6 +694,96 @@ function manwon(n){
 function num(s){return parseInt(String(s).replace(/[^\d]/g,''),10)||0;}
 function fmtInput(el){const n=num(el.value);el.value=n?n.toLocaleString('ko-KR'):'';}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function amountRange(n){
+  n=Math.max(0,Number(n)||0);
+  if(n<10000)return'under_10000';
+  if(n<30000)return'10000_30000';
+  if(n<50000)return'30000_50000';
+  if(n<100000)return'50000_100000';
+  if(n<300000)return'100000_300000';
+  return'over_300000';
+}
+function sanitizeNickname(value){return String(value||'').replace(/[\u0000-\u001f\u007f]/g,'').trim();}
+function nicknameError(nick){
+  const length=Array.from(nick).length;
+  if(length<2||length>20)return'닉네임은 2~20자로 입력해주세요';
+  if(/[^\s@]+@[^\s@]+\.[^\s@]+/.test(nick))return'이메일 대신 닉네임을 입력해주세요';
+  const digits=nick.replace(/\D/g,'');
+  if(/^[\d\s()+-]+$/.test(nick)&&digits.length>=9)return'전화번호 대신 닉네임을 입력해주세요';
+  return'';
+}
+function registerParticipant(nickname,page='onboarding'){
+  if(PARTICIPANT.participantId)return false;
+  PARTICIPANT.participantId=randomId();
+  PARTICIPANT.nickname=nickname;
+  PARTICIPANT.registeredAt=new Date().toISOString();
+  saveParticipant();
+  trackEvent('participant_registered',{nickname},{challengeId:null,page});
+  return true;
+}
+function trackInitialBudget(amount,page='onboarding'){
+  if(PARTICIPANT.budgetCreatedAt)return;
+  trackEvent('budget_created',{amountRange:amountRange(amount)},{challengeId:null,page});
+  PARTICIPANT.budgetCreatedAt=new Date().toISOString();
+  saveParticipant();
+}
+function transactionInputMethod(src){
+  if(src==='paste')return'text_paste';
+  if(src==='ocr')return'screenshot_ocr';
+  return'manual';
+}
+function transactionLogProperties(e,entryPoint){
+  const challengeDay=dayNo(e.d)||null;
+  return{
+    transactionId:e.id,
+    transactionType:e.kind==='inc'?'income':'expense',
+    amountRange:amountRange(e.amt),
+    inputMethod:transactionInputMethod(e.src),
+    budgetExcluded:!!e.nb,
+    transactionDate:e.d,
+    challengeDay,
+    isInChallenge:challengeDay!==null,
+    entryPoint
+  };
+}
+function challengeStats(c){
+  c=c||calc();
+  const challengeTransactions=S.exp.filter(e=>dayNo(e.d)>0);
+  const transactionDays=new Set(challengeTransactions.map(e=>e.d)).size;
+  const diff=S.startDate?Math.floor((pd(today())-pd(S.startDate))/86400000)+1:0;
+  return{
+    elapsedDays:Math.max(0,Math.min(CHALLENGE_DAYS,diff)),
+    completedDays:c.days.filter(r=>r.settled).length,
+    successfulDays:c.days.filter(r=>r.success===true).length,
+    transactionDays,
+    totalTransactions:challengeTransactions.length
+  };
+}
+function issueChallengeId(startType){
+  S.challengeId=randomId();
+  S.challengeCompletedLogged=false;
+  S.challengePeriodEndedLogged=false;
+  save();
+  trackEvent('challenge_started',{startDate:S.startDate,startType,budgetRange:amountRange(S.budget5)});
+}
+function maybeTrackChallengeState(c){
+  if(!S.challengeId||tutActive)return;
+  const stats=challengeStats(c);
+  if(stats.completedDays===CHALLENGE_DAYS&&!S.challengeCompletedLogged){
+    S.challengeCompletedLogged=true;save();
+    trackEvent('challenge_completed',{
+      completedDays:stats.completedDays,successfulDays:stats.successfulDays,
+      transactionDays:stats.transactionDays,totalTransactions:stats.totalTransactions
+    });
+  }
+  if(c.done&&!S.challengePeriodEndedLogged){
+    S.challengePeriodEndedLogged=true;save();
+    trackEvent('challenge_period_ended',{
+      completedDays:stats.completedDays,successfulDays:stats.successfulDays,
+      transactionDays:stats.transactionDays,totalTransactions:stats.totalTransactions
+    });
+  }
+}
 
 // ---------- 칭찬 / 훈계 문구 ----------
 // 시간대별로 칭찬 문구 풀을 다르게 두고, 그 안에서 랜덤으로 하나 뽑는다.
@@ -645,15 +904,20 @@ document.querySelectorAll('.nav-item').forEach(b=>{
   b.addEventListener('click',()=>{go(b.dataset.scr);});
 });
 function go(scr){
+  const previous=CUR;
   CUR=scr;
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('on',b.dataset.scr===scr));
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='scr-'+scr));
   render();
+  if(scr==='record'&&previous!=='record'&&!tutActive){
+    trackEvent('record_tab_viewed',{transactionCount:S.exp.length,completedDays:C.days.filter(r=>r.settled).length},{page:'record'});
+  }
   window.scrollTo(0,0);
 }
 function render(){
   if(typeof _lastDay!=='undefined'&&_lastDay&&today()!==_lastDay){_lastDay=today();calMonth=null;}
   C=calc();
+  maybeTrackChallengeState(C);
   if(CUR==='home')renderHome();
   if(CUR==='record')renderRecord();
 }
@@ -838,8 +1102,16 @@ function bindHold(){
 }
 function canCancel(date){return date===today();}
 function cancelClose(date){
+  const entryPoint=currentLogPage();
+  const wasSettled=!!S.conf[date];
   delete S.conf[date];
-  save();render();
+  save();
+  if(wasSettled&&!tutActive){
+    trackEvent('challenge_day_reopened',{
+      challengeDay:dayNo(date)||null,transactionDate:date,entryPoint
+    });
+  }
+  render();
   toast('마감을 취소했어요');
 }
 
@@ -953,7 +1225,7 @@ function openDay(date){
   if(!r){
     body.innerHTML=`<div class="empty" style="padding:30px"><div class="e-ic">📭</div><div class="e-t">기록이 없어요</div>
       <div class="e-s">${dayNo(date)>0?'＋ 지출 추가로 이 날을 채워보세요':'챌린지 기간(5일) 밖의 날이에요'}</div></div>
-      ${date<=t&&dayNo(date)>0?`<button class="cta ghost" style="margin-top:6px" onclick="closeSheets();openInput('${date}')">＋ 지출 추가</button>`:''}`;
+      ${date<=t&&dayNo(date)>0?`<button class="cta ghost" style="margin-top:6px" onclick="closeSheets();openInput('${date}','day_detail')">＋ 지출 추가</button>`:''}`;
   }else{
     const tag=r.settled?(r.success===true?`<span class="tag ok">성공 · ${won(r.saved)} 절약 ✓</span>`:`<span class="tag over">초과·기록됨</span>`)
       :(r.date<t?'<span class="tag pend">확인 대기</span>':r.isToday?'<span class="tag pend">진행 중</span>':'');
@@ -973,7 +1245,7 @@ function openDay(date){
           <button class="exp-del" onclick="openEditExp('${e.id}')">✎</button>
         </div>`).join(''):'<div class="hint" style="text-align:center;margin:4px 0 14px">기록된 지출이 없어요</div>'}
       <div style="display:flex;gap:8px;margin-top:14px">
-        ${date<=t?`<button class="chip-btn ghost" style="padding:13px" onclick="closeSheets();openInput('${date}')">＋ 지출 추가</button>`:''}
+        ${date<=t?`<button class="chip-btn ghost" style="padding:13px" onclick="closeSheets();openInput('${date}','day_detail')">＋ 지출 추가</button>`:''}
         ${!r.settled&&date<=t?`<button class="chip-btn solid" style="padding:13px" onclick="confirmDay('${date}')">${r.exps.length?'이대로 마감':'지출 없었어요'}</button>`:''}
         ${r.settled&&canCancel(date)?`<button class="chip-btn ghost" style="padding:13px;color:var(--red)" onclick="if(confirm('${date===today()?'오늘':'어제'} 마감을 취소할까요? 다시 열어 수정할 수 있어요.')){cancelClose('${date}');openDay('${date}')}">↩︎ 마감 취소</button>`:''}
       </div>`;
@@ -983,10 +1255,18 @@ function openDay(date){
 
 // ---------- confirm ----------
 function confirmDay(date){
+  const practice=tutActive;
+  const entryPoint=currentLogPage();
   if(tutActive&&tutStep==='close'){tutStep='celebrating';tutHideCoach();}
   S.conf[date]=1;save();
   C=calc();
   const r=C.byDate[date];
+  if(!practice&&r){
+    trackEvent('challenge_day_completed',{
+      challengeDay:r.day,transactionDate:date,result:r.success===true?'success':'over',
+      transactionCount:r.exps.length,entryPoint
+    });
+  }
   closeSheets(); // 시트 닫아 홈(마감 버튼·스트릭)이 보이게
   // 시각적 보상: 마감 버튼에서 스트릭 카드로 불꽃이 날아가는 모션 → 끝나면 축하 모달
   flyFlameToStreak(()=>{
@@ -1097,7 +1377,9 @@ function toast(msg){
 ================================================================ */
 let inputDate=null;
 let editId=null; // 기록 수정 중인 지출 id (null이면 새 입력)
-function openInput(date){
+let inputInteraction=null;
+function openInput(date,entryPoint){
+  const from=entryPoint||(date?currentLogPage():'nav_plus');
   editId=null;
   inputDate=date||today();
   candQueue=[];candIdx=0;
@@ -1105,18 +1387,36 @@ function openInput(date){
   document.getElementById('input-title').textContent='지출·수입 입력';
   renderInputPanel();
   showSheet('sheet-input');
+  if(!tutActive){
+    inputInteraction={mode:'create',entryPoint:from};
+    trackEvent('transaction_form_opened',{mode:'create',entryPoint:from},{page:'input'});
+  }else inputInteraction=null;
   if(tutActive&&(tutStep==='tapPlus'||tutStep==='input')){tutStep='input';tutRender();}
 }
 // 기록 수정: 기존 지출을 폼에 채워 열고, 폼 안에서 삭제도 가능
 function openEditExp(id){
   const e=S.exp.find(x=>x.id===id);
   if(!e){toast('기록을 찾지 못했어요');return;}
+  const from=currentLogPage();
   editId=id;
   inputDate=e.d;
   candQueue=[];candIdx=0;returnToQueue=false;
   document.getElementById('input-title').textContent='기록 수정';
   renderConfirmForm({amt:e.amt,name:e.name,kind:e.kind,date:e.d,time:e.time,nb:e.nb,src:e.src},0,1,true);
   showSheet('sheet-input');
+  if(!tutActive){
+    inputInteraction={mode:'edit',entryPoint:from};
+    trackEvent('transaction_form_opened',{mode:'edit',entryPoint:from},{page:'input'});
+  }else inputInteraction=null;
+}
+function filledTransactionFields(){
+  const fields=[];
+  if(num(document.getElementById('in-amt')?.value))fields.push('amount');
+  if(document.getElementById('in-name')?.value.trim())fields.push('description');
+  if(document.getElementById('in-date')?.value)fields.push('transactionDate');
+  if(document.getElementById('in-time')?.value)fields.push('time');
+  if(document.getElementById('in-nb')?.checked)fields.push('budgetExcluded');
+  return fields;
 }
 function renderInputPanel(){
   candQueue=[];candIdx=0;
@@ -1181,11 +1481,25 @@ function saveExp(src){
   if(editId){
     const e=S.exp.find(x=>x.id===editId);
     if(e){
+      const before={d:e.d,amt:e.amt,name:e.name,time:e.time||'',kind:e.kind==='inc'?'inc':'exp',nb:!!e.nb};
       e.d=d;e.amt=amt;e.name=name;e.time=time;
       if(kind==='inc')e.kind='inc';else delete e.kind;
       if(nb)e.nb=true;else delete e.nb;
+      const changedFields=[];
+      if(before.amt!==amt)changedFields.push('amount');
+      if(before.name!==name)changedFields.push('description');
+      if(before.d!==d)changedFields.push('transactionDate');
+      if(before.time!==time)changedFields.push('time');
+      if(before.kind!==kind)changedFields.push('transactionType');
+      if(before.nb!==nb)changedFields.push('budgetExcluded');
+      save();
+      if(!tutActive){
+        trackEvent('transaction_updated',Object.assign(
+          transactionLogProperties(e,inputInteraction?.entryPoint||'record'),{changedFields}
+        ),{page:'input'});
+      }
     }
-    editId=null;save();closeSheets();render();
+    editId=null;inputInteraction=null;closeSheets();render();
     toast('기록을 수정했어요');
     return;
   }
@@ -1194,11 +1508,14 @@ function saveExp(src){
   if(nb)rec.nb=true;
   S.exp.push(rec);
   save();
+  if(!tutActive){
+    trackEvent('transaction_created',transactionLogProperties(rec,inputInteraction?.entryPoint||'nav_plus'),{page:'input'});
+  }
   toast(nb?`✓ ${won(amt)} 기록만 했어요 (예산 유지)`:kind==='inc'?`✓ +${won(amt)} 수입 기록했어요`:`✓ ${won(amt)} 기록했어요`);
   if(candQueue.length&&candIdx<candQueue.length-1){candIdx++;render();showCand();}
   else{candQueue=[];render();
-    if(returnToQueue){openQueue();}
-    else closeSheets();
+    if(returnToQueue){inputInteraction=null;openQueue('pending_days');}
+    else{inputInteraction=null;closeSheets();}
   }
   if(tutActive&&tutStep==='input'){tutStep='seeRemaining';setTimeout(tutRender,80);}
 }
@@ -1207,15 +1524,21 @@ function askDelExp(id){
   const e=S.exp.find(x=>x.id===id);
   const label=e?(esc(e.name)||won(e.amt)):'이 기록';
   if(confirm(`'${e?(e.name||won(e.amt)):'이 기록'}'을(를) 삭제할까요?\n되돌릴 수 없어요.`)){
+    const props=e?transactionLogProperties(e,inputInteraction?.entryPoint||'record'):null;
     editId=null;
     S.exp=S.exp.filter(x=>x.id!==id);
-    save();closeSheets();render();
+    save();
+    if(props&&!tutActive)trackEvent('transaction_deleted',props,{page:'input'});
+    inputInteraction=null;closeSheets();render();
     toast('삭제했어요');
   }
 }
 function delExp(id){
+  const e=S.exp.find(x=>x.id===id);
   S.exp=S.exp.filter(e=>e.id!==id);
-  save();render();toast('삭제했어요');
+  save();
+  if(e&&!tutActive)trackEvent('transaction_deleted',transactionLogProperties(e,currentLogPage()));
+  render();toast('삭제했어요');
 }
 
 // --- 붙여넣기 파서 ---
@@ -1364,7 +1687,7 @@ function openSettings(){
     <div class="settings-row" style="cursor:default"><span>🙂 닉네임</span><span class="sv" style="color:var(--ink);font-weight:800">${S.nickname?esc(S.nickname):'(미설정)'}</span></div>
     <div class="hint" style="margin:6px 0 14px">닉네임은 처음 한 번만 정하고 <b>수정할 수 없어요</b>.</div>
     <div class="hint" style="margin:0 0 12px">5일 동안 쓸 수 있는 총예산을 정하면, 매일 남은 날 수로 나눠 <b>오늘의 안전 페이스</b>가 계산돼요.</div>
-    <button class="settings-row" onclick="closeSheets();openBudgetSheet()"><span>💰 5일치 예산 설정</span><span class="sv">${won(S.budget5)}</span></button>
+    <button class="settings-row" onclick="closeSheets();openBudgetSheet('settings')"><span>💰 5일치 예산 설정</span><span class="sv">${won(S.budget5)}</span></button>
     <button class="settings-row" onclick="closeSheets();restartChallenge()"><span>🔄 5일 챌린지 다시 시작</span><span class="sv">Day ${dayNo(today())||'-'}</span></button>
     <button class="settings-row" onclick="exportData()"><span>📤 데이터 내보내기 (JSON)</span><span class="sv">백업</span></button>
     <button class="settings-row" onclick="document.getElementById('import-file').click()"><span>📥 데이터 가져오기</span><span class="sv">복원</span></button>
@@ -1373,7 +1696,9 @@ function openSettings(){
     <div class="hint">데이터는 이 기기에만 저장돼요 · 가끔 내보내기로 백업하세요.</div>`;
   showSheet('sheet-settings');
 }
-function openBudgetSheet(){
+let budgetEntryPoint='settings';
+function openBudgetSheet(entryPoint){
+  budgetEntryPoint=entryPoint||currentLogPage();
   document.getElementById('budget-body').innerHTML=`
     <div class="hint" style="margin:0 0 16px">5일 동안 쓸 수 있는 <b>총예산</b>이에요. 매일 남은 날 수로 나눠 '오늘의 안전 페이스'가 정해져요.<br>
     예) 15만원이면 첫날 페이스는 3만원, 아낀 만큼 다음 날 페이스가 넉넉해져요.</div>
@@ -1385,24 +1710,43 @@ function openBudgetSheet(){
 function saveBudget(){
   const v=num(document.getElementById('bg5').value);
   if(v<=0){toast('예산을 입력해주세요');return;}
-  S.budget5=v;save();closeSheets();render();
+  const previous=S.budget5;
+  S.budget5=v;save();
+  if(v!==previous){
+    trackEvent('budget_updated',{
+      previousAmountRange:amountRange(previous),amountRange:amountRange(v),entryPoint:budgetEntryPoint
+    },{page:'budget'});
+  }
+  closeSheets();render();
   toast(`5일치 예산을 ${won(v)}(으)로 설정했어요`);
 }
 function restartChallenge(){
   if(!confirm('5일 챌린지를 다시 시작할까요?\n오늘이 Day 1이 되고, 기록·마감이 모두 초기화돼요. (예산 설정은 유지)'))return;
+  const oldChallengeId=S.challengeId;
+  const stats=challengeStats(C);
+  if(oldChallengeId){
+    trackEvent('challenge_restarted',{
+      elapsedDays:stats.elapsedDays,completedDays:stats.completedDays,transactionDays:stats.transactionDays
+    },{challengeId:oldChallengeId,page:'settings'});
+  }
   S.startDate=today();
   S.exp=[];
   S.conf={};
   S.seenMilestones=[];
-  save();C=calc();calMonth=null;render();
+  issueChallengeId('restart');
+  C=calc();calMonth=null;render();
   toast('새 5일 챌린지를 시작했어요 🚀');
 }
 
 // --- 확인 안 한 날: 날짜별 추가 + 마감 ---
 let returnToQueue=false;
-function openQueue(){
+function openQueue(entryPoint){
+  const from=entryPoint||currentLogPage();
   renderQueue();
   showSheet('sheet-queue');
+  if(!tutActive){
+    trackEvent('pending_days_viewed',{pendingDayCount:C.queue.length,entryPoint:from},{page:'pending_days'});
+  }
 }
 function renderQueue(){
   C=calc();
@@ -1440,12 +1784,19 @@ function renderQueue(){
     </div>`).join('');
 }
 function queueAdd(date){
-  openInput(date);
+  openInput(date,'pending_days');
   returnToQueue=true;
 }
 function queueConfirm(date){
+  const alreadySettled=!!S.conf[date];
   S.conf[date]=1;save();
   const c2=calc();const rr=c2.byDate[date];
+  if(!alreadySettled&&!tutActive&&rr){
+    trackEvent('challenge_day_completed',{
+      challengeDay:rr.day,transactionDate:date,result:rr.success===true?'success':'over',
+      transactionCount:rr.exps.length,entryPoint:'pending_days'
+    });
+  }
   toast(rr&&rr.success===false?'마감 · 🔥 스트릭 이어짐 (오늘은 페이스를 넘었어요)':'마감 · 🔥 스트릭 이어짐');
   render();
   if(c2.queue.length)renderQueue();else closeSheets();
@@ -1520,7 +1871,15 @@ function importData(file){
     try{
       const d=JSON.parse(r.result);
       if(d.v!==1)throw new Error();
-      S=Object.assign({},DEFAULT,d);save();closeSheets();render();
+      const imported=Object.assign({},DEFAULT,d);
+      if(!Array.isArray(imported.exp)||!imported.conf||typeof imported.conf!=='object')throw new Error();
+      if(!Array.isArray(imported.seenMilestones))imported.seenMilestones=[];
+      S=imported;
+      if(PARTICIPANT.nickname)S.nickname=PARTICIPANT.nickname;
+      if(S.onboarded&&S.startDate&&!S.challengeId)S.challengeId=randomId();
+      save();
+      trackEvent('data_imported',{hadChallenge:!!S.challengeId,transactionCount:Array.isArray(S.exp)?S.exp.length:0});
+      closeSheets();render();
       toast('데이터를 복원했어요');
     }catch(e){toast('올바른 백업 파일이 아니에요');}
   };
@@ -1528,8 +1887,13 @@ function importData(file){
 }
 function resetAll(){
   if(!confirm('정말 모든 데이터를 지울까요? 되돌릴 수 없어요.'))return;
+  const stats=challengeStats(C);
+  trackEvent('app_data_reset',{
+    hadActiveChallenge:!!S.challengeId,completedDays:stats.completedDays,transactionCount:S.exp.length
+  },{challengeId:S.challengeId||null,page:'settings'});
   localStorage.removeItem(KEY);
   S=JSON.parse(JSON.stringify(DEFAULT));
+  S.nickname=PARTICIPANT.nickname||'';
   closeSheets();location.reload();
 }
 
@@ -1541,6 +1905,13 @@ function showSheet(id){
   document.querySelectorAll('.sheet').forEach(s=>s.classList.toggle('show',s.id===id));
 }
 function closeSheets(){
+  const inputOpen=document.getElementById('sheet-input')?.classList.contains('show');
+  if(inputOpen&&inputInteraction&&!tutActive){
+    trackEvent('transaction_form_cancelled',{
+      mode:inputInteraction.mode,entryPoint:inputInteraction.entryPoint,filledFields:filledTransactionFields()
+    },{page:'input'});
+  }
+  if(inputOpen)inputInteraction=null;
   document.getElementById('dimmer').classList.remove('show');
   document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('show'));
 }
@@ -1554,28 +1925,31 @@ let onbScreen='budget';                 // 'budget' | 'finish'
 let onbBudget=DEFAULT_BUDGET, onbNick='';
 let tutActive=false, tutStep='';         // 코치마크 튜토리얼 진행 상태
 function showOnb(){
-  onbScreen='budget';onbBudget=S.budget5||DEFAULT_BUDGET;onbNick=S.nickname||'';
+  onbScreen='budget';onbBudget=S.budget5||DEFAULT_BUDGET;onbNick=PARTICIPANT.nickname||S.nickname||'';
   document.getElementById('onb').classList.add('show');
   renderOnb();
 }
 function renderOnb(){
   const el=document.getElementById('onb-inner');
+  const fixedNickname=!!PARTICIPANT.participantId;
   let mid,foot;
   if(onbScreen==='budget'){
     mid=`
       <div class="onb-hero-emoji">🙌</div>
       <div class="onb-title">테스트에 참가해주셔서<br><em>정말 고마워요</em></div>
       <div class="onb-body">딱 5일이면 돼요. 매일 지출을 적고 하루를 마감하는<br>이 작은 습관이 이어지는지 함께 확인해봐요.<br><br>먼저 <b>닉네임</b>과 <b>5일 동안 쓸 예산</b>을 정하고<br><b>직접 한 바퀴 연습</b>해볼게요.</div>
-      <div class="field" style="margin:24px auto 0;max-width:320px;text-align:left">
-        <label>닉네임</label>
-        <input type="text" id="onb-nick" value="${esc(onbNick)}" maxlength="16" placeholder="예: 세이버, 짠돌이" autocomplete="off">
-        <div class="hint" style="margin-top:6px">한 번 정하면 <b>수정할 수 없어요</b> (설정에서 보기만 가능)</div>
-      </div>
-      <div class="field" style="margin:0 auto;max-width:320px;text-align:left">
-        <label>5일치 가용 예산</label>
-        <div class="won-wrap"><input type="text" inputmode="numeric" id="onb-budget" value="${(+onbBudget).toLocaleString('ko-KR')}" placeholder="0" oninput="fmtInput(this)"></div>
-      </div>
-      <div class="hint" style="max-width:320px;margin:0 auto;text-align:center">예) 15만원이면 하루 페이스는 3만원부터 시작해요. 예산은 나중에 바꿀 수 있어요.</div>`;
+      <div class="onb-form">
+        <div class="onb-field">
+          <label for="onb-nick">닉네임</label>
+          <input type="text" id="onb-nick" value="${esc(fixedNickname?PARTICIPANT.nickname:onbNick)}" maxlength="20" placeholder="예: 세이버, 짠돌이" autocomplete="off" ${fixedNickname?'readonly':''}>
+          <div class="onb-help">${fixedNickname?'처음 정한 닉네임을 이번 테스트에서도 계속 사용해요.':'2~20자로 입력하고, 이메일이나 전화번호는 제외해주세요.'}</div>
+        </div>
+        <div class="onb-field">
+          <label for="onb-budget">5일치 가용 예산</label>
+          <div class="won-wrap"><input type="text" inputmode="numeric" id="onb-budget" value="${(+onbBudget).toLocaleString('ko-KR')}" placeholder="0" oninput="fmtInput(this);updateOnbBudgetHint(this)"></div>
+          <div class="onb-help">하루 시작 페이스 <strong id="onb-daily-pace">${won(onbBudget/CHALLENGE_DAYS)}</strong> · 예산은 나중에도 바꿀 수 있어요.</div>
+        </div>
+      </div>`;
     foot=`<button class="cta" onclick="onbStartTutorial()">이 정보로 연습 시작 →</button>`;
   }else{ // finish
     mid=`
@@ -1592,19 +1966,31 @@ function renderOnb(){
     <div class="onb-foot">${foot}</div>`;
   el.scrollTo(0,0);
 }
+function updateOnbBudgetHint(input){
+  const hint=document.getElementById('onb-daily-pace');
+  if(hint)hint.textContent=won(num(input.value)/CHALLENGE_DAYS);
+}
 // 예산 저장 후 홈으로 나가 실제 UI 위에서 코치마크 튜토리얼 시작
 function onbStartTutorial(){
-  const nick=(document.getElementById('onb-nick').value||'').trim();
+  const existingNickname=fixedParticipantNickname();
+  const nick=sanitizeNickname(existingNickname||document.getElementById('onb-nick').value);
   const v=num(document.getElementById('onb-budget').value);
-  if(!nick){toast('닉네임을 입력해주세요');return;}
+  const nickValidation=existingNickname?'':nicknameError(nick);
+  if(nickValidation){toast(nickValidation);return;}
   if(v<=0){toast('예산을 입력해주세요');return;}
-  S.nickname=nick; onbNick=nick;
-  S.budget5=v; S.startDate=today(); S.exp=[]; S.conf={}; S.seenMilestones=[]; save();
+  registerParticipant(nick);
+  trackInitialBudget(v);
+  S.nickname=PARTICIPANT.nickname||nick; onbNick=S.nickname;
+  S.budget5=v; S.startDate=today(); S.challengeId=null;
+  S.challengeCompletedLogged=false;S.challengePeriodEndedLogged=false;
+  S.exp=[]; S.conf={}; S.seenMilestones=[]; save();
+  trackEvent('tutorial_started',{stepCount:5},{challengeId:null,page:'onboarding'});
   document.getElementById('onb').classList.remove('show');
   homeDate=today(); C=calc(); go('home');
   tutActive=true; tutStep='homeIntro';
   setTimeout(tutRender,260); // 화면 전환 후 위치 잡기
 }
+function fixedParticipantNickname(){return PARTICIPANT.participantId?PARTICIPANT.nickname:'';}
 // ---- 코치마크 ----
 function tutRender(){
   if(!tutActive)return;
@@ -1721,16 +2107,19 @@ window.addEventListener('resize',()=>{ if(tutActive)positionCoach(); });
 window.addEventListener('scroll',()=>{ if(tutActive)positionCoach(); },true);
 function skipTutorial(){
   if(!confirm('튜토리얼을 건너뛸까요?\n바로 5일 챌린지가 시작돼요.'))return;
-  endTutorial();
+  trackEvent('tutorial_skipped',{skippedAtStep:tutStep||'not_started'},{challengeId:null});
+  endTutorial('skipped');
 }
 // 튜토리얼 종료 → 연습 기록 초기화하고 진짜 챌린지 시작
-function endTutorial(){
+function endTutorial(outcome='completed'){
+  if(outcome==='completed')trackEvent('tutorial_completed',{stepCount:5},{challengeId:null});
   tutActive=false;tutStep='';
   tutHideCoach();
   document.getElementById('onb').classList.remove('show');
-  S.exp=[]; S.conf={}; S.seenMilestones=[]; S.startDate=today(); S.onboarded=true; save();
+  S.exp=[]; S.conf={}; S.seenMilestones=[]; S.startDate=today(); S.onboarded=true;
+  issueChallengeId(outcome==='skipped'?'tutorial_skipped':'tutorial_completed');
   homeDate=today(); C=calc(); go('home');
-  toast(`${S.nickname?S.nickname+'님, ':''}튜토리얼 완료! 이제 진짜 Day 1이에요 🔥`);
+  toast(`${S.nickname?S.nickname+'님, ':''}${outcome==='skipped'?'바로':'튜토리얼 완료!'} 이제 진짜 Day 1이에요 🔥`);
 }
 
 /* ================================================================
@@ -1746,13 +2135,23 @@ function watchDayRollover(){
   });
 }
 function boot(){
+  const needsOnboarding=!S.onboarded;
   if(!S.onboarded){
     showOnb();
   }else if(!S.startDate){
     S.startDate=today();save();
   }
-  go('home');
+  startOrResumeSession('initial_load');
+  if(S.onboarded&&S.nickname&&!PARTICIPANT.participantId){
+    registerParticipant(sanitizeNickname(S.nickname),'home');
+    trackInitialBudget(S.budget5,'home');
+  }
+  if(PARTICIPANT.nickname&&S.nickname!==PARTICIPANT.nickname){S.nickname=PARTICIPANT.nickname;save();}
+  if(S.onboarded&&S.startDate&&!S.challengeId)issueChallengeId('migration');
+  if(!needsOnboarding)go('home');
+  bindLoggingLifecycle();
   watchDayRollover();
+  flushEventOutbox();
 }
 boot();
 </script>
