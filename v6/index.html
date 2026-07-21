@@ -515,6 +515,10 @@ function randomId(){
   if(window.crypto&&typeof window.crypto.randomUUID==='function')return window.crypto.randomUUID();
   return uid()+'-'+uid();
 }
+const KST_OFFSET_MS=9*60*60*1000;
+function kstIso(date=new Date()){
+  return new Date(date.getTime()+KST_OFFSET_MS).toISOString().replace('Z','+09:00');
+}
 
 // ---------- date helpers ----------
 function ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -627,7 +631,7 @@ function trackEvent(eventName,properties={},options={}){
       schemaVersion:LOG_SCHEMA_VERSION,
       eventId:randomId(),
       eventName,
-      occurredAt:new Date().toISOString(),
+      occurredAt:kstIso(),
       participantId:PARTICIPANT.participantId||null,
       anonymousId:PARTICIPANT.anonymousId,
       sessionId:session?session.id:null,
@@ -716,7 +720,7 @@ function registerParticipant(nickname,page='onboarding'){
   if(PARTICIPANT.participantId)return false;
   PARTICIPANT.participantId=randomId();
   PARTICIPANT.nickname=nickname;
-  PARTICIPANT.registeredAt=new Date().toISOString();
+  PARTICIPANT.registeredAt=kstIso();
   saveParticipant();
   trackEvent('participant_registered',{nickname},{challengeId:null,page});
   return true;
@@ -724,7 +728,7 @@ function registerParticipant(nickname,page='onboarding'){
 function trackInitialBudget(amount,page='onboarding'){
   if(PARTICIPANT.budgetCreatedAt)return;
   trackEvent('budget_created',{amountRange:amountRange(amount)},{challengeId:null,page});
-  PARTICIPANT.budgetCreatedAt=new Date().toISOString();
+  PARTICIPANT.budgetCreatedAt=kstIso();
   saveParticipant();
 }
 function transactionInputMethod(src){

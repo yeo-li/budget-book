@@ -148,7 +148,7 @@ function doPost(e) {
     }
 
     events.appendRow([
-      new Date().toISOString(),
+      kstIso_(new Date()),
       data.occurredAt,
       data.eventId,
       data.eventName,
@@ -289,6 +289,10 @@ function hasExactValue_(sheet, column, value) {
 function safeCellText_(value) {
   const text = String(value || '').replace(/[\u0000-\u001f\u007f]/g, '').trim();
   return /^[=+\-@]/.test(text) ? "'" + text : text;
+}
+
+function kstIso_(date) {
+  return Utilities.formatDate(date, 'Asia/Seoul', "yyyy-MM-dd'T'HH:mm:ss.SSS") + '+09:00';
 }
 
 function safeErrorCode_(error) {
