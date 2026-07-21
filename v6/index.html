@@ -350,12 +350,11 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 /* ---------- coach-mark 튜토리얼 ---------- */
 #coach{position:fixed;inset:0;z-index:170;pointer-events:none;display:none}
 #coach.show{display:block}
-/* 어둡게 덮으면서 '클릭까지 차단'하는 4개 패널 (구멍 부분만 열림) */
-.coach-blk{position:absolute;background:rgba(16,22,18,.72);pointer-events:auto}
+/* 클릭만 차단하는 투명 패널(어두운 처리는 구멍의 box-shadow가 둥글게 담당) */
+.coach-blk{position:absolute;background:transparent;pointer-events:auto}
+/* 구멍: 둥근 링 + 둥근 어둠을 box-shadow로 한 번에 → 모서리 깔끔 (inline으로 세팅) */
 .coach-hole{position:absolute;pointer-events:none;border-radius:16px;
-  transition:left .3s cubic-bezier(.3,.8,.3,1),top .3s cubic-bezier(.3,.8,.3,1),width .3s,height .3s;
-  outline:3px solid rgba(255,255,255,.9);outline-offset:-1px;animation:coachpulse 1.6s ease-in-out infinite}
-@keyframes coachpulse{0%,100%{outline-color:rgba(255,255,255,.85)}50%{outline-color:rgba(255,140,66,.95)}}
+  transition:left .28s cubic-bezier(.3,.8,.3,1),top .28s cubic-bezier(.3,.8,.3,1),width .28s,height .28s,box-shadow .2s}
 .coach-tip{position:absolute;max-width:300px;background:var(--card);border-radius:16px;box-shadow:var(--sh-lift);
   padding:15px 17px;pointer-events:auto;z-index:172;animation:fadein .25s ease}
 .coach-tip .ct-title{font-size:15px;font-weight:900;letter-spacing:-.01em}
@@ -405,11 +404,6 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
     <div class="sheet-grip"></div>
     <div class="sheet-head"><div class="sheet-title" id="input-title">지출·수입 입력</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
     <div class="sheet-body">
-      <div class="seg" id="input-seg">
-        <button data-m="manual" class="on">✏️ 직접</button>
-        <button data-m="capture">📷 캡처</button>
-        <button data-m="paste">📋 붙여넣기</button>
-      </div>
       <div id="input-panel"></div>
     </div>
   </div>
@@ -1101,25 +1095,14 @@ function toast(msg){
 /* ================================================================
    INPUT — 캡처(OCR) / 붙여넣기 / 직접 → 공통 "후보 확인" UX
 ================================================================ */
-let inputMode='manual';
 let inputDate=null;
 let editId=null; // 기록 수정 중인 지출 id (null이면 새 입력)
-document.querySelectorAll('#input-seg button').forEach(b=>{
-  b.addEventListener('click',()=>{
-    inputMode=b.dataset.m;
-    document.querySelectorAll('#input-seg button').forEach(x=>x.classList.toggle('on',x===b));
-    renderInputPanel();
-  });
-});
 function openInput(date){
   editId=null;
   inputDate=date||today();
-  inputMode='manual';
   candQueue=[];candIdx=0;
   returnToQueue=false;
-  document.getElementById('input-seg').style.display='';
   document.getElementById('input-title').textContent='지출·수입 입력';
-  document.querySelectorAll('#input-seg button').forEach(x=>x.classList.toggle('on',x.dataset.m==='manual'));
   renderInputPanel();
   showSheet('sheet-input');
   if(tutActive&&(tutStep==='tapPlus'||tutStep==='input')){tutStep='input';tutRender();}
@@ -1131,33 +1114,15 @@ function openEditExp(id){
   editId=id;
   inputDate=e.d;
   candQueue=[];candIdx=0;returnToQueue=false;
-  document.getElementById('input-seg').style.display='none';
   document.getElementById('input-title').textContent='기록 수정';
   renderConfirmForm({amt:e.amt,name:e.name,kind:e.kind,date:e.d,time:e.time,nb:e.nb,src:e.src},0,1,true);
   showSheet('sheet-input');
 }
 function renderInputPanel(){
-  const p=document.getElementById('input-panel');
-  if(inputMode==='capture'){
-    p.innerHTML=`
-      <input type="file" id="ocr-file" accept="image/*" style="display:none" onchange="runOCR(this.files[0])">
-      <button class="ocr-drop" onclick="document.getElementById('ocr-file').click()">
-        <div class="oi">📷</div>
-        <div class="ot">결제내역 캡처 올리기</div>
-        <div class="os">결제 알림·카드앱 화면을 캡처하면<br>금액과 가게명을 후보로 뽑아드려요</div>
-      </button>
-      <div class="hint">읽은 내용은 확인 화면에서 고칠 수 있어요.</div>`;
-  }else if(inputMode==='paste'){
-    p.innerHTML=`
-      <div class="field"><label>결제 문자 · 알림 내용 붙여넣기</label>
-      <textarea id="paste-text" placeholder="예)\nKB국민카드 3,500원 일시불\n스타벅스 강남점\n07/16 12:30 승인"></textarea></div>
-      <button class="cta" onclick="runPaste()">후보 뽑기</button>`;
-  }else{
-    candQueue=[];candIdx=0;
-    // 튜토리얼 입력 단계에서는 금액을 미리 채워둔다 (재진입해도 항상)
-    const tutSeed=(tutActive&&(tutStep==='tapPlus'||tutStep==='input'));
-    renderConfirmForm({amt:tutSeed?10000:'',name:'',src:'manual'});
-  }
+  candQueue=[];candIdx=0;
+  // 튜토리얼 입력 단계에서는 금액을 미리 채워둔다 (재진입해도 항상)
+  const tutSeed=(tutActive&&(tutStep==='tapPlus'||tutStep==='input'));
+  renderConfirmForm({amt:tutSeed?10000:'',name:'',src:'manual'});
 }
 
 // --- 후보 확인 공통 폼 (여러 건이면 순차 입력) ---
@@ -1373,7 +1338,7 @@ async function runOCR(file){
     p.innerHTML=`<div class="empty" style="padding:26px 10px"><div class="e-ic">😵</div>
       <div class="e-t">캡처를 읽지 못했어요</div>
       <div class="e-s">${esc(e.message||'')}<br>붙여넣기나 직접 입력으로 해주세요</div>
-      <button class="chip-btn ghost" style="margin-top:14px;padding:12px 22px;display:inline-block;flex:none" onclick="inputMode='manual';renderInputPanel()">✏️ 직접 입력</button></div>`;
+      <button class="chip-btn ghost" style="margin-top:14px;padding:12px 22px;display:inline-block;flex:none" onclick="renderInputPanel()">✏️ 직접 입력</button></div>`;
   }
 }
 
@@ -1644,11 +1609,11 @@ function tutRender(){
       title:'① 지출을 하나 추가해봐요',
       body:'아래 <b>＋ 버튼</b>을 눌러 방금 쓴 돈을 기록해볼게요. 직접 눌러보세요!'});
   }else if(tutStep==='input'){
-    // 시트를 어둡게 덮지도, 가리지도 않게 — 설명은 화면 맨 위에, 시트는 그대로 만질 수 있게
+    // 시트는 어둡게 덮지 않고, '금액 칸'만 링으로 강조 + 상단 설명
     const amt=document.getElementById('in-amt'); if(amt&&!num(amt.value))amt.value='10,000';
-    placeCoach(null,{dark:false,placement:'top',skip:true,
-      title:'② 금액을 넣고 저장!',
-      body:'아래 시트에 금액을 <b>10,000원</b>으로 채워뒀어요. 맨 아래 <b>저장하기</b>를 눌러보세요. (직접 고쳐도 돼요)'});
+    placeCoach('#in-amt',{pad:5,round:12,dark:false,placement:'top',skip:true,
+      title:'② 여기 금액을 넣고 저장!',
+      body:'강조된 <b>금액 칸</b>에 <b>10,000원</b>을 미리 채워뒀어요 ✏️<br>이렇게 <b>얼마 썼는지</b>만 적으면 돼요. (금액은 직접 고쳐도 OK)<br>그대로 맨 아래 <b>저장하기</b>를 누르면 오늘 지출로 기록돼요!'});
   }else if(tutStep==='seeRemaining'){
     placeCoach('#home-body .pace-card',{pad:8,round:20,placement:'below',next:'그다음은? →',skip:true,
       title:'③ 바로 줄었죠? 👀',
@@ -1681,6 +1646,8 @@ function placeCoach(sel,cfg){
   tip.innerHTML=`<div class="ct-title">${cfg.title}</div><div class="ct-body">${cfg.body}</div>
     <div class="ct-actions">${cfg.skip?`<button class="ct-skip" onclick="skipTutorial()">건너뛰기</button>`:''}${cfg.next?`<button class="ct-btn" onclick="tutNext()">${cfg.next}</button>`:''}</div>`;
   positionCoach();
+  // 시트 슬라이드업 등 레이아웃이 안정된 뒤 한 번 더 정렬 (스포트라이트가 대상에 정확히 맞게)
+  setTimeout(()=>{ if(tutActive)positionCoach(); },330);
 }
 function positionCoach(){
   if(!_coachCfg)return;
@@ -1694,13 +1661,18 @@ function positionCoach(){
   const dark=cfg.dark!==false;
   const setBlk=(el,x,y,w,h)=>{el.style.display='block';el.style.left=x+'px';el.style.top=y+'px';el.style.width=Math.max(0,w)+'px';el.style.height=Math.max(0,h)+'px';};
   const hideBlk=()=>Object.values(blk).forEach(e=>e.style.display='none');
+  const RING='inset 0 0 0 3px rgba(255,140,66,.95)';
+  const DIM='0 0 0 9999px rgba(16,22,18,.72)';
   if(tgt){
     const r=tgt.getBoundingClientRect(), pad=cfg.pad??6;
     const hx=r.left-pad, hy=r.top-pad, hw=r.width+pad*2, hh=r.height+pad*2;
     hole.style.display='block';
     hole.style.left=hx+'px';hole.style.top=hy+'px';hole.style.width=hw+'px';hole.style.height=hh+'px';
     hole.style.borderRadius=(typeof cfg.round==='string'?cfg.round:(cfg.round??16)+'px');
-    if(dark){ // 구멍만 남기고 4방향을 어둡게 + 클릭 차단
+    // 둥근 링 + (dark면) 둥근 어둠을 box-shadow로 한 번에 → 모서리 깔끔
+    hole.style.boxShadow=dark?(RING+','+DIM):RING;
+    if(dark){ // 투명 패널로 클릭만 차단
+      Object.values(blk).forEach(e=>e.style.background='transparent');
       setBlk(blk.t,0,0,vw,hy);
       setBlk(blk.b,0,hy+hh,vw,vh-(hy+hh));
       setBlk(blk.l,0,hy,hx,hh);
@@ -1708,7 +1680,7 @@ function positionCoach(){
     }else hideBlk();
   }else{
     hole.style.display='none';
-    if(dark){ setBlk(blk.t,0,0,vw,vh); blk.b.style.display=blk.l.style.display=blk.r.style.display='none'; } // 전체 어둡게+차단
+    if(dark){ blk.t.style.background='rgba(16,22,18,.72)'; setBlk(blk.t,0,0,vw,vh); blk.b.style.display=blk.l.style.display=blk.r.style.display='none'; } // 전체 어둡게+차단
     else hideBlk();
   }
   // 툴팁: 화면 안에서 동적으로 배치 (버튼/시트를 가리지 않게)
