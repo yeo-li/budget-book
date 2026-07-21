@@ -1122,7 +1122,7 @@ function openInput(date){
   document.querySelectorAll('#input-seg button').forEach(x=>x.classList.toggle('on',x.dataset.m==='manual'));
   renderInputPanel();
   showSheet('sheet-input');
-  if(tutActive&&tutStep==='tapPlus'){tutStep='input';tutRender();}
+  if(tutActive&&(tutStep==='tapPlus'||tutStep==='input')){tutStep='input';tutRender();}
 }
 // 기록 수정: 기존 지출을 폼에 채워 열고, 폼 안에서 삭제도 가능
 function openEditExp(id){
@@ -1154,7 +1154,9 @@ function renderInputPanel(){
       <button class="cta" onclick="runPaste()">후보 뽑기</button>`;
   }else{
     candQueue=[];candIdx=0;
-    renderConfirmForm({amt:'',name:'',src:'manual'});
+    // 튜토리얼 입력 단계에서는 금액을 미리 채워둔다 (재진입해도 항상)
+    const tutSeed=(tutActive&&(tutStep==='tapPlus'||tutStep==='input'));
+    renderConfirmForm({amt:tutSeed?10000:'',name:'',src:'manual'});
   }
 }
 
