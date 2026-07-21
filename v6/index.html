@@ -350,7 +350,9 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 /* ---------- coach-mark 튜토리얼 ---------- */
 #coach{position:fixed;inset:0;z-index:170;pointer-events:none;display:none}
 #coach.show{display:block}
-.coach-hole{position:absolute;box-shadow:0 0 0 9999px rgba(16,22,18,.72);pointer-events:none;
+/* 어둡게 덮으면서 '클릭까지 차단'하는 4개 패널 (구멍 부분만 열림) */
+.coach-blk{position:absolute;background:rgba(16,22,18,.72);pointer-events:auto}
+.coach-hole{position:absolute;pointer-events:none;border-radius:16px;
   transition:left .3s cubic-bezier(.3,.8,.3,1),top .3s cubic-bezier(.3,.8,.3,1),width .3s,height .3s;
   outline:3px solid rgba(255,255,255,.9);outline-offset:-1px;animation:coachpulse 1.6s ease-in-out infinite}
 @keyframes coachpulse{0%,100%{outline-color:rgba(255,255,255,.85)}50%{outline-color:rgba(255,140,66,.95)}}
@@ -455,7 +457,11 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
   <div id="onb"><div class="onb-inner" id="onb-inner"></div></div>
 
   <!-- ============ COACH-MARK (인터랙티브 튜토리얼) ============ -->
-  <div id="coach"><div class="coach-hole" id="coach-hole"></div><div class="coach-tip" id="coach-tip"></div></div>
+  <div id="coach">
+    <div class="coach-blk" id="cblk-t"></div><div class="coach-blk" id="cblk-b"></div>
+    <div class="coach-blk" id="cblk-l"></div><div class="coach-blk" id="cblk-r"></div>
+    <div class="coach-hole" id="coach-hole"></div><div class="coach-tip" id="coach-tip"></div>
+  </div>
 </div>
 
 <script>
@@ -1116,7 +1122,7 @@ function openInput(date){
   document.querySelectorAll('#input-seg button').forEach(x=>x.classList.toggle('on',x.dataset.m==='manual'));
   renderInputPanel();
   showSheet('sheet-input');
-  if(tutActive&&tutStep==='tapPlus'){tutStep='input';setTimeout(tutRender,60);}
+  if(tutActive&&tutStep==='tapPlus'){tutStep='input';tutRender();}
 }
 // 기록 수정: 기존 지출을 폼에 채워 열고, 폼 안에서 삭제도 가능
 function openEditExp(id){
@@ -1636,14 +1642,20 @@ function tutRender(){
       title:'① 지출을 하나 추가해봐요',
       body:'아래 <b>＋ 버튼</b>을 눌러 방금 쓴 돈을 기록해볼게요. 직접 눌러보세요!'});
   }else if(tutStep==='input'){
+    // 시트를 어둡게 덮지도, 가리지도 않게 — 설명은 화면 맨 위에, 시트는 그대로 만질 수 있게
     const amt=document.getElementById('in-amt'); if(amt&&!num(amt.value))amt.value='10,000';
-    placeCoach('#input-panel .cta',{pad:5,round:14,placement:'above',dark:false,skip:true,
+    placeCoach(null,{dark:false,placement:'top',skip:true,
       title:'② 금액을 넣고 저장!',
-      body:'금액을 <b>10,000원</b>으로 채워뒀어요. 그대로 <b>저장하기</b>를 눌러보세요. (직접 고쳐도 돼요)'});
+      body:'아래 시트에 금액을 <b>10,000원</b>으로 채워뒀어요. 맨 아래 <b>저장하기</b>를 눌러보세요. (직접 고쳐도 돼요)'});
   }else if(tutStep==='seeRemaining'){
     placeCoach('#home-body .pace-card',{pad:8,round:20,placement:'below',next:'그다음은? →',skip:true,
       title:'③ 바로 줄었죠? 👀',
-      body:`방금 10,000원을 적으니 <b>오늘 남은 돈</b>이 <b>${won(paceDisp)} → ${won(paceLeft)}</b>으로 바로 줄었어요. 실시간 반응이죠!<br>5일 전체 <b>남은 예산</b>은 <b>기록 탭</b> 맨 위에 있어요.`});
+      body:`방금 10,000원을 적으니 <b>오늘 남은 돈</b>이 <b>${won(paceDisp)} → ${won(paceLeft)}</b>으로 바로 줄었어요. 실시간 반응이죠!`});
+  }else if(tutStep==='recordIntro'){
+    // 기록 탭: 스포트라이트 없이 '어두운 화면 + 설명'만
+    placeCoach(null,{dark:true,placement:'center',next:'마감하러 가기 →',skip:true,
+      title:'📅 여기가 기록 탭이에요',
+      body:'달력에서 <b>5일 현황</b>을 보고, 지난 <b>지출을 확인·수정</b>할 수 있어요.<br>깜빡한 날은 <b>확인 안 한 날</b>에서 채워 마감하면 돼요.<br>맨 위엔 <b>5일 전체 남은 예산</b>이 있어요.'});
   }else if(tutStep==='close'){
     placeCoach('#close-hold',{pad:5,round:16,placement:'above',skip:true,
       title:'④ 하루를 마감해봐요',
@@ -1652,7 +1664,8 @@ function tutRender(){
 }
 function tutNext(){
   if(tutStep==='homeIntro'){tutStep='tapPlus';tutRender();}
-  else if(tutStep==='seeRemaining'){tutStep='close';tutRender();}
+  else if(tutStep==='seeRemaining'){tutStep='recordIntro';go('record');setTimeout(tutRender,70);}
+  else if(tutStep==='recordIntro'){tutStep='close';go('home');setTimeout(tutRender,70);}
 }
 function tutHideCoach(){ document.getElementById('coach').classList.remove('show'); _coachSel=null; }
 // 현재 코치마크 대상/설정을 기억해 리사이즈·스크롤 시 다시 배치
@@ -1672,33 +1685,47 @@ function positionCoach(){
   const cfg=_coachCfg;
   const hole=document.getElementById('coach-hole');
   const tip=document.getElementById('coach-tip');
+  const blk={t:document.getElementById('cblk-t'),b:document.getElementById('cblk-b'),
+             l:document.getElementById('cblk-l'),r:document.getElementById('cblk-r')};
   const tgt=_coachSel?document.querySelector(_coachSel):null;
   const vw=window.innerWidth, vh=window.innerHeight, M=12;
-  // 스포트라이트 구멍: 대상에 딱 맞게
+  const dark=cfg.dark!==false;
+  const setBlk=(el,x,y,w,h)=>{el.style.display='block';el.style.left=x+'px';el.style.top=y+'px';el.style.width=Math.max(0,w)+'px';el.style.height=Math.max(0,h)+'px';};
+  const hideBlk=()=>Object.values(blk).forEach(e=>e.style.display='none');
   if(tgt){
     const r=tgt.getBoundingClientRect(), pad=cfg.pad??6;
+    const hx=r.left-pad, hy=r.top-pad, hw=r.width+pad*2, hh=r.height+pad*2;
     hole.style.display='block';
-    hole.style.left=(r.left-pad)+'px';hole.style.top=(r.top-pad)+'px';
-    hole.style.width=(r.width+pad*2)+'px';hole.style.height=(r.height+pad*2)+'px';
+    hole.style.left=hx+'px';hole.style.top=hy+'px';hole.style.width=hw+'px';hole.style.height=hh+'px';
     hole.style.borderRadius=(typeof cfg.round==='string'?cfg.round:(cfg.round??16)+'px');
-    hole.style.boxShadow=(cfg.dark===false)?'none':'0 0 0 9999px rgba(16,22,18,.72)';
-  }else hole.style.display='none';
-  // 툴팁: 화면 안에서 대상 근처에 동적으로 배치
+    if(dark){ // 구멍만 남기고 4방향을 어둡게 + 클릭 차단
+      setBlk(blk.t,0,0,vw,hy);
+      setBlk(blk.b,0,hy+hh,vw,vh-(hy+hh));
+      setBlk(blk.l,0,hy,hx,hh);
+      setBlk(blk.r,hx+hw,hy,vw-(hx+hw),hh);
+    }else hideBlk();
+  }else{
+    hole.style.display='none';
+    if(dark){ setBlk(blk.t,0,0,vw,vh); blk.b.style.display=blk.l.style.display=blk.r.style.display='none'; } // 전체 어둡게+차단
+    else hideBlk();
+  }
+  // 툴팁: 화면 안에서 동적으로 배치 (버튼/시트를 가리지 않게)
   requestAnimationFrame(()=>{
     const th=tip.offsetHeight, tw=tip.offsetWidth;
-    let top,left;
-    if(tgt){
-      const r=tgt.getBoundingClientRect();
-      const cy=r.top+r.height/2;
+    const app=document.getElementById('app').getBoundingClientRect();
+    let top,left=app.left+app.width/2-tw/2;
+    if(cfg.placement==='top'){
+      top=app.top+16;
+    }else if(cfg.placement==='center'||!tgt){
+      top=Math.max(M,vh/2-th/2);
+    }else{
+      const r=tgt.getBoundingClientRect(), cy=r.top+r.height/2;
       let above=(cfg.placement==='above')||(cfg.placement==null&&cy>vh/2);
-      top=above?(r.top-th-14):(r.bottom+14);
-      if(above&&top<M)top=r.bottom+14;                 // 위 공간 부족 → 아래로
-      if(!above&&top+th>vh-M)top=r.top-th-14;           // 아래 공간 부족 → 위로
+      top=above?(r.top-th-16):(r.bottom+16);
+      if(above&&top<M)top=r.bottom+16;                 // 위 공간 부족 → 아래로
+      if(!above&&top+th>vh-M)top=r.top-th-16;           // 아래 공간 부족 → 위로
       top=Math.min(Math.max(M,top),vh-th-M);
       left=r.left+r.width/2-tw/2;
-    }else{
-      const app=document.getElementById('app').getBoundingClientRect();
-      top=app.top+90; left=app.left+app.width/2-tw/2;
     }
     left=Math.min(Math.max(M,left),vw-tw-M);
     tip.style.top=top+'px'; tip.style.left=left+'px';
