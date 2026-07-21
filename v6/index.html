@@ -471,7 +471,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 const KEY='savepoint_v6';
 const CHALLENGE_DAYS=5;
 const DEFAULT_BUDGET=150000; // 5일치 기본 예산
-const DEFAULT={v:1,onboarded:false,startDate:null,budget5:DEFAULT_BUDGET,exp:[],conf:{},seenMilestones:[]};
+const DEFAULT={v:1,onboarded:false,nickname:'',startDate:null,budget5:DEFAULT_BUDGET,exp:[],conf:{},seenMilestones:[]};
 let S=load();
 function load(){
   try{
@@ -1361,6 +1361,8 @@ function openSettings(){
       </div>
       <div class="streak-dots" style="margin:12px 0 0;justify-content:center">${S.startDate?dotRow(today()):''}</div>
     </div>
+    <div class="settings-row" style="cursor:default"><span>🙂 닉네임</span><span class="sv" style="color:var(--ink);font-weight:800">${S.nickname?esc(S.nickname):'(미설정)'}</span></div>
+    <div class="hint" style="margin:6px 0 14px">닉네임은 처음 한 번만 정하고 <b>수정할 수 없어요</b>.</div>
     <div class="hint" style="margin:0 0 12px">5일 동안 쓸 수 있는 총예산을 정하면, 매일 남은 날 수로 나눠 <b>오늘의 안전 페이스</b>가 계산돼요.</div>
     <button class="settings-row" onclick="closeSheets();openBudgetSheet()"><span>💰 5일치 예산 설정</span><span class="sv">${won(S.budget5)}</span></button>
     <button class="settings-row" onclick="closeSheets();restartChallenge()"><span>🔄 5일 챌린지 다시 시작</span><span class="sv">Day ${dayNo(today())||'-'}</span></button>
@@ -1549,10 +1551,10 @@ function closeSheets(){
    * 튜토리얼 중 조작은 '연습'이며, 끝나면 실제 5일 챌린지가 새로 시작됨
 ================================================================ */
 let onbScreen='budget';                 // 'budget' | 'finish'
-let onbBudget=DEFAULT_BUDGET;
+let onbBudget=DEFAULT_BUDGET, onbNick='';
 let tutActive=false, tutStep='';         // 코치마크 튜토리얼 진행 상태
 function showOnb(){
-  onbScreen='budget';onbBudget=S.budget5||DEFAULT_BUDGET;
+  onbScreen='budget';onbBudget=S.budget5||DEFAULT_BUDGET;onbNick=S.nickname||'';
   document.getElementById('onb').classList.add('show');
   renderOnb();
 }
@@ -1563,13 +1565,18 @@ function renderOnb(){
     mid=`
       <div class="onb-hero-emoji">🙌</div>
       <div class="onb-title">테스트에 참가해주셔서<br><em>정말 고마워요</em></div>
-      <div class="onb-body">딱 5일이면 돼요. 매일 지출을 적고 하루를 마감하는<br>이 작은 습관이 이어지는지 함께 확인해봐요.<br><br>먼저, <b>5일 동안 쓸 예산</b>을 정하고<br><b>직접 한 바퀴 연습</b>해볼게요.</div>
+      <div class="onb-body">딱 5일이면 돼요. 매일 지출을 적고 하루를 마감하는<br>이 작은 습관이 이어지는지 함께 확인해봐요.<br><br>먼저 <b>닉네임</b>과 <b>5일 동안 쓸 예산</b>을 정하고<br><b>직접 한 바퀴 연습</b>해볼게요.</div>
       <div class="field" style="margin:24px auto 0;max-width:320px;text-align:left">
+        <label>닉네임</label>
+        <input type="text" id="onb-nick" value="${esc(onbNick)}" maxlength="16" placeholder="예: 세이버, 짠돌이" autocomplete="off">
+        <div class="hint" style="margin-top:6px">한 번 정하면 <b>수정할 수 없어요</b> (설정에서 보기만 가능)</div>
+      </div>
+      <div class="field" style="margin:0 auto;max-width:320px;text-align:left">
         <label>5일치 가용 예산</label>
         <div class="won-wrap"><input type="text" inputmode="numeric" id="onb-budget" value="${(+onbBudget).toLocaleString('ko-KR')}" placeholder="0" oninput="fmtInput(this)"></div>
       </div>
-      <div class="hint" style="max-width:320px;margin:10px auto 0;text-align:center">예) 15만원이면 하루 페이스는 3만원부터 시작해요. 나중에 언제든 바꿀 수 있어요.</div>`;
-    foot=`<button class="cta" onclick="onbStartTutorial()">이 예산으로 연습 시작 →</button>`;
+      <div class="hint" style="max-width:320px;margin:0 auto;text-align:center">예) 15만원이면 하루 페이스는 3만원부터 시작해요. 예산은 나중에 바꿀 수 있어요.</div>`;
+    foot=`<button class="cta" onclick="onbStartTutorial()">이 정보로 연습 시작 →</button>`;
   }else{ // finish
     mid=`
       <div class="onb-hero-emoji">🎊</div>
@@ -1587,8 +1594,11 @@ function renderOnb(){
 }
 // 예산 저장 후 홈으로 나가 실제 UI 위에서 코치마크 튜토리얼 시작
 function onbStartTutorial(){
+  const nick=(document.getElementById('onb-nick').value||'').trim();
   const v=num(document.getElementById('onb-budget').value);
+  if(!nick){toast('닉네임을 입력해주세요');return;}
   if(v<=0){toast('예산을 입력해주세요');return;}
+  S.nickname=nick; onbNick=nick;
   S.budget5=v; S.startDate=today(); S.exp=[]; S.conf={}; S.seenMilestones=[]; save();
   document.getElementById('onb').classList.remove('show');
   homeDate=today(); C=calc(); go('home');
@@ -1619,10 +1629,10 @@ function tutRender(){
       title:'③ 바로 줄었죠? 👀',
       body:`방금 10,000원을 적으니 <b>오늘 남은 돈</b>이 <b>${won(paceDisp)} → ${won(paceLeft)}</b>으로 바로 줄었어요. 실시간 반응이죠!`});
   }else if(tutStep==='recordIntro'){
-    // 기록 탭: 스포트라이트 없이 '어두운 화면 + 설명'만
-    placeCoach(null,{dark:true,placement:'center',next:'마감하러 가기 →',skip:true,
+    // 기록 탭: 배경을 옅게 덮어 실제 기록 화면이 보이게 + 설명은 아래쪽에
+    placeCoach(null,{dark:true,dimOpacity:0.35,placement:'bottom',next:'마감하러 가기 →',skip:true,
       title:'📅 여기가 기록 탭이에요',
-      body:'달력에서 <b>5일 현황</b>을 보고, 지난 <b>지출을 확인·수정</b>할 수 있어요.<br>깜빡한 날은 <b>확인 안 한 날</b>에서 채워 마감하면 돼요.<br>맨 위엔 <b>5일 전체 남은 예산</b>이 있어요.'});
+      body:'위 <b>달력</b>에서 5일 현황을, 아래 <b>지출 내역</b>에서 기록을 확인·수정할 수 있어요.<br>깜빡한 날은 <b>확인 안 한 날</b>에서 채워 마감하고, 맨 위엔 <b>5일 전체 남은 예산</b>이 있어요.'});
   }else if(tutStep==='close'){
     placeCoach('#close-hold',{pad:5,round:16,placement:'above',skip:true,
       title:'④ 하루를 마감해봐요',
@@ -1680,7 +1690,7 @@ function positionCoach(){
     }else hideBlk();
   }else{
     hole.style.display='none';
-    if(dark){ blk.t.style.background='rgba(16,22,18,.72)'; setBlk(blk.t,0,0,vw,vh); blk.b.style.display=blk.l.style.display=blk.r.style.display='none'; } // 전체 어둡게+차단
+    if(dark){ blk.t.style.background='rgba(16,22,18,'+(cfg.dimOpacity??0.72)+')'; setBlk(blk.t,0,0,vw,vh); blk.b.style.display=blk.l.style.display=blk.r.style.display='none'; } // 전체 덮기+차단 (옅게 가능)
     else hideBlk();
   }
   // 툴팁: 화면 안에서 동적으로 배치 (버튼/시트를 가리지 않게)
@@ -1690,6 +1700,8 @@ function positionCoach(){
     let top,left=app.left+app.width/2-tw/2;
     if(cfg.placement==='top'){
       top=app.top+16;
+    }else if(cfg.placement==='bottom'){
+      top=vh-th-M-84;                 // 하단(내비 위) — 위쪽 달력/기록이 보이게
     }else if(cfg.placement==='center'||!tgt){
       top=Math.max(M,vh/2-th/2);
     }else{
@@ -1718,7 +1730,7 @@ function endTutorial(){
   document.getElementById('onb').classList.remove('show');
   S.exp=[]; S.conf={}; S.seenMilestones=[]; S.startDate=today(); S.onboarded=true; save();
   homeDate=today(); C=calc(); go('home');
-  toast('튜토리얼 완료! 이제 진짜 Day 1이에요 🔥');
+  toast(`${S.nickname?S.nickname+'님, ':''}튜토리얼 완료! 이제 진짜 Day 1이에요 🔥`);
 }
 
 /* ================================================================
