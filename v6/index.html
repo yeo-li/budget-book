@@ -71,6 +71,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .close-btn .lb{position:relative;z-index:1;display:flex;align-items:center;gap:9px}
 .close-btn.done{background:var(--green-soft);color:var(--green-deep);box-shadow:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
 .close-btn.done.holding{transform:scale(.975)}
+.close-btn.waiting{background:var(--line);color:var(--faint);box-shadow:none;cursor:not-allowed}
 .save-preview{width:100%;margin-top:9px;padding:11px 14px;border-radius:13px;background:var(--gold-soft);color:var(--amber);
   font-size:13px;font-weight:700;text-align:center;border:1px solid #F1E3C2;transition:transform .12s}
 .save-preview b{font-weight:900;color:var(--gold)}
@@ -151,6 +152,10 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .banner{margin:0 16px 10px;padding:13px 16px;border-radius:var(--r-md);display:flex;align-items:center;gap:11px;
   font-size:13px;font-weight:700;box-shadow:var(--sh);border:1px solid transparent;width:calc(100% - 32px);text-align:left}
 .banner.todo{background:var(--blue-soft);color:var(--blue);border-color:#D8E7F1}
+.banner.pending-reminder{background:#FFFBF2;color:var(--ink);border-color:#EFD6A8;align-items:flex-start}
+.pending-reminder .banner-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pending-reminder .banner-copy b{font-size:13.5px;font-weight:900}
+.pending-reminder .banner-copy small{font-size:11.5px;color:var(--sub);font-weight:600;line-height:1.45}
 .banner.close{background:var(--card);color:var(--ink);border-color:var(--line)}
 .banner .arrow{margin-left:auto;color:var(--faint);font-weight:400}
 .banner .bic{font-size:20px}
@@ -960,7 +965,7 @@ function renderHome(){
   if(ts)ts.innerHTML='';
 
   // 챌린지 완료(5일 지남)
-  if(C.done){
+  if(C.done&&!C.queue.length){
     el.innerHTML=`
     <div class="hero">
       <div class="cap">5일 챌린지 완료 🎉</div>
@@ -984,6 +989,7 @@ function renderHome(){
 
   // 보고 있는 날짜 (기본: 오늘) — 챌린지 범위 안으로 클램프
   if(!homeDate)homeDate=t;
+  if(C.done&&C.queue.length)homeDate=C.queue[0].date;
   if(homeDate<S.startDate)homeDate=S.startDate;
   if(C.windowEnd&&homeDate>C.windowEnd)homeDate=C.windowEnd;
   const vd=homeDate;
@@ -992,6 +998,7 @@ function renderHome(){
   const isFuture=vd>t;
   const vr=C.byDate[vd];           // 미래 날은 undefined
   const dnum=dayNo(vd);
+  const pendingGate=C.queue.length&&isToday?C.queue[0]:null;
   holdTarget=vd;
 
   const budgetPct=S.budget5>0?Math.max(0,Math.min(100,C.remaining/S.budget5*100)):0;
@@ -1000,14 +1007,34 @@ function renderHome(){
   let stCls='soon',stTxt='아직 오지 않은 날';
   if(vr){
     if(vr.settled)stTxt=vr.success===true?'✓ 마감함 · 성공':'✓ 마감함 · 초과',stCls='ok';
+    else if(isToday&&pendingGate)stTxt='이전 날짜 확인 필요',stCls='pend';
     else if(isToday)stTxt='진행 중',stCls='live';
     else stTxt='확인 대기',stCls='pend';
   }else if(isToday){stTxt='진행 중';stCls='live';}
   else if(isFuture){stTxt='예정';stCls='soon';}
 
   // 보고 있는 날의 페이스 / 남은 돈
-  let paceCardHtml,closeHtml='';
-  if(isFuture||!vr){
+  let paceCardHtml,closeHtml='',pendingReminderHtml='';
+  if(pendingGate){
+    const pendingLabel=pendingGate.date===addDays(t,-1)?'어제':fmtDate(pendingGate.date,false);
+    paceCardHtml=`
+    <div class="card pace-card" id="pending-waiting">
+      <div class="pace-head">
+        <div class="pace-title">오늘 남은 돈</div>
+        <span class="badge warn">계산 대기</span>
+      </div>
+      <div class="pace-num" style="font-size:24px;margin:10px 0 3px;color:var(--faint)">계산 대기</div>
+      <div class="pace-sub">이전 날짜를 마감하면 오늘 금액이 계산돼요</div>
+    </div>`;
+    closeHtml=`
+      <button class="close-btn waiting" disabled aria-label="이전 날짜 확인 후 오늘 마감 가능"><span class="lb">🌙 이전 날짜 확인 후 오늘 마감 가능</span></button>`;
+    pendingReminderHtml=`
+      <button class="banner pending-reminder" id="pending-reminder" onclick="openQueue('home_pending_banner')">
+        <span class="bic">📥</span>
+        <span class="banner-copy"><b>${pendingLabel} 기록을 먼저 마감해 주세요</b><small>늦게 기록하고 마감해도 스트릭은 복구돼요.<br>확인하면 오늘 쓸 수 있는 금액을 바로 계산해요${C.queue.length>1?` · ${C.queue.length}일 남음`:''}</small></span>
+        <span class="arrow">›</span>
+      </button>`;
+  }else if(isFuture||!vr){
     paceCardHtml=`
     <div class="card pace-card">
       <div class="pace-head"><div class="pace-title">${isToday?'오늘 남은 돈':'그날 남은 돈'}</div><span class="badge ok" style="background:var(--line);color:var(--faint)">예정</span></div>
@@ -1050,6 +1077,12 @@ function renderHome(){
 
   const prevDisabled=vd<=S.startDate?'disabled':'';
   const nextDisabled=(C.windowEnd&&vd>=C.windowEnd)?'disabled':'';
+  const queueBannerHtml=pendingReminderHtml||(C.queue.length?`
+  <button class="banner todo" onclick="openQueue()">
+    <span class="bic">📥</span>
+    <span>확인 안 한 날 ${C.queue.length}일</span>
+    <span class="arrow">›</span>
+  </button>`:'');
 
   el.innerHTML=`
   <div class="datestrip" style="margin-top:8px">
@@ -1071,12 +1104,7 @@ function renderHome(){
 
   ${closeHtml?`<div style="margin:0 16px 12px">${closeHtml}</div>`:''}
 
-  ${C.queue.length?`
-  <button class="banner todo" onclick="openQueue()">
-    <span class="bic">📥</span>
-    <span>확인 안 한 날 ${C.queue.length}일</span>
-    <span class="arrow">›</span>
-  </button>`:''}
+  ${queueBannerHtml}
 
   <div class="hint" style="padding:0 24px">매일 지출을 적고 하루를 마감하면 스트릭이 이어져요. 리마인드 없이 5일 동안 스스로 이어가 보세요 💪</div>
   <div style="height:8px"></div>`;
@@ -1278,7 +1306,14 @@ function openDay(date){
 }
 
 // ---------- confirm ----------
+function pendingBefore(date){return C.queue.find(r=>r.date<date);}
 function confirmDay(date){
+  const earlier=!tutActive&&pendingBefore(date);
+  if(earlier){
+    toast('먼저 '+fmtDate(earlier.date,false)+' 기록을 확인해 주세요');
+    openQueue('day_close_blocked');
+    return;
+  }
   const practice=tutActive;
   const entryPoint=currentLogPage();
   if(tutActive&&tutStep==='close'){tutStep='celebrating';tutHideCoach();}
@@ -1808,23 +1843,36 @@ function renderQueue(){
       </div>
     </div>`).join('');
 }
-function queueAdd(date){
-  openInput(date,'pending_days');
+function queueAdd(date,entryPoint){
+  openInput(date,entryPoint||'pending_days');
   returnToQueue=true;
 }
-function queueConfirm(date){
+function queueConfirm(date,entryPoint){
+  const from=entryPoint||'pending_days';
+  const earlier=pendingBefore(date);
+  if(earlier){
+    toast('먼저 '+fmtDate(earlier.date,false)+' 기록을 확인해 주세요');
+    if(document.getElementById('sheet-queue').classList.contains('show'))renderQueue();
+    return;
+  }
   const alreadySettled=!!S.conf[date];
   S.conf[date]=1;save();
   const c2=calc();const rr=c2.byDate[date];
   if(!alreadySettled&&!tutActive&&rr){
     trackEvent('challenge_day_completed',{
       challengeDay:rr.day,transactionDate:date,result:rr.success===true?'success':'over',
-      transactionCount:rr.exps.length,entryPoint:'pending_days'
+      transactionCount:rr.exps.length,entryPoint:from
     });
   }
-  toast(rr&&rr.success===false?'마감 · 🔥 스트릭 이어짐 (오늘은 페이스를 넘었어요)':'마감 · 🔥 스트릭 이어짐');
+  if(from==='home_pending_gate'){
+    toast(c2.queue.length?'확인 완료 · 다음 날짜도 확인해 주세요':c2.done?'모든 날짜 확인 완료':'확인 완료 · 오늘 예산을 계산했어요');
+  }else{
+    toast(rr&&rr.success===false?'마감 · 🔥 스트릭 이어짐 (오늘은 페이스를 넘었어요)':'마감 · 🔥 스트릭 이어짐');
+  }
   render();
-  if(c2.queue.length)renderQueue();else closeSheets();
+  if(document.getElementById('sheet-queue').classList.contains('show')){
+    if(c2.queue.length)renderQueue();else closeSheets();
+  }
 }
 
 // --- 스트릭 캘린더 ---
