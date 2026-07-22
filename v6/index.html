@@ -233,6 +233,13 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
   background:var(--bg);outline:none;transition:border-color .15s;-webkit-appearance:none}
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--p);background:#fff}
 .field textarea{min-height:110px;font-weight:500;font-size:14px;line-height:1.5;resize:none}
+.datetime-row{display:flex;gap:10px}
+.datetime-row .field{min-width:0}
+.datetime-row .date-field{flex:1.2}
+.datetime-row .time-field{flex:1}
+@media(max-width:360px){
+  .datetime-row{display:block}
+}
 .won-wrap{position:relative}
 .won-wrap input{padding-right:44px !important;text-align:right;font-size:20px !important;font-weight:800 !important}
 .won-wrap::after{content:'원';position:absolute;right:16px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--sub)}
@@ -385,7 +392,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
       <div class="wordmark"><span class="dot"></span>5일 챌린지</div>
       <div style="display:flex;align-items:center;gap:6px">
         <div id="top-stats" style="display:flex;gap:6px"></div>
-        <button class="iconbtn" onclick="openSettings()">⚙︎</button>
+        <button class="iconbtn" onclick="openSettings()" aria-label="설정 열기">⚙︎</button>
       </div>
     </div>
     <div id="home-body"></div>
@@ -403,60 +410,60 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
   <!-- ============ NAV ============ -->
   <nav id="nav">
     <button class="nav-item on" data-scr="home"><span class="ic">🏠</span><span class="lb">홈</span></button>
-    <button class="nav-plus" onclick="openInput()"><span class="circle">＋</span></button>
+    <button class="nav-plus" onclick="openInput()" aria-label="거래 추가"><span class="circle">＋</span></button>
     <button class="nav-item" data-scr="record"><span class="ic">📅</span><span class="lb">기록</span></button>
   </nav>
 
   <!-- ============ SHEETS ============ -->
-  <div class="dimmer" id="dimmer" onclick="closeSheets()"></div>
+  <div class="dimmer" id="dimmer" onclick="closeSheets()" aria-hidden="true"></div>
 
   <!-- input sheet -->
-  <div class="sheet" id="sheet-input">
+  <div class="sheet" id="sheet-input" role="dialog" aria-modal="true" aria-labelledby="input-title" aria-hidden="true" inert>
     <div class="sheet-grip"></div>
-    <div class="sheet-head"><div class="sheet-title" id="input-title">지출·수입 입력</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-head"><div class="sheet-title" id="input-title">지출·수입 입력</div><button class="sheet-x" onclick="closeSheets()" aria-label="입력 닫기">✕</button></div>
     <div class="sheet-body">
       <div id="input-panel"></div>
     </div>
   </div>
 
   <!-- settings sheet -->
-  <div class="sheet" id="sheet-settings">
+  <div class="sheet" id="sheet-settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" aria-hidden="true" inert>
     <div class="sheet-grip"></div>
-    <div class="sheet-head"><div class="sheet-title">설정</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-head"><div class="sheet-title" id="settings-title">설정</div><button class="sheet-x" onclick="closeSheets()" aria-label="설정 닫기">✕</button></div>
     <div class="sheet-body" id="settings-body"></div>
   </div>
 
   <!-- budget sheet -->
-  <div class="sheet" id="sheet-budget">
+  <div class="sheet" id="sheet-budget" role="dialog" aria-modal="true" aria-labelledby="budget-title" aria-hidden="true" inert>
     <div class="sheet-grip"></div>
-    <div class="sheet-head"><div class="sheet-title">5일치 예산 설정</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-head"><div class="sheet-title" id="budget-title">5일치 예산 설정</div><button class="sheet-x" onclick="closeSheets()" aria-label="예산 설정 닫기">✕</button></div>
     <div class="sheet-body" id="budget-body"></div>
   </div>
 
   <!-- streak sheet -->
-  <div class="sheet" id="sheet-streak">
+  <div class="sheet" id="sheet-streak" role="dialog" aria-modal="true" aria-labelledby="streak-title" aria-hidden="true" inert>
     <div class="sheet-grip"></div>
-    <div class="sheet-head"><div class="sheet-title">🔥 기록 스트릭</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-head"><div class="sheet-title" id="streak-title">🔥 기록 스트릭</div><button class="sheet-x" onclick="closeSheets()" aria-label="스트릭 닫기">✕</button></div>
     <div class="sheet-body" id="streak-body"></div>
   </div>
 
   <!-- queue sheet (확인 안 한 날) -->
-  <div class="sheet" id="sheet-queue">
+  <div class="sheet" id="sheet-queue" role="dialog" aria-modal="true" aria-labelledby="queue-title" aria-hidden="true" inert>
     <div class="sheet-grip"></div>
-    <div class="sheet-head"><div class="sheet-title">📥 확인 안 한 날</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-head"><div class="sheet-title" id="queue-title">📥 확인 안 한 날</div><button class="sheet-x" onclick="closeSheets()" aria-label="확인 안 한 날 닫기">✕</button></div>
     <div class="sheet-body" id="queue-body"></div>
   </div>
 
   <!-- day detail sheet -->
-  <div class="sheet" id="sheet-day">
+  <div class="sheet" id="sheet-day" role="dialog" aria-modal="true" aria-labelledby="day-sheet-title" aria-hidden="true" inert>
     <div class="sheet-grip"></div>
-    <div class="sheet-head"><div class="sheet-title" id="day-sheet-title">날짜</div><button class="sheet-x" onclick="closeSheets()">✕</button></div>
+    <div class="sheet-head"><div class="sheet-title" id="day-sheet-title">날짜</div><button class="sheet-x" onclick="closeSheets()" aria-label="날짜 상세 닫기">✕</button></div>
     <div class="sheet-body" id="day-sheet-body"></div>
   </div>
 
   <!-- celebration -->
-  <div id="celebrate"></div>
-  <div class="toast" id="toast"></div>
+  <div id="celebrate" role="dialog" aria-modal="true" aria-live="polite"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <!-- ============ ONBOARDING ============ -->
   <div id="onb"><div class="onb-inner" id="onb-inner"></div></div>
@@ -524,11 +531,12 @@ function kstIso(date=new Date()){
 function ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 // 하루의 경계는 자정이 아니라 새벽 5시. 5시 전이면 아직 '어제'로 친다.
 const DAY_START_HOUR=5;
-function today(){
-  const d=new Date();
-  if(d.getHours()<DAY_START_HOUR)d.setDate(d.getDate()-1);
-  return ds(d);
+function kstDateString(date=new Date(),dayStartHour=0){
+  const d=new Date(date.getTime()+KST_OFFSET_MS-dayStartHour*60*60*1000);
+  return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
 }
+function today(date=new Date()){return kstDateString(date,DAY_START_HOUR);}
+function kstHour(date=new Date()){return new Date(date.getTime()+KST_OFFSET_MS).getUTCHours();}
 function pd(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
 function dim(y,m){return new Date(y,m,0).getDate();} // m: 1-12
 const DOW=['일','월','화','수','목','금','토'];
@@ -536,8 +544,7 @@ function fmtDate(s,withDow){const d=pd(s);const t=today();
   let base=(d.getMonth()+1)+'월 '+d.getDate()+'일';
   if(withDow)base+=' ('+DOW[d.getDay()]+')';
   if(s===t)return '오늘 · '+base;
-  const yd=new Date();yd.setDate(yd.getDate()-1);
-  if(s===ds(yd))return '어제 · '+base;
+  if(s===addDays(t,-1))return '어제 · '+base;
   return base;}
 function addDays(s,n){const d=pd(s);d.setDate(d.getDate()+n);return ds(d);}
 function dayNo(date){ // 챌린지 몇 일차인지 (1-based). 범위 밖이면 0
@@ -834,7 +841,7 @@ function pick(arr,seed){ // seed로 안정적으로 하나 고른다 (재렌더 
   return arr[h%arr.length];
 }
 function timeBand(){
-  const h=new Date().getHours();
+  const h=kstHour();
   if(h<5)return 'night';
   if(h<11)return 'morning';
   if(h<14)return 'lunch';
@@ -845,6 +852,10 @@ function timeBand(){
 function praisePool(){return PRAISE_BY_TIME[timeBand()];}
 function praiseRandom(){const p=praisePool();return p[Math.floor(Math.random()*p.length)];} // 마감 순간 랜덤
 function praiseStable(seed){return pick(praisePool(),seed);} // 인라인 프리뷰 (깜빡임 방지)
+
+function dailyPace(remaining,daysLeft){
+  return remaining>0&&daysLeft>0?Math.floor(remaining/daysLeft/100)*100:0;
+}
 
 /* ================================================================
    CALC ENGINE — 5일 예산을 남은 날 수로 나눠 '오늘의 안전 페이스' 결정
@@ -866,7 +877,7 @@ function calc(){
     const date=addDays(S.startDate,i);
     if(date>t)break; // 아직 오지 않은 날
     const daysLeft=CHALLENGE_DAYS-i;
-    const pace=remaining>0?remaining/daysLeft:0;
+    const pace=dailyPace(remaining,daysLeft);
     const exps=expByDate[date]||[];
     // e.nb === true → '예산에서 제외 (기록만)'. 페이스·남은 돈에 반영하지 않는다.
     const spent=exps.filter(e=>e.kind!=='inc'&&!e.nb).reduce((a,e)=>a+e.amt,0);
@@ -875,7 +886,7 @@ function calc(){
     const settled=!!S.conf[date];
     let success=null,saved=0;
     if(settled){
-      if(net<=pace+0.5){success=true;saved=Math.max(0,Math.round(pace-net));}
+      if(net<=pace){success=true;saved=Math.max(0,pace-net);}
       else success=false;
     }
     const rec={date,day:i+1,pace,spent,inc,net,exps,settled,success,saved,isToday:date===t};
@@ -1004,7 +1015,7 @@ function renderHome(){
     const ratio=pace>0?Math.max(0,net)/pace:(net>0?2:0);
     const status=ratio>1?'over':ratio>0.8?'warn':'ok';
     const stLabel={ok:'안전 페이스',warn:'페이스 주의',over:'페이스 초과'}[status];
-    const paceDisp=Math.floor(pace/100)*100;
+    const paceDisp=pace;
     const paceLeft=paceDisp-net;
     paceCardHtml=`
     <div class="card pace-card">
@@ -1023,12 +1034,12 @@ function renderHome(){
     // 마감 / 취소 영역
     if(!vr.settled){
       closeHtml=`
-      <button class="close-btn" id="close-hold"><span class="fill"></span><span class="lb">🌙 꾹 눌러서 ${isToday?'하루':'이 날'} 마감</span></button>
+      <button class="close-btn" id="close-hold" aria-label="${isToday?'오늘':'선택한 날'} 마감"><span class="fill"></span><span class="lb">🌙 꾹 눌러서 ${isToday?'하루':'이 날'} 마감</span></button>
       ${paceLeft>=0?`<div class="save-preview done" style="pointer-events:none">🔥 지금 마감하면 <b>스트릭 ${C.streak+1}일째</b> · 페이스 안이에요</div>`
         :`<div class="save-preview flat">페이스를 넘었어요 · 그래도 마감하면 스트릭은 이어져요</div>`}`;
     }else{
       closeHtml=`
-      <button class="close-btn done" id="close-cancel" ${canCancel(vd)?'':'style="pointer-events:none"'}><span class="fill cancel"></span><span class="lb">✅ 마감 완료${canCancel(vd)?' · 꾹 눌러 취소':''}</span></button>
+      <button class="close-btn done" id="close-cancel" aria-label="${canCancel(vd)?'오늘 마감 취소':'마감 완료'}" ${canCancel(vd)?'':'disabled'}><span class="fill cancel"></span><span class="lb">✅ 마감 완료${canCancel(vd)?' · 꾹 눌러 취소':''}</span></button>
       ${vr.success===true?`<div class="save-preview done" style="pointer-events:none">${praiseStable(vd)}</div>`:`<div class="save-preview flat">${pick(SCOLD,vd)}</div>`}`;
     }
   }
@@ -1038,12 +1049,12 @@ function renderHome(){
 
   el.innerHTML=`
   <div class="datestrip" style="margin-top:8px">
-    <button class="nav" ${prevDisabled} onclick="navDay(-1)">‹</button>
+    <button class="nav" ${prevDisabled} onclick="navDay(-1)" aria-label="이전 날짜">‹</button>
     <div class="mid">
       <div class="dt">${(vdD.getMonth()+1)}월 ${vdD.getDate()}일 (${DOW[vdD.getDay()]})${isToday?' · 오늘':''}</div>
       <div class="sub ${stCls}">Day ${dnum||'-'} · ${stTxt}</div>
     </div>
-    <button class="nav" ${nextDisabled} onclick="navDay(1)">›</button>
+    <button class="nav" ${nextDisabled} onclick="navDay(1)" aria-label="다음 날짜">›</button>
   </div>
 
   <button class="streak-card" id="home-streak" onclick="openStreak()" style="width:calc(100% - 32px);margin-top:2px">
@@ -1098,6 +1109,11 @@ function longPress(btn,action){
   btn.addEventListener('pointercancel',cancel);
   btn.addEventListener('pointerleave',cancel);
   btn.addEventListener('contextmenu',e=>e.preventDefault());
+  btn.addEventListener('keydown',e=>{
+    if((e.key==='Enter'||e.key===' ')&&!e.repeat){
+      e.preventDefault();cancel();action();
+    }
+  });
 }
 function bindHold(){
   const tgt=holdTarget||today();
@@ -1166,7 +1182,7 @@ function renderRecord(){
           <div><div class="exp-name">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}${e.nb?' <span style="font-size:10px;font-weight:800;color:var(--p-deep);background:var(--p-soft);border-radius:5px;padding:1px 5px;vertical-align:1px">기록만</span>':''}</div>
           <div class="exp-src">${e.time?e.time+' · ':''}${e.nb?'예산 제외':(e.kind==='inc'?'수입':'지출')}${e.src==='ocr'?' · 📷 캡처':e.src==='paste'?' · 📋 붙여넣기':''}</div></div>
           <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''} ${e.nb?'style="color:var(--faint)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
-          <button class="exp-del" onclick="openEditExp('${e.id}')">✎</button>
+          <button class="exp-del" onclick="openEditExp('${e.id}')" aria-label="거래 수정">✎</button>
         </div>`).join('')}
     </div>`;
   }).join(''):`<div class="empty"><div class="e-ic">🧾</div><div class="e-t">이 달의 기록이 아직 없어요</div>
@@ -1202,7 +1218,7 @@ function renderRecord(){
     <div class="cal-head">
       <div class="cal-title">${cy}년 ${cm}월</div>
       <div class="cal-nav">
-        <button onclick="moveCal(-1)">‹</button><button onclick="moveCal(1)">›</button>
+        <button onclick="moveCal(-1)" aria-label="이전 달">‹</button><button onclick="moveCal(1)" aria-label="다음 달">›</button>
       </div>
     </div>
     ${grid}
@@ -1236,7 +1252,7 @@ function openDay(date){
     body.innerHTML=`
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">${tag}</div>
       <div class="calc-preview" style="margin:0 0 16px">
-        <div class="calc-row"><span>이날의 안전 페이스</span><b class="num">${won(Math.floor(r.pace))}</b></div>
+        <div class="calc-row"><span>이날의 안전 페이스</span><b class="num">${won(r.pace)}</b></div>
         <div class="calc-row"><span>지출 합계</span><b class="num">${won(r.spent)}</b></div>
         ${r.inc?`<div class="calc-row"><span>수입</span><b class="num pos">+${won(r.inc)}</b></div>
         <div class="calc-row"><span>순 지출</span><b class="num ${r.net>r.pace?'neg':''}">${won(r.net)}</b></div>`:''}
@@ -1246,7 +1262,7 @@ function openDay(date){
           <div class="exp-ic">${e.kind==='inc'?'💰':'💸'}</div>
           <div><div class="exp-name">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}${e.nb?' <span style="font-size:10px;font-weight:800;color:var(--p-deep);background:var(--p-soft);border-radius:5px;padding:1px 5px;vertical-align:1px">기록만</span>':''}${e.time?`<span style="color:var(--faint);font-weight:600;font-size:12px"> · ${e.time}</span>`:''}</div></div>
           <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''} ${e.nb?'style="color:var(--faint)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
-          <button class="exp-del" onclick="openEditExp('${e.id}')">✎</button>
+          <button class="exp-del" onclick="openEditExp('${e.id}')" aria-label="거래 수정">✎</button>
         </div>`).join(''):'<div class="hint" style="text-align:center;margin:4px 0 14px">기록된 지출이 없어요</div>'}
       <div style="display:flex;gap:8px;margin-top:14px">
         ${date<=t?`<button class="chip-btn ghost" style="padding:13px" onclick="closeSheets();openInput('${date}','day_detail')">＋ 지출 추가</button>`:''}
@@ -1450,14 +1466,14 @@ function renderConfirmForm(cand,idx,total,editing){
       <button class="${cand.kind==='inc'?'':'on'}" data-k="exp" onclick="pickKind('exp',this)">💸 지출</button>
       <button class="${cand.kind==='inc'?'on':''}" data-k="inc" onclick="pickKind('inc',this)">💰 수입</button>
     </div>
-    <div class="field"><label>금액</label>
+    <div class="field"><label for="in-amt">금액</label>
       <div class="won-wrap"><input type="text" inputmode="numeric" id="in-amt" value="${cand.amt?(+cand.amt).toLocaleString('ko-KR'):''}" placeholder="0" oninput="fmtInput(this)"></div></div>
-    <div class="field"><label>내용 (선택)</label>
+    <div class="field"><label for="in-name">내용 (선택)</label>
       <input type="text" id="in-name" value="${esc(cand.name||'')}" placeholder="예: 스타벅스 / 당근 판매"></div>
-    <div style="display:flex;gap:10px">
-      <div class="field" style="flex:1.2"><label>날짜 (필수)</label>
+    <div class="datetime-row">
+      <div class="field date-field"><label for="in-date">날짜 (필수)</label>
         <input type="date" id="in-date" value="${cand.date||inputDate}" max="${today()}"></div>
-      <div class="field" style="flex:1"><label>시간 (선택)</label>
+      <div class="field time-field"><label for="in-time">시간 (선택)</label>
         <input type="time" id="in-time" value="${cand.time||''}"></div>
     </div>
     <label style="display:flex;align-items:flex-start;gap:11px;padding:2px 2px 16px;cursor:pointer">
@@ -1554,9 +1570,9 @@ function parsePayText(txt){
   if(amts.length)cand.amt=amts[0];
   const dm=txt.match(/(\d{1,2})[\/.월]\s?(\d{1,2})일?/);
   if(dm){
-    const y=new Date().getFullYear();
-    const cd=new Date(y,+dm[1]-1,+dm[2]);
-    if(cd<=new Date())cand.date=ds(cd);
+    const y=Number(today().slice(0,4)),m=+dm[1],d=+dm[2];
+    const cd=y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    if(m>=1&&m<=12&&d>=1&&d<=dim(y,m)&&cd<=today())cand.date=cd;
   }
   const stop=/승인|일시불|할부|누적|잔액|체크|신용|카드|입금|출금|사용|원|KB|신한|삼성|현대|롯데|하나|우리|국민|농협|토스|카카오|페이|[0-9]{2}[:\/.][0-9]{2}|\*/;
   const lines=txt.split(/\n/).map(s=>s.trim()).filter(Boolean);
@@ -1696,7 +1712,8 @@ function openSettings(){
     <button class="settings-row" onclick="exportData()"><span>📤 데이터 내보내기 (JSON)</span><span class="sv">백업</span></button>
     <button class="settings-row" onclick="document.getElementById('import-file').click()"><span>📥 데이터 가져오기</span><span class="sv">복원</span></button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this.files[0])">
-    <button class="settings-row danger" onclick="resetAll()"><span>🗑️ 전체 초기화</span></button>
+    <button class="settings-row danger" onclick="resetAll()"><span>🗑️ 챌린지 데이터 초기화</span></button>
+    <div class="hint" style="margin:6px 0 14px">닉네임과 테스트 참여자 ID는 초기화 후에도 유지돼요.</div>
     <div class="hint">데이터는 이 기기에만 저장돼요 · 가끔 내보내기로 백업하세요.</div>`;
   showSheet('sheet-settings');
 }
@@ -1706,7 +1723,7 @@ function openBudgetSheet(entryPoint){
   document.getElementById('budget-body').innerHTML=`
     <div class="hint" style="margin:0 0 16px">5일 동안 쓸 수 있는 <b>총예산</b>이에요. 매일 남은 날 수로 나눠 '오늘의 안전 페이스'가 정해져요.<br>
     예) 15만원이면 첫날 페이스는 3만원, 아낀 만큼 다음 날 페이스가 넉넉해져요.</div>
-    <div class="field"><label>5일치 가용 예산</label>
+    <div class="field"><label for="bg5">5일치 가용 예산</label>
       <div class="won-wrap"><input type="text" inputmode="numeric" id="bg5" value="${(+S.budget5).toLocaleString('ko-KR')}" placeholder="0" oninput="fmtInput(this)"></div></div>
     <button class="cta" onclick="saveBudget()">이 예산으로 설정</button>`;
   showSheet('sheet-budget');
@@ -1765,7 +1782,7 @@ function renderQueue(){
     <div class="q-card" style="margin:0 0 12px">
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div class="q-date">${fmtDate(r.date,true)}</div>
-        <div class="q-sub num">페이스 ${won(Math.floor(r.pace))}</div>
+        <div class="q-sub num">페이스 ${won(r.pace)}</div>
       </div>
       ${r.exps.length?`<div style="margin-top:10px">
         ${r.exps.map(e=>`
@@ -1774,7 +1791,7 @@ function renderQueue(){
             <div><div class="exp-name" style="font-size:13.5px">${esc(e.name)||(e.kind==='inc'?'수입':'지출')}${e.nb?' <span style="font-size:9.5px;font-weight:800;color:var(--p-deep);background:var(--p-soft);border-radius:5px;padding:1px 5px">기록만</span>':''}</div>
             <div class="exp-src">${e.time?e.time+' · ':''}${e.nb?'예산 제외':(e.kind==='inc'?'수입':'지출')}</div></div>
             <div class="exp-amt num" ${e.kind==='inc'?'style="color:var(--green)"':''} ${e.nb?'style="color:var(--faint)"':''}>${e.kind==='inc'?'+':''}${won(e.amt)}</div>
-            <button class="exp-del" onclick="openEditExp('${e.id}')">✎</button>
+            <button class="exp-del" onclick="openEditExp('${e.id}')" aria-label="거래 수정">✎</button>
           </div>`).join('')}
         <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 2px 2px;border-top:1px solid var(--line);margin-top:4px">
           <span style="font-size:12.5px;font-weight:800;color:var(--sub)">합계</span>
@@ -1847,7 +1864,7 @@ function renderStreak(){
     <div class="hint" style="text-align:center;margin:-6px 0 14px;line-height:1.6">스트릭은 <b>절약이 아니라 마감</b>에 걸려 있어요.<br>초과한 날도 <b>마감하면 이어져요</b> — 매일 나타나 기록하는 게 핵심이에요.</div>
     <div class="cal-head" style="margin-bottom:10px">
       <div class="cal-title">${cy}년 ${cm}월</div>
-      <div class="cal-nav"><button onclick="moveStreak(-1)">‹</button><button onclick="moveStreak(1)">›</button></div>
+      <div class="cal-nav"><button onclick="moveStreak(-1)" aria-label="이전 달">‹</button><button onclick="moveStreak(1)" aria-label="다음 달">›</button></div>
     </div>
     <div class="caldrow">${DOW.map(w=>`<div class="cal-dow">${w}</div>`).join('')}</div>
     <div class="caldrow" style="gap:5px;margin-top:3px">${cells}</div>
@@ -1890,7 +1907,7 @@ function importData(file){
   r.readAsText(file);
 }
 function resetAll(){
-  if(!confirm('정말 모든 데이터를 지울까요? 되돌릴 수 없어요.'))return;
+  if(!confirm('챌린지 기록·마감·예산을 초기화할까요?\n닉네임과 테스트 참여자 ID는 유지돼요. 되돌릴 수 없어요.'))return;
   const stats=challengeStats(C);
   trackEvent('app_data_reset',{
     hadActiveChallenge:!!S.challengeId,completedDays:stats.completedDays,transactionCount:S.exp.length
@@ -1904,9 +1921,25 @@ function resetAll(){
 /* ================================================================
    SHEETS
 ================================================================ */
+let sheetReturnFocus=null;
+function setSheetOpen(sheet,open){
+  sheet.classList.toggle('show',open);
+  sheet.setAttribute('aria-hidden',open?'false':'true');
+  sheet.inert=!open;
+}
 function showSheet(id){
+  const target=document.getElementById(id);
+  if(!target)return;
+  if(!document.querySelector('.sheet.show')&&!sheetReturnFocus){
+    const active=document.activeElement;
+    if(active&&!active.closest('.sheet'))sheetReturnFocus=active;
+  }
   document.getElementById('dimmer').classList.add('show');
-  document.querySelectorAll('.sheet').forEach(s=>s.classList.toggle('show',s.id===id));
+  document.querySelectorAll('.sheet').forEach(s=>setSheetOpen(s,s===target));
+  requestAnimationFrame(()=>{
+    const first=target.querySelector('.sheet-x,input:not([type="hidden"]),button:not([disabled]),select,textarea');
+    if(first)first.focus();
+  });
 }
 function closeSheets(){
   const inputOpen=document.getElementById('sheet-input')?.classList.contains('show');
@@ -1917,8 +1950,26 @@ function closeSheets(){
   }
   if(inputOpen)inputInteraction=null;
   document.getElementById('dimmer').classList.remove('show');
-  document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('show'));
+  document.querySelectorAll('.sheet').forEach(s=>setSheetOpen(s,false));
+  const returnFocus=sheetReturnFocus;
+  requestAnimationFrame(()=>{
+    if(document.querySelector('.sheet.show'))return;
+    if(returnFocus&&document.contains(returnFocus))returnFocus.focus();
+    if(sheetReturnFocus===returnFocus)sheetReturnFocus=null;
+  });
 }
+document.addEventListener('keydown',e=>{
+  const sheet=document.querySelector('.sheet.show');
+  if(!sheet)return;
+  if(e.key==='Escape'){e.preventDefault();closeSheets();return;}
+  if(e.key!=='Tab')return;
+  const focusable=[...sheet.querySelectorAll('button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')]
+    .filter(el=>el.getClientRects().length>0);
+  if(!focusable.length){e.preventDefault();return;}
+  const first=focusable[0],last=focusable[focusable.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+});
 
 /* ================================================================
    ONBOARDING — 환영 + 예산 입력 → '직접 해보는' 인터랙티브 튜토리얼
@@ -1951,7 +2002,7 @@ function renderOnb(){
         <div class="onb-field">
           <label for="onb-budget">5일치 가용 예산</label>
           <div class="won-wrap"><input type="text" inputmode="numeric" id="onb-budget" value="${(+onbBudget).toLocaleString('ko-KR')}" placeholder="0" oninput="fmtInput(this);updateOnbBudgetHint(this)"></div>
-          <div class="onb-help">하루 시작 페이스 <strong id="onb-daily-pace">${won(onbBudget/CHALLENGE_DAYS)}</strong> · 예산은 나중에도 바꿀 수 있어요.</div>
+          <div class="onb-help">하루 시작 페이스 <strong id="onb-daily-pace">${won(dailyPace(onbBudget,CHALLENGE_DAYS))}</strong> · 예산은 나중에도 바꿀 수 있어요.</div>
         </div>
       </div>`;
     foot=`<button class="cta" onclick="onbStartTutorial()">이 정보로 연습 시작 →</button>`;
@@ -1972,7 +2023,7 @@ function renderOnb(){
 }
 function updateOnbBudgetHint(input){
   const hint=document.getElementById('onb-daily-pace');
-  if(hint)hint.textContent=won(num(input.value)/CHALLENGE_DAYS);
+  if(hint)hint.textContent=won(dailyPace(num(input.value),CHALLENGE_DAYS));
 }
 // 예산 저장 후 홈으로 나가 실제 UI 위에서 코치마크 튜토리얼 시작
 function onbStartTutorial(){
@@ -1998,7 +2049,7 @@ function fixedParticipantNickname(){return PARTICIPANT.participantId?PARTICIPANT
 // ---- 코치마크 ----
 function tutRender(){
   if(!tutActive)return;
-  const paceDisp=Math.floor((C.todayPace||0)/100)*100;   // 오늘 남은 돈(시작값)
+  const paceDisp=C.todayPace||0;                         // 오늘 남은 돈(시작값)
   const paceLeft=paceDisp-(C.todaySpent||0);              // 지출 후 남은 값
   if(tutStep==='homeIntro'){
     placeCoach('#home-body .pace-card',{pad:8,round:20,placement:'below',next:'지출 적어보기 →',skip:true,
