@@ -25,6 +25,7 @@
   --sh-lift:0 4px 12px rgba(26,26,46,.08),0 16px 40px rgba(26,26,46,.12);
 }
 html{font-size:16px}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{
   font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
   background:#EDE8E0; color:var(--ink); min-height:100dvh;
@@ -85,7 +86,7 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .st-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:13px;font-weight:700;color:var(--sub);position:relative}
 .st-day.ok{background:var(--green);color:#fff;font-weight:900}
 .st-day.rep{background:var(--gold);color:#fff;font-weight:900}
-.st-day.over{background:var(--red-soft);color:var(--red)}
+.st-day.over{background:var(--green);color:#fff;font-weight:900}
 .st-day.pend{background:var(--amber-soft);color:var(--amber)}
 .st-day.dim{opacity:.3}
 .st-day.today::after{content:'';position:absolute;inset:-3px;border:2px solid var(--ink);border-radius:14px}
@@ -324,16 +325,33 @@ h1,h2,h3{font-weight:800;letter-spacing:-.02em}
 .streak-card{display:flex;align-items:center;gap:16px;margin:0 16px 10px;padding:18px 20px;border-radius:var(--r-lg);
   background:linear-gradient(150deg,#FFF3EC,#FDE6DA);border:1px solid #F6D7C6;box-shadow:var(--sh)}
 .streak-card:active{transform:scale(.99)}
-.flame-big{font-size:46px;line-height:1;filter:drop-shadow(0 3px 8px rgba(232,87,31,.35));animation:flamebob 2.4s ease-in-out infinite}
+.flame-big{font-size:46px;line-height:1;flex-shrink:0;filter:drop-shadow(0 3px 8px rgba(232,87,31,.35));animation:flamebob 2.4s ease-in-out infinite}
 @keyframes flamebob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.06)}}
-.streak-n{font-size:30px;font-weight:900;letter-spacing:-.03em;color:var(--flame);line-height:1.05}
-.streak-sub{font-size:12.5px;font-weight:800;color:var(--amber);margin-top:3px}
+.streak-copy{min-width:0;flex:1;text-align:left}
+.streak-n{font-size:30px;font-weight:900;letter-spacing:0;color:var(--flame);line-height:1.05;white-space:nowrap;word-break:keep-all}
+.streak-sub{font-size:12.5px;font-weight:800;color:var(--amber);line-height:1.35;margin-top:3px;word-break:keep-all}
 .streak-dots{display:flex;gap:7px;margin-left:auto;flex-shrink:0}
 .sdot{width:16px;height:16px;border-radius:50%;background:var(--line2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff}
 .sdot.ok{background:var(--green)}
-.sdot.over{background:var(--red)}
+.sdot.over{background:var(--green)}
 .sdot.pend{background:var(--amber)}
 .sdot.today{box-shadow:0 0 0 3px var(--flame-soft),0 0 0 4px var(--flame)}
+@media(max-width:380px){
+  .streak-card{gap:10px;padding:16px}
+  .flame-big{font-size:38px}
+  .streak-n{font-size:25px}
+  .streak-sub{font-size:11px}
+  .streak-dots{gap:5px}
+  .sdot{width:13px;height:13px;font-size:8px}
+}
+@media(max-width:330px){
+  .streak-card{gap:8px;padding:14px}
+  .flame-big{font-size:34px}
+  .streak-n{font-size:23px}
+  .streak-sub{font-size:10.5px}
+  .streak-dots{gap:4px}
+  .sdot{width:12px;height:12px;font-size:7px}
+}
 
 /* ---------- onboarding ---------- */
 #onb{position:fixed;inset:0;z-index:150;display:none;justify-content:center;background:#EDE8E0}
@@ -974,7 +992,7 @@ function renderHome(){
     </div>
     <div class="streak-card">
       <div class="flame-big">${C.successTotal>=3?'🏆':'🔥'}</div>
-      <div><div class="streak-n">${C.streak}일 연속</div><div class="streak-sub">최종 스트릭</div></div>
+      <div class="streak-copy"><div class="streak-n">${C.streak}일 연속</div><div class="streak-sub">최종 스트릭</div></div>
       <div class="streak-dots">${dotRow(t)}</div>
     </div>
     <div class="card" style="text-align:center;padding:22px 20px">
@@ -1029,7 +1047,7 @@ function renderHome(){
     closeHtml=`
       <button class="close-btn waiting" disabled aria-label="이전 날짜 확인 후 오늘 마감 가능"><span class="lb">🌙 이전 날짜 확인 후 오늘 마감 가능</span></button>`;
     pendingReminderHtml=`
-      <button class="banner pending-reminder" id="pending-reminder" onclick="openQueue('home_pending_banner')">
+      <button class="banner pending-reminder" id="pending-reminder" onclick="openQueue('home')">
         <span class="bic">📥</span>
         <span class="banner-copy"><b>${pendingLabel} 기록을 먼저 마감해 주세요</b><small>늦게 기록하고 마감해도 스트릭은 복구돼요.<br>확인하면 오늘 쓸 수 있는 금액을 바로 계산해요${C.queue.length>1?` · ${C.queue.length}일 남음`:''}</small></span>
         <span class="arrow">›</span>
@@ -1096,7 +1114,7 @@ function renderHome(){
 
   <button class="streak-card" id="home-streak" onclick="openStreak()" style="width:calc(100% - 32px);margin-top:2px">
     <div class="flame-big">🔥</div>
-    <div style="text-align:left"><div class="streak-n">${C.streak}일 연속</div><div class="streak-sub">기록 스트릭 유지 중 · 눌러서 자세히</div></div>
+    <div class="streak-copy"><div class="streak-n">${C.streak}일 연속</div><div class="streak-sub">기록 스트릭 · 자세히 보기</div></div>
     <div class="streak-dots">${dotRow(t)}</div>
   </button>
 
@@ -1311,7 +1329,7 @@ function confirmDay(date){
   const earlier=!tutActive&&pendingBefore(date);
   if(earlier){
     toast('먼저 '+fmtDate(earlier.date,false)+' 기록을 확인해 주세요');
-    openQueue('day_close_blocked');
+    openQueue('day_detail');
     return;
   }
   const practice=tutActive;
@@ -1573,7 +1591,7 @@ function saveExp(src){
   toast(nb?`✓ ${won(amt)} 기록만 했어요 (예산 유지)`:kind==='inc'?`✓ +${won(amt)} 수입 기록했어요`:`✓ ${won(amt)} 기록했어요`);
   if(candQueue.length&&candIdx<candQueue.length-1){candIdx++;render();showCand();}
   else{candQueue=[];render();
-    if(returnToQueue){inputInteraction=null;openQueue('pending_days');}
+    if(returnToQueue){inputInteraction=null;openQueue(queueEntryPoint);}
     else{inputInteraction=null;closeSheets();}
   }
   if(tutActive&&tutStep==='input'){tutStep='seeRemaining';setTimeout(tutRender,80);}
@@ -1800,8 +1818,10 @@ function restartChallenge(){
 
 // --- 확인 안 한 날: 날짜별 추가 + 마감 ---
 let returnToQueue=false;
+let queueEntryPoint='pending_days';
 function openQueue(entryPoint){
   const from=entryPoint||currentLogPage();
+  queueEntryPoint=from;
   renderQueue();
   showSheet('sheet-queue');
   if(!tutActive){
@@ -1838,8 +1858,8 @@ function renderQueue(){
         </div>
       </div>`:`<div class="q-sub" style="margin-top:8px">아직 기록이 없어요</div>`}
       <div class="q-actions">
-        <button class="chip-btn ghost" onclick="queueAdd('${r.date}')">＋ 추가</button>
-        <button class="chip-btn solid" onclick="queueConfirm('${r.date}')">${r.exps.length?'이대로 마감':'지출 없었어요'}</button>
+        <button class="chip-btn ghost" onclick="queueAdd('${r.date}','${queueEntryPoint}')">＋ 추가</button>
+        <button class="chip-btn solid" onclick="queueConfirm('${r.date}','${queueEntryPoint}')">${r.exps.length?'이대로 마감':'지출 없었어요'}</button>
       </div>
     </div>`).join('');
 }
@@ -1864,7 +1884,7 @@ function queueConfirm(date,entryPoint){
       transactionCount:rr.exps.length,entryPoint:from
     });
   }
-  if(from==='home_pending_gate'){
+  if(from==='home'){
     toast(c2.queue.length?'확인 완료 · 다음 날짜도 확인해 주세요':c2.done?'모든 날짜 확인 완료':'확인 완료 · 오늘 예산을 계산했어요');
   }else{
     toast(rr&&rr.success===false?'마감 · 🔥 스트릭 이어짐 (오늘은 페이스를 넘었어요)':'마감 · 🔥 스트릭 이어짐');
