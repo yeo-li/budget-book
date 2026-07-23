@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1746C6">
+<title>친구와 예산 목표를 함께 지키는 앱, 써보고 싶나요? | 지출 모임</title>
+<meta name="description" content="각자의 예산 목표와 진행률을 나누고 사진, 반응, 채팅으로 서로 응원하는 지출 모임 앱의 베타 수요 조사">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+*{box-sizing:border-box}
+:root{
+  --blue:#1746C6;
+  --blue-deep:#0B2B83;
+  --blue-soft:#EAF1FF;
+  --blue-line:#BFD0FA;
+  --ink:#121826;
+  --muted:#5D6678;
+  --white:#FFFFFF;
+  --lime:#CBF35B;
+  --coral:#FF7A66;
+  --cyan:#7AD7FF;
+  --line:#D9E1F2;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  margin:0;background:var(--blue);color:var(--ink);
+  font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;letter-spacing:0;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+.page{min-height:100svh;overflow:hidden}
+.wrap{width:min(1180px,calc(100% - 48px));margin:0 auto}
+.topbar{
+  position:sticky;top:0;z-index:40;background:rgba(23,70,198,.92);
+  border-bottom:1px solid rgba(255,255,255,.2);backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);color:var(--white);
+}
+.nav{height:70px;display:flex;align-items:center;justify-content:space-between;gap:22px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:950}
+.brand-mark{
+  width:34px;height:34px;border-radius:7px;display:grid;place-items:center;
+  background:var(--white);color:var(--blue);font-size:12px;font-weight:950;
+  box-shadow:3px 3px 0 var(--lime);
+}
+.brand span:last-child{white-space:nowrap}
+.nav-links{display:flex;align-items:center;gap:27px;font-size:14px;font-weight:800;color:#DCE7FF}
+.nav-links a{transition:color .15s}
+.nav-links a:hover{color:var(--white)}
+.nav-cta,.primary-cta,.ghost-cta,.submit-btn,.share-btn,.upload-button,.mobile-cta{
+  border:1px solid currentColor;border-radius:7px;font-weight:900;
+  transition:transform .15s,box-shadow .15s,background .15s;
+}
+.nav-cta{padding:10px 17px;background:var(--white);color:var(--blue);border-color:var(--white);white-space:nowrap}
+.primary-cta{
+  padding:16px 22px;background:var(--lime);color:var(--ink);border-color:var(--ink);
+  box-shadow:5px 5px 0 var(--ink);
+}
+.ghost-cta{display:inline-flex;align-items:center;justify-content:center;padding:15px 20px;color:var(--white);border-color:rgba(255,255,255,.7)}
+.primary-cta:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--ink)}
+.ghost-cta:hover{background:rgba(255,255,255,.12)}
+.nav-cta:active,.primary-cta:active,.ghost-cta:active,.submit-btn:active,.share-btn:active,.upload-button:active,.mobile-cta:active{transform:translateY(1px);box-shadow:none}
+
+.hero{position:relative;background:var(--blue);color:var(--white);padding:54px 0 46px}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(430px,.9fr);gap:70px;align-items:center}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;margin:0 0 20px;padding:7px 10px;
+  border:1px solid rgba(255,255,255,.65);border-radius:999px;background:rgba(255,255,255,.1);
+  color:var(--white);font-size:12px;font-weight:900;
+}
+.eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--lime)}
+h1{margin:0;max-width:690px;font-size:66px;line-height:1.03;font-weight:950;letter-spacing:0}
+.accent-word{position:relative;display:inline-block;color:var(--lime);white-space:nowrap}
+.mobile-break{display:none}
+.hero-copy{max-width:610px;margin:23px 0 0;color:#DBE6FF;font-size:18px;line-height:1.7}
+.hero-copy strong{color:var(--white);font-weight:900}
+.hero-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:30px}
+.hero-note{margin:15px 0 0;color:#C5D5FA;font-size:13px;font-weight:700}
+.signal-row{
+  display:grid;grid-template-columns:repeat(3,1fr);max-width:650px;margin-top:31px;
+  border-top:1px solid rgba(255,255,255,.42);border-bottom:1px solid rgba(255,255,255,.42);
+}
+.signal{padding:15px 16px;border-right:1px solid rgba(255,255,255,.42)}
+.signal:last-child{border-right:0}
+.signal b{display:block;margin-bottom:5px;font-size:15px}
+.signal span{display:block;color:#C9D8F9;font-size:12px;font-weight:700;line-height:1.45}
+
+.hero-visual{position:relative;min-height:590px;display:flex;align-items:center;justify-content:center}
+.hero-visual::before{
+  content:"";position:absolute;inset:35px 2px 25px 48px;background:var(--cyan);
+  border:1px solid var(--ink);border-radius:8px;box-shadow:10px 10px 0 var(--blue-deep);
+  transform:rotate(2deg);
+}
+.group-app{
+  position:relative;z-index:2;width:min(100%,430px);overflow:hidden;background:#F7F9FD;
+  color:var(--ink);border:1px solid var(--ink);border-radius:8px;
+  box-shadow:0 26px 55px rgba(4,20,66,.28);transform:rotate(-1deg);
+  transition:transform .25s;
+}
+.hero-visual:hover .group-app{transform:rotate(0) translateY(-3px)}
+.group-app-head{display:flex;align-items:center;justify-content:space-between;padding:16px 17px;background:var(--white);border-bottom:1px solid var(--line)}
+.group-app-title b{display:block;font-size:16px}
+.group-app-title span{display:block;margin-top:3px;color:#7A8496;font-size:11px;font-weight:700}
+.member-stack{display:flex}
+.avatar{
+  width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+  background:var(--blue);color:var(--white);font-size:11px;font-weight:950;border:2px solid var(--white);margin-left:-7px;
+}
+.avatar:first-child{margin-left:0;background:var(--coral)}
+.avatar:nth-child(2){background:var(--blue)}
+.avatar:nth-child(3){background:#36A86F}
+.group-budget{margin:13px;padding:16px;background:var(--blue);color:var(--white);border-radius:8px}
+.group-budget-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.group-budget small{display:block;color:#D9E5FF;font-size:11px;font-weight:700}
+.group-budget strong{display:block;margin-top:4px;font-size:25px}
+.group-dday{padding:5px 8px;background:rgba(255,255,255,.14);border-radius:5px;font-size:10px;font-weight:900}
+.group-progress{height:7px;margin-top:12px;overflow:hidden;background:rgba(255,255,255,.22);border-radius:7px}
+.group-progress i{display:block;width:35%;height:100%;background:var(--lime);border-radius:7px}
+.group-progress-copy{display:flex;justify-content:space-between;margin-top:6px;color:#D9E5FF;font-size:10px;font-weight:700}
+.member-budget-list{display:grid;gap:10px;margin-top:12px}
+.member-budget-row{padding-top:10px;border-top:1px solid rgba(255,255,255,.2)}
+.member-budget-row:first-child{padding-top:0;border-top:0}
+.member-budget-copy{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:10px;font-weight:800}
+.member-budget-copy span:last-child{color:#D9E5FF}
+.member-budget-bar{height:5px;margin-top:6px;overflow:hidden;background:rgba(255,255,255,.2);border-radius:5px}
+.member-budget-bar i{display:block;height:100%;background:var(--lime);border-radius:5px}
+.member-budget-row:nth-child(2) .member-budget-bar i{background:var(--cyan)}
+.record-section-title{display:flex;justify-content:space-between;padding:3px 15px 8px;font-size:12px;font-weight:900}
+.record-section-title span{color:#838C9D;font-size:10px}
+.record-list{margin:0 13px 13px;background:var(--white);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.record-row{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;
+  padding:11px;border-bottom:1px solid var(--line);
+}
+.record-row:last-child{border-bottom:0}
+.record-thumb{width:62px;height:52px;object-fit:cover;border-radius:7px;background:#DCE7F7}
+.record-icon{width:42px;height:42px;border-radius:7px;display:grid;place-items:center;background:var(--blue-soft);font-size:19px}
+.record-info{min-width:0}
+.record-info b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.record-info>span{display:block;margin-top:3px;color:#7B8597;font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.record-amount{align-self:start;color:#D34B50;font-size:12px;font-weight:950;white-space:nowrap}
+.record-reactions{display:flex;gap:5px;margin-top:7px}
+.reaction-strip{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.reaction-button{
+  min-width:47px;height:29px;padding:0 8px;border:1px solid var(--line);border-radius:999px;
+  background:#F7F9FD;color:var(--ink);font-size:12px;font-weight:850;transition:background .15s,border-color .15s,transform .15s;
+}
+.reaction-button:hover{border-color:var(--blue-line);background:var(--blue-soft)}
+.reaction-button.active{border-color:var(--blue);background:var(--blue-soft);color:var(--blue);transform:translateY(-1px)}
+.group-app-foot{
+  display:flex;justify-content:space-between;align-items:center;padding:11px 15px;background:var(--white);
+  border-top:1px solid var(--line);font-size:11px;font-weight:800;color:#778195;
+}
+.group-app-foot b{color:var(--blue)}
+.budget-float{
+  position:absolute;z-index:4;right:-20px;bottom:42px;width:190px;padding:14px;
+  background:var(--lime);color:var(--ink);border:1px solid var(--ink);border-radius:8px;
+  box-shadow:6px 6px 0 var(--ink);transform:rotate(2deg);
+}
+.budget-float span{display:block;font-size:11px;font-weight:800}
+.budget-float strong{display:block;margin-top:4px;font-size:20px}
+.budget-float small{display:block;margin-top:5px;color:#536129;font-size:10px;font-weight:750}
+
+.route-band{background:var(--white);border-bottom:1px solid var(--line)}
+.route-grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.route-link{
+  display:flex;align-items:center;gap:12px;width:100%;padding:20px 22px;
+  background:transparent;border:0;border-right:1px solid var(--line);text-align:left;
+  transition:background .15s;
+}
+.route-link:last-child{border-right:0}
+.route-link:hover{background:var(--blue-soft)}
+.route-no{
+  width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;
+  background:var(--blue);color:var(--white);font-size:11px;font-weight:950;
+}
+.route-link b{display:block;font-size:14px}
+.route-link span:last-child{display:block;margin-top:2px;color:var(--muted);font-size:11px;font-weight:700}
+
+.section{padding:86px 0}
+.section-head{max-width:780px;margin-bottom:38px}
+.section-kicker{margin:0 0 11px;color:var(--blue);font-size:12px;font-weight:950;text-transform:uppercase}
+h2{margin:0;font-size:40px;line-height:1.2;font-weight:950;letter-spacing:0}
+.section-copy{margin:15px 0 0;color:var(--muted);font-size:17px;line-height:1.7}
+#value{background:var(--white)}
+.value-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.value-card{
+  position:relative;min-height:260px;padding:22px;background:var(--blue-soft);
+  border:1px solid var(--blue-line);border-radius:8px;overflow:hidden;
+}
+.value-card:nth-child(2){background:var(--blue);color:var(--white);border-color:var(--blue)}
+.value-card:nth-child(3){background:var(--lime);border-color:#A8D437}
+.value-card:nth-child(4){background:var(--coral);border-color:#E96754}
+.value-card .tag{
+  display:inline-flex;padding:6px 8px;background:var(--white);color:var(--blue);border-radius:5px;
+  font-size:11px;font-weight:950;
+}
+.value-card:nth-child(2) .tag{background:rgba(255,255,255,.15);color:var(--white)}
+.value-card:nth-child(3) .tag,.value-card:nth-child(4) .tag{color:var(--ink)}
+.value-card h3{margin:58px 0 10px;font-size:24px}
+.value-card p{margin:0;color:var(--muted);line-height:1.65;font-weight:650}
+.value-card:nth-child(2) p{color:#DCE6FF}
+.value-card:nth-child(3) p,.value-card:nth-child(4) p{color:#414936}
+.value-visual{position:absolute;right:18px;top:18px;font-size:44px;line-height:1}
+
+#features{background:var(--blue-soft)}
+.demo-grid{display:grid;grid-template-columns:.78fr 1.22fr;gap:56px;align-items:start}
+.demo-copy .section-head{margin-bottom:26px}
+.demo-points{display:grid;gap:0;border-top:1px solid var(--blue-line)}
+.demo-point{display:flex;gap:13px;padding:17px 0;border-bottom:1px solid var(--blue-line)}
+.demo-point strong{
+  width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;
+  background:var(--blue);color:var(--white);font-size:11px;
+}
+.demo-point b{display:block;font-size:15px}
+.demo-point span{display:block;margin-top:4px;color:var(--muted);font-size:13px;line-height:1.5;font-weight:650}
+.demo-card{
+  background:var(--white);border:1px solid var(--ink);border-radius:8px;overflow:hidden;
+  box-shadow:9px 9px 0 var(--blue);color:var(--ink);
+}
+.demo-stack{display:grid;gap:20px}
+.demo-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 15px;border-bottom:1px solid var(--line)}
+.demo-toolbar b{font-size:14px}
+.privacy-label{padding:6px 8px;background:var(--blue-soft);color:var(--blue);border-radius:5px;font-size:10px;font-weight:900;white-space:nowrap}
+.upload-button{
+  display:inline-flex;align-items:center;justify-content:center;padding:9px 12px;
+  background:var(--blue);color:var(--white);border-color:var(--blue);font-size:12px;
+}
+.photo-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.record-form{padding:17px;background:#F8FAFE}
+.record-form-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.record-form-top small{display:block;color:#7A8496;font-size:11px;font-weight:800}
+.record-form-top strong{display:block;margin-top:3px;font-size:28px}
+.category-badge{padding:7px 10px;background:#E9F0FF;color:var(--blue);border-radius:6px;font-size:11px;font-weight:900}
+.record-memo{margin-top:13px;padding:11px 12px;background:var(--white);border:1px solid var(--line);border-radius:7px;color:#505A6C;font-size:13px;font-weight:700}
+.share-mode-label{display:block;margin-top:13px;color:#687386;font-size:11px;font-weight:900}
+.share-mode{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:7px}
+.share-option{
+  min-height:42px;padding:7px;border:1px solid #CBD6EB;border-radius:6px;background:var(--white);
+  color:#596579;font-size:11px;font-weight:850;cursor:pointer;transition:background .15s,border-color .15s,color .15s;
+}
+.share-option:hover{border-color:var(--blue)}
+.share-option.active{background:var(--blue);border-color:var(--blue);color:var(--white)}
+.attachment-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;margin-top:12px;padding:11px;background:var(--white);border:1px solid var(--line);border-radius:7px}
+.attachment-thumb{width:76px;height:58px;object-fit:cover;border-radius:6px;background:#DCE7F7}
+.attachment-copy b{display:block;font-size:12px}
+.attachment-copy span{display:block;margin-top:3px;color:#7A8496;font-size:10px;font-weight:700;line-height:1.4}
+.record-preview-label{padding:13px 15px 8px;border-top:1px solid var(--line);color:#7A8496;font-size:11px;font-weight:900}
+.demo-record{grid-template-columns:auto minmax(0,1fr);margin:0 15px 10px;border:1px solid var(--line);border-radius:8px;background:var(--white)}
+.demo-record.no-photo{grid-template-columns:1fr}
+.demo-record.no-photo .record-thumb{display:none}
+.demo-record .record-thumb{width:70px;height:62px}
+.record-main-line{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.record-main-line .record-amount{align-self:auto}
+.private-record-note{display:none;margin:0 15px 10px;padding:18px;background:#F7F9FD;border:1px dashed #B8C5DC;border-radius:8px;color:#657185;text-align:center;font-size:12px;font-weight:800}
+.private-record-note.show{display:block}
+.demo-note{margin:0 15px 15px;color:#7A8496;font-size:11px;font-weight:700}
+
+.chat-card{background:var(--white);border:1px solid var(--ink);border-radius:8px;overflow:hidden;box-shadow:9px 9px 0 var(--cyan)}
+.chat-head{display:flex;align-items:center;justify-content:space-between;padding:14px 15px;border-bottom:1px solid var(--line)}
+.chat-head b{font-size:14px}
+.chat-head span{color:#778195;font-size:11px;font-weight:800}
+.chat-messages{display:flex;flex-direction:column;gap:9px;min-height:155px;max-height:210px;overflow-y:auto;padding:14px;background:#F7F9FD}
+.chat-message{display:flex;align-items:flex-end;gap:7px;max-width:84%}
+.chat-message.mine{align-self:flex-end;flex-direction:row-reverse}
+.chat-avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;background:var(--coral);color:var(--white);font-size:9px;font-weight:950}
+.chat-bubble{padding:9px 11px;background:var(--white);border:1px solid var(--line);border-radius:8px;font-size:12px;line-height:1.45;font-weight:700}
+.chat-message.mine .chat-bubble{background:var(--blue);border-color:var(--blue);color:var(--white)}
+.chat-form{display:grid;grid-template-columns:1fr auto;gap:8px;padding:11px;border-top:1px solid var(--line)}
+.chat-form input{width:100%;height:42px;padding:0 12px;background:#F7F9FD;border:1px solid #CBD6EB;border-radius:7px;outline:none}
+.chat-form input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(23,70,198,.12)}
+.chat-send{height:42px;padding:0 15px;border:0;border-radius:7px;background:var(--blue);color:var(--white);font-weight:900}
+
+#target{background:var(--blue-deep);color:var(--white)}
+#target .section-kicker{color:var(--cyan)}
+#target .section-copy{color:#C9D8F9}
+.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.metric-card{min-height:220px;padding:22px;background:var(--white);color:var(--ink);border-radius:8px}
+.metric-card:nth-child(2){background:var(--cyan)}
+.metric-card:nth-child(3){background:var(--coral)}
+.metric-card strong{display:block;font-size:34px;color:var(--blue);margin-bottom:28px}
+.metric-card:nth-child(2) strong,.metric-card:nth-child(3) strong{color:var(--ink)}
+.metric-card h3{margin:0 0 9px;font-size:20px}
+.metric-card p{margin:0;color:#515B6D;line-height:1.6;font-weight:650}
+.metric-card:nth-child(2) p,.metric-card:nth-child(3) p{color:#39414E}
+
+#apply{background:var(--white)}
+.form-grid{display:grid;grid-template-columns:.78fr 1.22fr;gap:34px;align-items:start}
+.form-aside{
+  position:sticky;top:96px;padding:31px;background:var(--blue);color:var(--white);
+  border:1px solid var(--blue-deep);border-radius:8px;box-shadow:8px 8px 0 var(--lime);
+}
+.form-aside .section-kicker{color:var(--cyan)}
+.form-aside h2{font-size:34px}
+.form-aside p{color:#DCE7FF;line-height:1.7;font-weight:650}
+.criteria{display:grid;gap:12px;margin-top:24px;padding-top:22px;border-top:1px solid rgba(255,255,255,.25)}
+.criteria div{display:flex;align-items:center;gap:10px;color:#EDF3FF;font-weight:800}
+.criteria i{width:9px;height:9px;border-radius:2px;background:var(--lime);flex:0 0 auto}
+.form-panel{padding:28px;background:var(--white);border:1px solid var(--line);border-radius:8px;box-shadow:0 16px 45px rgba(18,48,120,.12)}
+.field{margin-bottom:18px}
+.field label,.group-label{display:block;margin-bottom:8px;color:#30394B;font-size:13px;font-weight:900}
+.field input,.field select{
+  width:100%;height:50px;padding:0 14px;background:#F7F9FD;border:1px solid #CAD4E8;
+  border-radius:7px;outline:none;transition:border-color .15s,box-shadow .15s,background .15s;
+}
+.field input:focus,.field select:focus{background:var(--white);border-color:var(--blue);box-shadow:0 0 0 3px rgba(23,70,198,.14)}
+.optional-fields{margin:0 0 18px;border:1px solid var(--line);border-radius:7px;background:#F7F9FD}
+.optional-fields summary{padding:13px 14px;color:var(--blue);font-size:13px;font-weight:900;cursor:pointer}
+.optional-fields-body{padding:4px 14px 1px;border-top:1px solid var(--line)}
+.optional-fields-body .field:last-child{margin-bottom:14px}
+.radio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.radio-card{
+  position:relative;display:block;min-height:90px;padding:12px;background:#F7F9FD;
+  border:1px solid #CAD4E8;border-radius:7px;cursor:pointer;transition:background .15s,border-color .15s,box-shadow .15s;
+}
+.radio-card input{position:absolute;opacity:0;pointer-events:none}
+.radio-card b{display:block;margin-bottom:5px;font-size:14px}
+.radio-card span{display:block;color:#687387;font-size:12px;line-height:1.45;font-weight:700}
+.radio-card:has(input:checked){background:var(--blue-soft);border-color:var(--blue);box-shadow:0 0 0 2px rgba(23,70,198,.12)}
+.consent{display:flex;gap:10px;align-items:flex-start;margin:19px 0;color:#5D677A;font-size:13px;line-height:1.5;font-weight:700}
+.consent input{margin-top:3px;accent-color:var(--blue)}
+.submit-btn{width:100%;height:55px;background:var(--blue);color:var(--white);border-color:var(--blue);font-size:16px;box-shadow:4px 4px 0 var(--blue-deep)}
+.form-foot{margin:12px 0 0;color:#7A8495;font-size:12px;line-height:1.5}
+.success{display:none;margin-top:15px;padding:21px;background:#F1FFD2;border:1px solid #A8D437;border-radius:8px}
+.success.show{display:block}
+.success h3{margin:0 0 8px;font-size:20px}
+.success p{margin:0;color:#4D5941;line-height:1.6;font-weight:700}
+.share-btn{margin-top:14px;padding:13px 16px;background:var(--blue);color:var(--white);border-color:var(--blue)}
+.toast{
+  position:fixed;left:50%;bottom:22px;z-index:80;max-width:calc(100% - 32px);
+  padding:12px 16px;background:var(--ink);color:var(--white);border-radius:7px;
+  font-size:14px;font-weight:800;opacity:0;pointer-events:none;
+  transform:translateX(-50%) translateY(18px);transition:opacity .2s,transform .2s;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.footer{padding:34px 0 46px;background:var(--blue-deep);color:#BFD0FA;font-size:13px}
+.footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.debug-link{padding:0;border:0;background:none;color:#BFD0FA;text-decoration:underline}
+.mobile-apply-bar{display:none}
+
+@media(max-width:980px){
+  .hero-grid,.demo-grid,.form-grid{grid-template-columns:1fr}
+  .value-grid{grid-template-columns:repeat(2,1fr)}
+  .hero-grid{gap:34px}
+  .hero-visual{min-height:0;max-height:300px;align-items:flex-start;overflow:hidden}
+  .hero-visual::before{inset:25px 12% auto;height:430px}
+  .budget-float{display:none}
+  .demo-grid{gap:32px}
+  .form-aside{position:static}
+}
+@media(max-width:720px){
+  .page{padding-bottom:72px}
+  .wrap{width:min(100% - 28px,1180px)}
+  .nav{height:64px}
+  .nav-links{display:none}
+  .brand-mark{width:30px;height:30px}
+  .hero{padding:30px 0 24px}
+  .eyebrow{margin-bottom:16px}
+  h1{font-size:42px;line-height:1.08}
+  .mobile-break{display:block}
+  .hero-copy{margin-top:17px;font-size:16px;line-height:1.62}
+  .hero-actions{align-items:stretch;margin-top:24px}
+  .primary-cta,.ghost-cta{width:100%;text-align:center}
+  .signal-row{grid-template-columns:repeat(3,minmax(122px,1fr));overflow-x:auto;scrollbar-width:none;margin-top:23px}
+  .signal-row::-webkit-scrollbar{display:none}
+  .signal{padding:13px}
+  .hero-visual{max-height:180px;margin-top:2px}
+  .hero-visual::before{inset:18px 4px auto 26px;height:340px;box-shadow:6px 6px 0 var(--blue-deep)}
+  .group-app{width:min(100%,360px)}
+  .route-grid{grid-template-columns:1fr}
+  .route-link{padding:14px;border-right:0;border-bottom:1px solid var(--line)}
+  .route-link:last-child{border-bottom:0}
+  .section{padding:64px 0}
+  .section-head{margin-bottom:28px}
+  h2{font-size:30px}
+  .value-grid,.metrics-grid,.radio-grid{grid-template-columns:1fr}
+  .value-card{min-height:220px}
+  .value-card h3{margin-top:45px}
+  .demo-card{box-shadow:6px 6px 0 var(--blue)}
+  .attachment-row{grid-template-columns:auto 1fr}
+  .attachment-row .upload-button{grid-column:1/-1;width:100%}
+  .share-mode{grid-template-columns:repeat(2,1fr)}
+  .chat-card{box-shadow:6px 6px 0 var(--cyan)}
+  .form-aside{padding:24px;box-shadow:6px 6px 0 var(--lime)}
+  .form-panel{padding:19px}
+  .mobile-apply-bar{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;align-items:center;
+    justify-content:space-between;gap:14px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+    background:rgba(11,43,131,.96);color:var(--white);border-top:1px solid rgba(255,255,255,.22);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  }
+  .mobile-apply-bar span{font-size:12px;font-weight:800}
+  .mobile-cta{padding:10px 14px;background:var(--lime);color:var(--ink);border-color:var(--ink);white-space:nowrap}
+}
+@media(max-width:390px){
+  h1{font-size:36px}
+  .brand span:last-child{font-size:14px}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *{transition:none!important}
+}
+
+/* v7 need-validation layout */
+.need-hero{
+  min-height:calc(100svh - 70px);padding:42px 0;background:var(--blue);
+  display:flex;align-items:center;
+}
+.need-hero-grid{
+  display:grid;grid-template-columns:minmax(0,.92fr) minmax(430px,.78fr);
+  gap:72px;align-items:center;
+}
+.need-question h1{max-width:720px;font-size:60px;line-height:1.08}
+.need-question .hero-copy{max-width:620px;margin-top:22px}
+.need-question .hero-actions{margin-top:27px}
+.need-research-note{
+  max-width:610px;margin:18px 0 0;padding-top:17px;border-top:1px solid rgba(255,255,255,.28);
+  color:#D7E3FF;font-size:13px;line-height:1.55;font-weight:750;
+}
+.need-phone-stage.hero-visual{
+  min-height:590px;display:flex;align-items:center;justify-content:center;overflow:visible;
+}
+.need-phone-stage.hero-visual::before{
+  inset:34px 8px 28px 42px;height:auto;background:var(--cyan);border:1px solid var(--ink);
+  border-radius:8px;box-shadow:10px 10px 0 var(--blue-deep);transform:rotate(2deg);
+}
+.need-phone{
+  position:relative;z-index:2;width:min(100%,440px);overflow:hidden;background:#F7F9FD;
+  color:var(--ink);border:1px solid var(--ink);border-radius:8px;
+  box-shadow:0 24px 52px rgba(5,24,73,.25);transform:rotate(-1deg);
+}
+.need-phone-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:16px 17px;background:var(--white);border-bottom:1px solid var(--line);
+}
+.need-phone-head b,.need-phone-head span{display:block}
+.need-phone-head b{font-size:16px}
+.need-phone-head div span{margin-top:3px;color:#778195;font-size:11px;font-weight:750}
+.need-live{padding:6px 8px;border-radius:5px;background:var(--blue-soft);color:var(--blue);font-size:10px;font-weight:900}
+.need-goal{margin:14px;padding:15px;background:var(--blue);color:var(--white);border-radius:7px}
+.need-goal-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.need-goal-title b{font-size:12px}.need-goal-title span{color:#DCE7FF;font-size:10px;font-weight:750}
+.need-member-goals{display:grid;gap:10px}
+.need-member-goal{padding-top:10px;border-top:1px solid rgba(255,255,255,.2)}
+.need-member-goal:first-child{padding-top:0;border-top:0}
+.need-goal-copy{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.need-member-name{display:flex;align-items:center;gap:7px;min-width:0;font-size:10px;font-weight:850}
+.need-member-name i{
+  width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;
+  background:var(--coral);color:var(--white);font-size:8px;font-style:normal;font-weight:950;
+}
+.need-member-goal:nth-child(2) .need-member-name i{background:#36A86F}
+.need-member-goal:nth-child(3) .need-member-name i{background:#7B5BE7}
+.need-goal-copy strong{font-size:11px}
+.need-progress{height:6px;margin-top:7px;overflow:hidden;border-radius:8px;background:rgba(255,255,255,.22)}
+.need-progress i{display:block;width:66%;height:100%;border-radius:8px;background:var(--lime)}
+.need-member-goal:nth-child(2) .need-progress i{width:52%;background:var(--cyan)}
+.need-member-goal:nth-child(3) .need-progress i{width:73%;background:#FF9A8A}
+.need-goal-meta{display:flex;justify-content:space-between;margin-top:5px;color:#DCE7FF;font-size:9px;font-weight:750}
+.need-feed{
+  display:grid;grid-template-columns:144px minmax(0,1fr);gap:14px;margin:0 14px 12px;
+  overflow:hidden;background:var(--white);border:1px solid var(--line);border-radius:7px;
+}
+.need-feed>img{width:144px;height:156px;object-fit:cover}
+.need-feed-copy{padding:14px 13px 12px 0;min-width:0}
+.need-feed-copy>span,.need-feed-copy>small{display:block;color:#798397;font-size:10px;font-weight:750}
+.need-feed-copy>b{display:block;margin:7px 0 6px;font-size:14px;line-height:1.4}
+.need-feed-copy .record-reactions{margin-top:14px}
+.need-phone-chat{
+  display:flex;align-items:center;gap:10px;padding:12px 15px;background:var(--white);border-top:1px solid var(--line);
+}
+.need-phone-chat span{width:27px;height:27px;border-radius:50%;display:grid;place-items:center;background:var(--coral);color:var(--white);font-size:9px;font-weight:950}
+.need-phone-chat p{margin:0;padding:8px 10px;background:var(--blue-soft);border-radius:7px;font-size:11px;font-weight:750}
+
+.need-demo-section{min-height:100svh;padding:68px 0;background:var(--white);scroll-margin-top:70px}
+.need-demo-intro{
+  display:grid;grid-template-columns:.72fr 1.28fr;gap:58px;align-items:end;margin-bottom:32px;
+}
+.need-demo-intro h2{font-size:42px}
+.need-steps{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--blue-line);border-bottom:1px solid var(--blue-line)}
+.need-step{display:flex;gap:10px;padding:16px 14px;border-right:1px solid var(--blue-line)}
+.need-step:last-child{border-right:0}
+.need-step strong{
+  width:25px;height:25px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;
+  background:var(--blue);color:var(--white);font-size:10px;
+}
+.need-step span,.need-step b{display:block}
+.need-step b{margin-bottom:4px;font-size:13px}
+.need-step span{color:var(--muted);font-size:11px;line-height:1.45;font-weight:700}
+.need-workspace{display:grid;grid-template-columns:1.25fr .75fr;gap:22px;align-items:stretch}
+.need-record-card{box-shadow:7px 7px 0 var(--blue);display:flex;flex-direction:column}
+.need-record-compose{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px;padding:16px;background:#F7F9FD}
+.need-photo-wrap{position:relative;height:158px;overflow:hidden;border:1px solid var(--line);border-radius:7px;background:#DCE7F7}
+.need-photo-wrap>img{width:100%;height:100%;object-fit:cover}
+.need-photo-wrap .upload-button{position:absolute;right:8px;bottom:8px;border-color:var(--white);box-shadow:0 4px 12px rgba(0,0,0,.16)}
+.need-record-controls{min-width:0;padding-top:3px}
+.need-record-controls>small{display:block;color:#6D788B;font-size:11px;font-weight:800}
+.need-record-controls>b{display:block;margin-top:7px;font-size:19px}
+.need-record-controls .share-mode-label{margin-top:19px}
+.need-record-card .share-mode{grid-template-columns:repeat(4,minmax(62px,1fr))}
+.need-record-card .demo-record{
+  flex:1;grid-template-columns:auto minmax(0,1fr);margin:0;padding:14px 16px;border:0;border-top:1px solid var(--line);border-radius:0;
+}
+.need-record-card .demo-record .record-thumb{width:76px;height:66px}
+.need-record-card .private-record-note{margin:14px}
+.need-chat-card{box-shadow:7px 7px 0 var(--cyan);display:flex;flex-direction:column}
+.need-chat-card .chat-messages{flex:1;min-height:170px}
+.need-chat-card .chat-form{padding:10px}
+.need-inline-cta{
+  min-height:48px;margin:0 10px 10px;border:1px solid var(--blue);border-radius:7px;
+  background:var(--blue);color:var(--white);font-weight:900;
+}
+
+.need-apply{
+  min-height:calc(100svh - 70px);padding:72px 0;background:var(--blue-soft);
+  display:flex;align-items:center;scroll-margin-top:70px;
+}
+.need-form-grid{grid-template-columns:.82fr 1.18fr;gap:64px;align-items:center}
+.need-form-aside{
+  position:static;padding:0;background:transparent;color:var(--ink);border:0;border-radius:0;box-shadow:none;
+}
+.need-form-aside .section-kicker{color:var(--blue)}
+.need-form-aside h2{font-size:42px}
+.need-form-aside p{max-width:500px;margin:18px 0 0;color:var(--muted);font-size:16px;line-height:1.65;font-weight:650}
+.need-answer-summary{display:flex;gap:8px;margin-top:24px}
+.need-answer-summary span{padding:7px 9px;border:1px solid var(--blue-line);border-radius:5px;background:var(--white);color:var(--blue);font-size:11px;font-weight:900}
+.need-form-panel{padding:26px}
+.need-intent-field{margin-top:22px}
+.need-form-panel .radio-card{min-height:96px}
+.need-form-panel textarea{
+  width:100%;min-height:98px;padding:13px 14px;resize:vertical;background:#F7F9FD;
+  border:1px solid #CAD4E8;border-radius:7px;outline:none;line-height:1.55;
+  transition:border-color .15s,box-shadow .15s,background .15s;
+}
+.need-form-panel textarea:focus{background:var(--white);border-color:var(--blue);box-shadow:0 0 0 3px rgba(23,70,198,.14)}
+.need-feedback-field{margin-top:20px}
+.optional-label{color:#7A8495;font-size:11px;font-weight:800}
+.need-form-panel .consent{margin-top:17px}
+
+@media(max-width:980px){
+  .need-hero{min-height:auto}
+  .need-hero-grid{grid-template-columns:1fr;gap:20px}
+  .need-phone-stage.hero-visual{min-height:430px;max-height:none;overflow:visible}
+  .need-phone-stage.hero-visual::before{inset:22px 13% 18px 18%}
+  .need-demo-intro{grid-template-columns:1fr;gap:22px}
+  .need-workspace{grid-template-columns:1fr}
+  .need-form-grid{grid-template-columns:1fr;gap:34px}
+}
+@media(max-width:720px){
+  body{overflow-x:hidden}
+  .page{padding-bottom:76px}
+  .wrap{width:min(100% - 32px,1180px)}
+  .nav{height:58px;gap:12px}
+  .brand{gap:8px}
+  .brand-mark{width:28px;height:28px;border-radius:6px;box-shadow:2px 2px 0 var(--lime)}
+  .brand span:last-child{font-size:14px}
+  .nav-cta{min-height:40px;padding:8px 12px;font-size:12px}
+  .need-hero{padding:30px 0 28px}
+  .need-hero-grid{gap:24px}
+  .need-question h1{font-size:38px;line-height:1.12}
+  .need-question .hero-copy{font-size:15px;line-height:1.58}
+  .need-question .hero-actions{display:grid;grid-template-columns:1fr;margin-top:22px}
+  .need-question .primary-cta{min-height:54px;padding:14px 18px}
+  .need-question .ghost-cta{min-height:44px;padding:11px 14px;border-color:rgba(255,255,255,.45)}
+  .need-research-note{margin-top:15px;padding-top:14px}
+  .need-phone-stage.hero-visual{min-height:410px;max-height:none;margin-top:0;overflow:visible}
+  .need-phone-stage.hero-visual::before{inset:12px 2px 8px 12px;height:auto;border-radius:7px;box-shadow:5px 5px 0 var(--blue-deep);transform:none}
+  .need-phone{width:100%;transform:none;box-shadow:0 14px 30px rgba(5,24,73,.22)}
+  .need-phone-head{padding:12px 13px}
+  .need-phone-head b{font-size:14px}
+  .need-live{padding:5px 7px}
+  .need-goal{margin:10px;padding:11px}
+  .need-goal-title{margin-bottom:9px}
+  .need-member-goals{gap:7px}
+  .need-member-goal{padding-top:7px}
+  .need-member-name{font-size:9px}
+  .need-goal-copy strong{font-size:10px}
+  .need-feed{grid-template-columns:104px minmax(0,1fr);margin:0 10px 10px}
+  .need-feed>img{width:104px;height:121px}
+  .need-feed-copy{padding:10px 8px 8px 0}
+  .need-feed-copy>b{margin:5px 0;font-size:12px}
+  .need-feed-copy .record-reactions{margin-top:8px}
+  .need-phone-chat{display:none}
+  .need-demo-section{min-height:auto;padding:50px 0 56px;scroll-margin-top:58px}
+  .need-demo-intro{margin-bottom:24px}
+  .need-demo-intro h2{font-size:30px}
+  .need-steps{grid-template-columns:1fr}
+  .need-step{align-items:center;padding:12px 0;border-right:0;border-bottom:1px solid var(--blue-line)}
+  .need-step:last-child{border-bottom:0}
+  .need-step strong{width:28px;height:28px}
+  .need-workspace{gap:18px}
+  .need-record-card,.need-chat-card{box-shadow:4px 4px 0 var(--blue)}
+  .need-chat-card{box-shadow:4px 4px 0 var(--cyan)}
+  .demo-toolbar,.chat-head{padding:12px}
+  .demo-toolbar b,.chat-head b{font-size:12px}
+  .need-record-compose{grid-template-columns:130px minmax(0,1fr);gap:12px;padding:12px}
+  .need-photo-wrap{height:150px}
+  .need-photo-wrap .upload-button{left:7px;right:7px;padding:7px 5px;font-size:10px}
+  .need-record-controls>b{font-size:16px}
+  .need-record-controls .share-mode-label{margin-top:12px}
+  .need-record-card .share-mode{grid-template-columns:repeat(2,1fr)}
+  .need-record-card .share-option{min-height:44px}
+  .need-record-card .demo-record{padding:12px}
+  .need-record-card .demo-record .record-thumb{width:64px;height:58px}
+  .need-record-card .record-main-line{align-items:flex-start}
+  .need-record-card .record-reactions{gap:4px}
+  .need-record-card .reaction-button{min-width:44px;height:32px;padding:0 7px}
+  .need-chat-card .chat-messages{min-height:140px}
+  .chat-message{max-width:92%}
+  .chat-form input,.chat-send{height:46px}
+  .need-inline-cta{min-height:50px}
+  .need-apply{min-height:auto;padding:50px 0 94px;scroll-margin-top:58px}
+  .need-form-grid{gap:26px}
+  .need-form-aside h2{font-size:30px}
+  .need-form-aside p{margin-top:13px;font-size:14px}
+  .need-answer-summary{margin-top:17px}
+  .need-answer-summary span{padding:6px 8px}
+  .need-form-panel{padding:18px;box-shadow:0 10px 28px rgba(18,48,120,.1)}
+  .need-form-panel .field input{height:52px;font-size:16px}
+  .need-form-panel .radio-grid{gap:9px}
+  .need-form-panel .radio-card{min-height:78px;padding:12px 13px}
+  .need-form-panel textarea{min-height:108px;font-size:16px}
+  .need-form-panel .consent{margin:17px 0;font-size:12px}
+  .need-form-panel .consent input{width:18px;height:18px;flex:0 0 auto}
+  .need-form-panel .submit-btn{height:56px}
+  .mobile-apply-bar{
+    min-height:66px;padding:9px 12px calc(9px + env(safe-area-inset-bottom));
+  }
+  .mobile-apply-bar span{max-width:150px;font-size:11px;line-height:1.35}
+  .mobile-cta{min-height:44px;padding:9px 13px}
+  .footer{padding:28px 0 34px}
+  .footer .wrap{display:grid;gap:12px}
+}
+@media(max-width:480px){
+  .need-record-compose{grid-template-columns:1fr}
+  .need-photo-wrap{height:auto;aspect-ratio:16/9}
+  .need-photo-wrap .upload-button{left:auto;right:8px;width:auto;padding:8px 10px}
+  .need-record-controls{padding-top:1px}
+  .need-record-controls .share-mode-label{margin-top:14px}
+}
+@media(max-width:390px){
+  .wrap{width:min(100% - 24px,1180px)}
+  .need-question h1{font-size:34px}
+  .need-question .hero-copy{font-size:14px}
+  .need-phone-stage.hero-visual{min-height:400px}
+  .need-phone-head div span{font-size:10px}
+  .need-live{font-size:9px}
+  .need-goal-meta{font-size:8px}
+  .need-feed{grid-template-columns:92px minmax(0,1fr)}
+  .need-feed>img{width:92px}
+  .need-feed-copy>b{font-size:11px}
+  .need-feed-copy .reaction-button{min-width:42px}
+  .need-answer-summary{gap:5px}
+  .need-answer-summary span{font-size:10px}
+}
+@media(max-width:350px){
+  .need-question h1{font-size:31px}
+  .need-phone-head{align-items:flex-start}
+  .need-live{white-space:nowrap}
+  .need-goal-meta span:last-child{display:none}
+  .need-feed{grid-template-columns:86px minmax(0,1fr)}
+  .need-feed>img{width:86px}
+  .need-feed-copy .record-reactions{gap:3px}
+  .need-feed-copy .reaction-button{min-width:38px;padding:0 5px}
+  .mobile-apply-bar span{display:none}
+  .mobile-cta{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <div class="wrap nav">
+      <a class="brand" href="#top" aria-label="지출 모임 홈">
+        <span class="brand-mark">JM</span>
+        <span>지출 모임</span>
+      </a>
+      <nav class="nav-links" aria-label="페이지 이동">
+        <a href="#features">어떤 앱인가요?</a>
+        <a href="#apply">의사 남기기</a>
+      </nav>
+      <button class="nav-cta js-cta" data-placement="nav">써보고 싶어요</button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero need-hero">
+      <div class="wrap need-hero-grid">
+        <div class="need-question">
+          <h1>친구와 예산 목표를<br><span class="accent-word">함께 지키는 앱,</span><br>있으면 써보고 싶나요?</h1>
+          <p class="hero-copy">
+            각자 목표를 세우고, 지출이나 사진을 원하는 만큼 나누고,
+            반응과 채팅으로 서로 꾸준히 이어가는 <strong>소비 목표 모임 앱</strong>입니다.
+          </p>
+          <div class="hero-actions">
+            <button class="primary-cta js-cta" data-placement="hero">네, 써보고 싶어요</button>
+            <a class="ghost-cta js-learn" href="#features">어떤 앱인지 10초만 보기</a>
+          </div>
+          <p class="need-research-note">챌린지 참가 모집이 아니라, 이 앱을 실제로 원하는지 확인하는 사전 신청입니다.</p>
+        </div>
+
+        <div class="hero-visual need-phone-stage" aria-label="친구들과 예산 목표와 소비 기록을 공유하는 앱 화면 예시">
+          <article class="need-phone">
+            <div class="need-phone-head">
+              <div>
+                <b>7월 예산 모임</b>
+                <span>나 · 지민 · 수아</span>
+              </div>
+              <span class="need-live">함께 진행 중</span>
+            </div>
+            <div class="need-goal">
+              <div class="need-goal-title"><b>멤버별 예산 달성률</b><span>7월 23일 기준</span></div>
+              <div class="need-member-goals">
+                <div class="need-member-goal">
+                  <div class="need-goal-copy"><span class="need-member-name"><i>나</i>생활비 50만 원</span><strong>66%</strong></div>
+                  <div class="need-progress"><i></i></div>
+                  <div class="need-goal-meta"><span>32.8만 원 사용</span><span>17.2만 원 남음</span></div>
+                </div>
+                <div class="need-member-goal">
+                  <div class="need-goal-copy"><span class="need-member-name"><i>지</i>카페비 12만 원</span><strong>52%</strong></div>
+                  <div class="need-progress"><i></i></div>
+                  <div class="need-goal-meta"><span>6.2만 원 사용</span><span>5.8만 원 남음</span></div>
+                </div>
+                <div class="need-member-goal">
+                  <div class="need-goal-copy"><span class="need-member-name"><i>수</i>식비 35만 원</span><strong>73%</strong></div>
+                  <div class="need-progress"><i></i></div>
+                  <div class="need-goal-meta"><span>25.6만 원 사용</span><span>9.4만 원 남음</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="need-feed">
+              <img src="assets/cafe-expense-share.png" alt="친구와 공유한 카페 소비 사진">
+              <div class="need-feed-copy">
+                <span>지민 · 오후 카페</span>
+                <b>이번 주 카페 목표 지키는 중</b>
+                <small>사진만 공유 · 방금 전</small>
+                <div class="record-reactions">
+                  <button class="reaction-button js-reaction" type="button" data-emoji="👍" data-count="4" aria-pressed="false">👍 <span>4</span></button>
+                  <button class="reaction-button js-reaction" type="button" data-emoji="💙" data-count="2" aria-pressed="false">💙 <span>2</span></button>
+                </div>
+              </div>
+            </div>
+            <div class="need-phone-chat">
+              <span>수아</span>
+              <p>오늘 목표 잘 지켰네! 내일도 같이 가자</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="need-demo-section" id="features">
+      <div class="wrap">
+        <div class="need-demo-intro">
+          <div>
+            <p class="section-kicker">이런 앱을 생각하고 있어요</p>
+            <h2>각자 관리하고,<br>함께 포기하지 않기.</h2>
+          </div>
+          <div class="need-steps" aria-label="앱의 핵심 사용 방식">
+            <div class="need-step"><strong>1</strong><span><b>각자의 예산 목표</b>금액은 달라도 진행은 함께 봐요.</span></div>
+            <div class="need-step"><strong>2</strong><span><b>선택해서 공유</b>지출, 사진, 둘 다 원하는 만큼만.</span></div>
+            <div class="need-step"><strong>3</strong><span><b>반응하고 대화</b>잘한 날을 축하하고 흔들릴 때 붙잡아요.</span></div>
+          </div>
+        </div>
+
+        <div class="need-workspace">
+          <article class="demo-card need-record-card">
+            <div class="demo-toolbar">
+              <b>7월 예산 모임 · 오늘의 기록</b>
+              <span class="privacy-label" id="share-mode-label">지출+사진 공개</span>
+            </div>
+            <div class="need-record-compose">
+              <div class="need-photo-wrap">
+                <img id="demo-image" src="assets/cafe-expense-share.png" alt="지출 기록에 첨부할 사진 미리보기">
+                <label class="upload-button" for="photo-input">
+                  사진 바꾸기
+                  <input class="photo-input" id="photo-input" type="file" accept="image/*">
+                </label>
+              </div>
+              <div class="need-record-controls">
+                <small>18,500원 · 카페</small>
+                <b>친구와 보낸 오후</b>
+                <span class="share-mode-label">어떻게 보여줄까요?</span>
+                <div class="share-mode" aria-label="기록 공유 방식">
+                  <button class="share-option active" type="button" data-share-mode="expense_photo">지출+사진</button>
+                  <button class="share-option" type="button" data-share-mode="expense_only">지출만</button>
+                  <button class="share-option" type="button" data-share-mode="photo_only">사진만</button>
+                  <button class="share-option" type="button" data-share-mode="private">나만</button>
+                </div>
+              </div>
+            </div>
+            <div class="record-row demo-record" id="demo-record">
+              <img class="record-thumb" src="assets/cafe-expense-share.png" alt="카페 지출 기록에 첨부된 사진" id="demo-record-image">
+              <div class="record-info">
+                <div class="record-main-line"><b id="demo-record-title">나 · 오후 카페</b><strong class="record-amount" id="demo-record-amount">-18,500원</strong></div>
+                <span id="demo-record-meta">지출+사진 공개 · 방금 전</span>
+                <div class="record-reactions" aria-label="지출 기록 이모지 반응 체험">
+                  <button class="reaction-button js-reaction" type="button" data-emoji="👍" data-count="4" aria-pressed="false">👍 <span>4</span></button>
+                  <button class="reaction-button js-reaction" type="button" data-emoji="🔥" data-count="2" aria-pressed="false">🔥 <span>2</span></button>
+                  <button class="reaction-button js-reaction" type="button" data-emoji="💙" data-count="5" aria-pressed="false">💙 <span>5</span></button>
+                </div>
+              </div>
+            </div>
+            <div class="private-record-note" id="private-record-note">이 기록은 나만 볼 수 있어요.</div>
+          </article>
+
+          <article class="chat-card need-chat-card">
+            <div class="chat-head"><b>7월 예산 모임 · 채팅</b><span>3명</span></div>
+            <div class="chat-messages" id="chat-messages" aria-live="polite">
+              <div class="chat-message">
+                <span class="chat-avatar">지</span>
+                <div class="chat-bubble">예산 거의 다 쓰셨네요~?^^</div>
+              </div>
+              <div class="chat-message mine">
+                <span class="chat-avatar">나</span>
+                <div class="chat-bubble">오늘 저녁으로 삼김 먹겠습니다...</div>
+              </div>
+            </div>
+            <form class="chat-form" id="chat-form">
+              <input id="chat-input" type="text" maxlength="80" placeholder="응원 한마디" aria-label="모임 채팅 메시지">
+              <button class="chat-send" type="submit">보내기</button>
+            </form>
+            <button class="need-inline-cta js-cta" type="button" data-placement="quick_route">이 앱, 써보고 싶어요</button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="need-apply" id="apply">
+      <div class="wrap form-grid need-form-grid">
+        <aside class="form-aside need-form-aside">
+          <p class="section-kicker">30초 사전 신청</p>
+          <h2>이 앱을 써보고 싶다면,<br>의사를 남겨주세요.</h2>
+          <p>출시 준비가 되면 가장 먼저 알려드릴게요. 지금은 결제도, 챌린지 참여도 없습니다.</p>
+          <div class="need-answer-summary">
+            <span>이메일 1개</span>
+            <span>질문 1개</span>
+            <span>선택 의견</span>
+          </div>
+        </aside>
+
+        <div>
+          <form class="form-panel need-form-panel" id="beta-form" novalidate>
+            <div class="field">
+              <label for="email">안내받을 이메일</label>
+              <input id="email" name="email" type="email" placeholder="beta@example.com" autocomplete="email" required>
+            </div>
+
+            <div class="field need-intent-field">
+              <span class="group-label">친구와 함께 이 앱을 써볼 의향이 있나요?</span>
+              <div class="radio-grid" id="friend-intent-group">
+                <label class="radio-card">
+                  <input type="radio" name="friendIntent" value="yes" required>
+                  <b>네, 같이 써보고 싶어요</b>
+                  <span>함께 시작할 사람이 있어요.</span>
+                </label>
+                <label class="radio-card">
+                  <input type="radio" name="friendIntent" value="maybe">
+                  <b>앱은 원하는데 아직 몰라요</b>
+                  <span>친구에게 먼저 물어볼게요.</span>
+                </label>
+                <label class="radio-card">
+                  <input type="radio" name="friendIntent" value="solo">
+                  <b>혼자라면 써보고 싶어요</b>
+                  <span>공유 없이 개인 사용을 원해요.</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="field need-feedback-field">
+              <label for="feedback">있으면 좋을 기능이나 의견 <span class="optional-label">(선택)</span></label>
+              <textarea id="feedback" name="feedback" maxlength="500" placeholder="예: 목표를 놓치기 전에 친구가 알림을 보내줄 수 있으면 좋겠어요."></textarea>
+            </div>
+
+            <label class="consent">
+              <input id="consent" name="consent" type="checkbox" required>
+              <span>베타 안내와 수요 확인을 위해 응답을 저장하는 데 동의합니다.</span>
+            </label>
+            <button class="submit-btn" type="submit">써보고 싶다고 남기기</button>
+            <p class="form-foot">이메일은 베타 안내에만 사용합니다.</p>
+          </form>
+          <div class="success" id="success-panel" role="status" aria-live="polite">
+            <h3>의사를 남겨주셔서 감사합니다.</h3>
+            <p id="success-copy">베타가 준비되면 이메일로 알려드릴게요.</p>
+            <button class="share-btn" id="share-btn" type="button">친구에게도 물어보기</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <span>지출 모임 v7 베타 실험</span>
+      <button class="debug-link" id="debug-link" type="button">이 브라우저의 실험 로그 보기</button>
+    </div>
+  </footer>
+</div>
+<div class="mobile-apply-bar">
+  <span>이런 앱, 써보고 싶나요?</span>
+  <button class="mobile-cta js-cta" type="button" data-placement="mobile_sticky">의사 남기기</button>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const APP_VERSION="v7";
+const SCHEMA_VERSION=1;
+const EXPERIMENT_ENDPOINT="https://script.google.com/macros/s/AKfycbzdsmS0EsBl_ghlMutrZYy40pMQaY8PtA1YiBHdyqEV05qaGHxaEzPri4Mi9RLr6Ru55A/exec";
+const VISITOR_KEY="budget-book-v7-visitor";
+const SESSION_KEY="budget-book-v7-session";
+const EVENT_OUTBOX_KEY="budget-book-v7-event-outbox";
+const APPLICATIONS_KEY="budget-book-v7-applications";
+const SESSION_TIMEOUT_MS=30*60*1000;
+
+const $=(selector,root=document)=>root.querySelector(selector);
+const $$=(selector,root=document)=>Array.from(root.querySelectorAll(selector));
+
+function randomId(){
+  if(window.crypto&&crypto.randomUUID)return crypto.randomUUID();
+  return Math.random().toString(36).slice(2)+Date.now().toString(36);
+}
+function nowIso(){
+  const d=new Date();
+  const kst=new Date(d.getTime()+9*60*60*1000);
+  return kst.toISOString().replace("Z","+09:00");
+}
+function jsonGet(key,fallback){
+  try{return JSON.parse(localStorage.getItem(key))||fallback}catch(e){return fallback}
+}
+function jsonSet(key,value){
+  try{localStorage.setItem(key,JSON.stringify(value))}catch(e){}
+}
+function visitor(){
+  let data=jsonGet(VISITOR_KEY,null);
+  if(!data||!data.visitorId){
+    data={visitorId:randomId(),firstSeenAt:nowIso()};
+    jsonSet(VISITOR_KEY,data);
+  }
+  return data;
+}
+function session(){
+  const now=Date.now();
+  let data=null;
+  try{data=JSON.parse(sessionStorage.getItem(SESSION_KEY))}catch(e){}
+  if(!data||!data.sessionId||now-data.lastActiveAt>SESSION_TIMEOUT_MS){
+    data={sessionId:randomId(),startedAt:nowIso(),lastActiveAt:now,pageViewed:false};
+  }
+  data.lastActiveAt=now;
+  try{sessionStorage.setItem(SESSION_KEY,JSON.stringify(data))}catch(e){}
+  return data;
+}
+function referrerType(){
+  if(!document.referrer)return "direct";
+  try{return new URL(document.referrer).origin===location.origin?"same_origin":"external"}catch(e){return "unknown"}
+}
+function trafficAttribution(){
+  const params=new URLSearchParams(location.search);
+  let referrerHost="";
+  try{referrerHost=document.referrer?new URL(document.referrer).hostname:""}catch(e){}
+  const utmSource=clean(params.get("utm_source"),80);
+  const utmMedium=clean(params.get("utm_medium"),80);
+  return {
+    source:utmSource||referrerHost||"direct",
+    medium:utmMedium||(referrerHost?"referral":"none"),
+    campaign:clean(params.get("utm_campaign"),120),
+    referrerHost:clean(referrerHost,120)
+  };
+}
+function readOutbox(){return jsonGet(EVENT_OUTBOX_KEY,[])}
+function saveOutbox(queue){jsonSet(EVENT_OUTBOX_KEY,queue.slice(-500))}
+function enqueueEvent(event){
+  const queue=readOutbox();
+  queue.push(event);
+  saveOutbox(queue);
+}
+function track(eventName,properties={}){
+  const v=visitor();
+  const s=session();
+  const event={
+    type:"event",
+    schemaVersion:SCHEMA_VERSION,
+    eventId:randomId(),
+    eventName,
+    occurredAt:nowIso(),
+    visitorId:v.visitorId,
+    sessionId:s.sessionId,
+    page:"landing",
+    appVersion:APP_VERSION,
+    properties
+  };
+  enqueueEvent(event);
+  flushEvents();
+}
+async function postJson(payload,keepalive=false){
+  if(!EXPERIMENT_ENDPOINT)return false;
+  let responseReceived=false;
+  const init={
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(payload),
+    keepalive
+  };
+  try{
+    const res=await fetch(EXPERIMENT_ENDPOINT,init);
+    responseReceived=true;
+    if(!res.ok)throw new Error("http_"+res.status);
+    const data=await res.json().catch(()=>({ok:true}));
+    if(data&&data.ok===false)throw new Error(data.error||"collector_rejected");
+    return true;
+  }catch(error){
+    if(responseReceived)return false;
+    if(/^https:\/\/script\.google\.com\//.test(EXPERIMENT_ENDPOINT)){
+      try{
+        await fetch(EXPERIMENT_ENDPOINT,Object.assign({},init,{mode:"no-cors"}));
+        return true;
+      }catch(e){}
+    }
+    return false;
+  }
+}
+let flushing=false;
+async function flushEvents(keepalive=false){
+  if(flushing)return;
+  const queue=readOutbox();
+  if(!queue.length||!EXPERIMENT_ENDPOINT)return;
+  flushing=true;
+  const remaining=[];
+  for(const event of queue){
+    const ok=await postJson(event,keepalive);
+    if(!ok)remaining.push(event);
+  }
+  saveOutbox(remaining);
+  flushing=false;
+}
+function storeApplication(application){
+  const rows=jsonGet(APPLICATIONS_KEY,[]);
+  rows.push(application);
+  jsonSet(APPLICATIONS_KEY,rows.slice(-100));
+}
+function emailValid(value){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+function clean(value,max=120){
+  return String(value||"").replace(/[\u0000-\u001f\u007f]/g,"").trim().slice(0,max);
+}
+function toast(message){
+  const el=$("#toast");
+  el.textContent=message;
+  el.classList.add("show");
+  clearTimeout(toast.timer);
+  toast.timer=setTimeout(()=>el.classList.remove("show"),2600);
+}
+function scrollToApply(placement){
+  track("cta_clicked",{placement});
+  $("#apply").scrollIntoView({behavior:"smooth",block:"start"});
+  setTimeout(()=>$("#email")?.focus({preventScroll:true}),550);
+}
+function formData(form){
+  const data=new FormData(form);
+  return {
+    email:clean(data.get("email"),160).toLowerCase(),
+    friendIntent:clean(data.get("friendIntent"),20),
+    feedback:clean(data.get("feedback"),500),
+    consent:$("#consent").checked
+  };
+}
+function validateApplication(data){
+  if(!emailValid(data.email))return "이메일을 확인해주세요.";
+  if(!data.friendIntent)return "함께 써볼 사람이 있는지 선택해주세요.";
+  if(!data.consent)return "응답 저장 동의가 필요합니다.";
+  return "";
+}
+async function submitApplication(event){
+  event.preventDefault();
+  const form=event.currentTarget;
+  const data=formData(form);
+  const message=validateApplication(data);
+  if(message){toast(message);return}
+  const v=visitor();
+  const s=session();
+  const application={
+    type:"application",
+    schemaVersion:SCHEMA_VERSION,
+    applicationId:randomId(),
+    submittedAt:nowIso(),
+    visitorId:v.visitorId,
+    sessionId:s.sessionId,
+    appVersion:APP_VERSION,
+    ...trafficAttribution(),
+    ...data
+  };
+  storeApplication(application);
+  track("beta_form_submitted",{
+    friendIntent:data.friendIntent,
+    hasFeedback:Boolean(data.feedback)
+  });
+  const submitBtn=$(".submit-btn",form);
+  submitBtn.disabled=true;
+  submitBtn.textContent="의사 저장 중";
+  const sent=await postJson(application);
+  submitBtn.disabled=false;
+  submitBtn.textContent="써보고 싶다고 남기기";
+  $("#success-copy").textContent=sent
+    ?"베타가 준비되면 이메일로 가장 먼저 알려드릴게요."
+    :"현재 수집 주소가 비어 있어 이 브라우저에 의사를 저장했습니다.";
+  $("#success-panel").classList.add("show");
+  form.reset();
+  $("#success-panel").scrollIntoView({behavior:"smooth",block:"center"});
+}
+function showDebug(){
+  const events=readOutbox();
+  const apps=jsonGet(APPLICATIONS_KEY,[]);
+  const visitorCount=visitor().visitorId?"1":"0";
+  const ctaClicks=events.filter(e=>e.eventName==="cta_clicked").length;
+  const submits=events.filter(e=>e.eventName==="beta_form_submitted").length;
+  const yes=events.filter(e=>e.eventName==="beta_form_submitted"&&e.properties.friendIntent==="yes").length;
+  const lines=[
+    "이 브라우저의 로컬 실험 로그",
+    "visitor: "+visitorCount,
+    "cta_clicked: "+ctaClicks,
+    "beta_form_submitted: "+submits,
+    "friend_intent_yes: "+yes,
+    "local_applications: "+apps.length,
+    "outbox_events: "+events.length
+  ];
+  alert(lines.join("\n"));
+}
+async function sharePage(){
+  track("friend_share_clicked",{method:navigator.share?"web_share":"clipboard"});
+  const shareData={
+    title:"지출 모임 베타",
+    text:"친구와 각자의 예산 목표를 나누고 서로 응원하며 함께 달성하는 지출 모임 베타입니다.",
+    url:location.href.split("#")[0]
+  };
+  if(navigator.share){
+    try{await navigator.share(shareData);return}catch(e){}
+  }
+  try{
+    await navigator.clipboard.writeText(shareData.url);
+    toast("공유 링크를 복사했습니다.");
+  }catch(e){
+    toast("주소창의 링크를 친구에게 보내주세요.");
+  }
+}
+function bindPhotoDemo(){
+  const input=$("#photo-input");
+  const preview=$("#demo-image");
+  const recordPreview=$("#demo-record-image");
+  let objectUrl="";
+  input?.addEventListener("change",()=>{
+    const file=input.files&&input.files[0];
+    if(!file)return;
+    if(!file.type.startsWith("image/")){
+      toast("이미지 파일을 선택해주세요.");
+      input.value="";
+      return;
+    }
+    if(file.size>10*1024*1024){
+      toast("10MB 이하의 사진을 선택해주세요.");
+      input.value="";
+      return;
+    }
+    if(objectUrl)URL.revokeObjectURL(objectUrl);
+    objectUrl=URL.createObjectURL(file);
+    preview.src=objectUrl;
+    preview.alt="내가 선택한 소비 사진 미리보기";
+    recordPreview.src=objectUrl;
+    recordPreview.alt="내가 선택한 사진이 첨부된 지출 기록";
+    track("photo_demo_uploaded",{fileType:clean(file.type,40)});
+    toast("사진 미리보기를 바꿨습니다.");
+  });
+  window.addEventListener("pagehide",()=>{
+    if(objectUrl)URL.revokeObjectURL(objectUrl);
+  });
+}
+function bindReactions(){
+  $$(".js-reaction").forEach(button=>{
+    button.addEventListener("click",()=>{
+      const active=!button.classList.contains("active");
+      const baseCount=Number(button.dataset.count)||0;
+      button.classList.toggle("active",active);
+      button.setAttribute("aria-pressed",String(active));
+      $("span",button).textContent=String(baseCount+(active?1:0));
+      track("emoji_reaction_clicked",{
+        emoji:button.dataset.emoji||"unknown",
+        surface:button.closest(".hero-visual")?"hero":"demo",
+        active
+      });
+    });
+  });
+}
+function bindShareModes(){
+  const record=$("#demo-record");
+  const image=$("#demo-record-image");
+  const amount=$("#demo-record-amount");
+  const title=$("#demo-record-title");
+  const meta=$("#demo-record-meta");
+  const label=$("#share-mode-label");
+  const privateNote=$("#private-record-note");
+  const labels={
+    expense_photo:"지출+사진 공개",
+    expense_only:"지출만 공개",
+    photo_only:"사진만 공개",
+    private:"나만 보기"
+  };
+  $$(".share-option").forEach(button=>{
+    button.addEventListener("click",()=>{
+      const mode=button.dataset.shareMode;
+      $$(".share-option").forEach(option=>option.classList.toggle("active",option===button));
+      label.textContent=labels[mode];
+      record.hidden=mode==="private";
+      privateNote.classList.toggle("show",mode==="private");
+      record.classList.toggle("no-photo",mode==="expense_only");
+      image.hidden=mode==="expense_only";
+      amount.hidden=mode==="photo_only";
+      title.textContent=mode==="photo_only"?"나 · 오늘의 카페 사진":"나 · 오후 카페";
+      meta.textContent=(labels[mode]||"선택 공개")+" · 방금 전";
+      track("share_mode_selected",{mode});
+    });
+  });
+}
+function bindChatDemo(){
+  const form=$("#chat-form");
+  const input=$("#chat-input");
+  const messages=$("#chat-messages");
+  form?.addEventListener("submit",event=>{
+    event.preventDefault();
+    const message=clean(input.value,80);
+    if(!message){
+      toast("메시지를 입력해주세요.");
+      input.focus();
+      return;
+    }
+    const row=document.createElement("div");
+    row.className="chat-message mine";
+    const avatar=document.createElement("span");
+    avatar.className="chat-avatar";
+    avatar.textContent="나";
+    const bubble=document.createElement("div");
+    bubble.className="chat-bubble";
+    bubble.textContent=message;
+    row.append(avatar,bubble);
+    messages.appendChild(row);
+    input.value="";
+    messages.scrollTop=messages.scrollHeight;
+    track("chat_demo_sent",{messageLength:Array.from(message).length});
+  });
+}
+function bind(){
+  $$(".js-cta").forEach(btn=>btn.addEventListener("click",()=>scrollToApply(btn.dataset.placement||"unknown")));
+  $(".js-learn")?.addEventListener("click",()=>track("learn_more_clicked",{placement:"hero"}));
+  $("#beta-form").addEventListener("submit",submitApplication);
+  $("#friend-intent-group").addEventListener("change",event=>{
+    if(event.target.name==="friendIntent")track("friend_intent_selected",{friendIntent:event.target.value});
+  });
+  let formStarted=false;
+  $("#beta-form").addEventListener("input",()=>{
+    if(formStarted)return;
+    formStarted=true;
+    track("beta_form_started",{entryPoint:location.hash==="#apply"?"direct_hash":"page"});
+  },{once:true});
+  $("#share-btn").addEventListener("click",sharePage);
+  $("#debug-link").addEventListener("click",showDebug);
+  document.addEventListener("visibilitychange",()=>{
+    if(document.visibilityState==="hidden")flushEvents(true);
+  });
+  window.addEventListener("online",()=>flushEvents());
+  bindPhotoDemo();
+  bindReactions();
+  bindShareModes();
+  bindChatDemo();
+}
+function boot(){
+  visitor();
+  const s=session();
+  if(!s.pageViewed){
+    track("page_viewed",{
+      trigger:"initial_load",
+      referrerType:referrerType(),
+      ...trafficAttribution()
+    });
+    s.pageViewed=true;
+    try{sessionStorage.setItem(SESSION_KEY,JSON.stringify(s))}catch(e){}
+  }
+  bind();
+  flushEvents();
+}
+boot();
+</script>
+</body>
+</html>
